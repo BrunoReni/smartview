@@ -1,0 +1,35 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_SR3.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="SR3", name="Tabela SR3 - Histórico Valores Salariais", country="ALL", initialRelease="12.1.2210")
+class SR3TReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class SR3TReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Tabela SR3 - Histórico Valores Salariais"
+return self
+ 
+method getDescription() as character class SR3TReportsBusinessObject
+return STR0003//"Objeto com os registros da tabela SR3 - Histórico Valores Salariais"
+ 
+method getAreas() as array class SR3TReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class SR3TReportsBusinessObject
+    self:oData:aliasToData("SR3", oFilter)
+return self:oData
+ 
+method getSchema() as object class SR3TReportsBusinessObject
+    self:oSchema:aliasToSchema("SR3")
+return self:oSchema

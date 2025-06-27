@@ -1,0 +1,35 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_RCE.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="RCE", name="Tabela RCE - Sindicatos", country="ALL", initialRelease="12.1.2210")
+class RCETReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class RCETReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Tabela RCE - Sindicatos"
+return self
+ 
+method getDescription() as character class RCETReportsBusinessObject
+return STR0003//"Objeto com os registros da tabela RCE - Sindicatos"
+ 
+method getAreas() as array class RCETReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class RCETReportsBusinessObject
+    self:oData:aliasToData("RCE", oFilter)
+return self:oData
+ 
+method getSchema() as object class RCETReportsBusinessObject
+    self:oSchema:aliasToSchema("RCE")
+return self:oSchema

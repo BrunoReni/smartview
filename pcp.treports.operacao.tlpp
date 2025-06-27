@@ -1,0 +1,262 @@
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "pcp.treports.operacao.ch"
+
+namespace totvs.protheus.sigapcp.treportsintegratedprovider
+
+@totvsFrameworkTReportsIntegratedProvider(active=.T.)
+
+/*/{Protheus.doc} OperacaoTReportsBusinessObject
+Classe para criação do Objeto de Negócio para listagem das operações por produto
+
+@author breno.ferreira
+@since 22/05/2023
+@version 1.0
+/*/
+class OperacaoTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields as array
+    protected data aStruct as array
+endclass
+
+/*/{Protheus.doc} new
+Método de instância da classe
+ 
+@return object: self
+
+@author breno.ferreira
+@since 22/05/2023
+@version 1.0
+/*/ 
+method new() as object class OperacaoTReportsBusinessObject
+    _Super:new()
+    //Define a Área
+    self:appendArea(STR0001)//STR0001 = "PCP"   
+ 
+    //Define o nome do Objeto de Negócio
+    self:setDisplayName(STR0002)//STR0002 - "Operação"
+    
+    //Define a descrição do Objeto de Negócio
+    self:setDescription(STR0003)//STR0003 - "Relatório das Operações por Produto"
+
+    self:setPergunte("MTR840") //Indica o pergunte que será utilizado no relatório
+return self
+
+/*/{Protheus.doc} getData
+Retorna os dados do objeto de negócio
+ 
+@param nPage, numérico, indica a página atual do relatório
+@param oFilter, objeto, contém o filtro do TReports
+ 
+@return object: self:oData
+
+@author breno.ferreira
+@since 22/05/2023
+@version 1.0
+/*/
+method getData(nPage as numeric, oFilter as object) as object class OperacaoTReportsBusinessObject
+    local cAlias     := GetNextAlias() as character
+    local cDescEmp   as character
+    local cDescFil   as character
+    local cQuery     := "" as character
+    local cRotPad    as character
+    local jParams    as json
+    local lHasNext   := .F. as logical
+    local mv_par01   as character //Do Produto ? 
+    local mv_par02   as character //Ate o Produto ?
+    local mv_par03   as character //Do Roteiro ? 
+    local mv_par04   as character //Ate o Roteiro ?
+    local mv_par05   as numeric //Lista so Rot.Padrao ? 
+    local mv_par06   as numeric //Lista Rec. Alt/Sec ? 
+    local nEnd       := 0 as numeric
+    local nStart     := 0 as numeric
+    local nX         := 0 as numeric
+    local ojItems    := Nil as json
+    
+    Private aMopc    := {} as array
+    Private lNegEstr :=GETMV("MV_NEGESTR") as logical
+
+    self:setPageSize(40)
+
+    jParams := oFilter:getParameters() //metodo para retorno do json dos parâmetros
+
+    mv_par01 := jParams["MV_PAR01"][1] //Do Produto ?                      
+    mv_par02 := jParams["MV_PAR02"][1] //Ate o Produto ?                      
+    mv_par03 := jParams["MV_PAR03"][1] //Do Roteiro ?                 
+    mv_par04 := jParams["MV_PAR04"][1] //Ate o Roteiro ?                 
+    mv_par05 := jParams["MV_PAR05"][1] //Lista so Rot.Padrao ?                 
+    mv_par06 := jParams["MV_PAR06"][1] //Lista Rec. Alt/Sec ?                                  
+    
+    //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize()
+    
+    cQuery += "SELECT * FROM ("
+    cQuery +=   "SELECT ROW_NUMBER() OVER(ORDER BY SG2.G2_FILIAL , "
+    cQuery +=                                    " SG2.G2_PRODUTO, "
+    cQuery +=                                    " SG2.G2_OPERAC ASC) LINHA, " 
+    //SG2
+    cQuery +=         " SG2.G2_FILIAL,"
+    cQuery +=         " SG2.G2_CODIGO, "
+    cQuery +=         " SG2.G2_RECURSO, "
+    cQuery +=         " SG2.G2_OPERAC, "
+    cQuery +=         " SG2.G2_DESCRI, "
+    cQuery +=         " SG2.G2_TPOPER, "
+    cQuery +=         " SG2.G2_FERRAM, "
+    cQuery +=         " SG2.G2_LINHAPR, "
+    cQuery +=         " SG2.G2_TPLINHA, "
+    cQuery +=         " SG2.G2_MAOOBRA, "
+    cQuery +=         " SG2.G2_SETUP, "
+    cQuery +=         " SG2.G2_LOTEPAD, "
+    cQuery +=         " SG2.G2_TEMPAD, "
+    cQuery +=         " SG2.G2_TEMPSOB, "
+    cQuery +=         " SG2.G2_TPSOBRE, "
+    cQuery +=         " SG2.G2_TEMPDES, "
+    cQuery +=         " SG2.G2_TPDESD, "
+    cQuery +=         " SG2.G2_DESPROP, "
+    cQuery +=         " SG2.G2_CTRAB, "
+    cQuery +=         " SG2.G2_FORMSTP, "
+    //SH1
+    cQuery +=         " SH1.H1_DESCRI, "
+    cQuery +=         " SH1.H1_CODIGO, "
+    //SB1
+    cQuery +=         " SB1.B1_COD, "
+    cQuery +=         " SB1.B1_DESC, "
+    cQuery +=         " SB1.B1_OPERPAD "
+    //SH3
+    if mv_par06 == 1
+        cQuery +=         " ,SH3.H3_RECALTE, "
+        cQuery +=         " SH3.H3_TIPO, "
+        cQuery +=         " SH3.H3_EFICIEN "
+    ELSE 
+        cQuery +=         " ,'','','' "    
+    endif
+	cQuery +=    " FROM " + RetSqlName("SG2") + " SG2 "
+    if mv_par06 == 1
+       cQuery +=    " LEFT OUTER JOIN " + RetSqlName("SH3") + " SH3 "
+       cQuery +=    " ON SH3.H3_FILIAL = '" + FWxFilial("SH3") + "' "
+       cQuery +=    " AND SH3.H3_PRODUTO = SG2.G2_PRODUTO"
+       cQuery +=    " AND SH3.H3_RECPRIN = SG2.G2_RECURSO "
+       cQuery +=    " AND SH3.H3_OPERAC = SG2.G2_OPERAC "
+       cQuery +=    " AND SH3.H3_CODIGO = SG2.G2_CODIGO "  
+    endif
+    cQuery +=    " INNER JOIN " + RetSqlName("SB1") + " SB1 "
+    cQuery +=    " ON SB1.B1_FILIAL = '" + FWxFilial("SB1") + "' " 
+    cQuery +=    " AND B1_COD = G2_PRODUTO "   
+    cQuery +=    " LEFT JOIN " + RetSqlName("SH1") + " SH1 ON H1_CODIGO = G2_RECURSO "
+    cQuery +=    " AND H1_FILIAL = '" + FWxFilial("SH1") + "' "  
+    cQuery +=    " AND SH1.D_E_L_E_T_ = ' ' "
+    cQuery +=    " WHERE SG2.G2_FILIAL = '" + FWxFilial("SG2") + "' "        
+    if mv_par05 == 1 
+        cQuery += " AND B1_OPERPAD = G2_CODIGO "
+    endif   
+    cQuery +=     " AND SG2.G2_PRODUTO   >= '" + mv_par01 + "' " 
+    cQuery +=     " AND SG2.G2_PRODUTO   <= '" + mv_par02 + "' "	 
+    cQuery +=     " AND SG2.G2_CODIGO    >= '" + mv_par03 + "' "	 
+    cQuery +=     " AND SG2.G2_CODIGO    <= '" + mv_par04 + "' "	  
+	cQuery +=     " AND SG2.D_E_L_E_T_ = ' ' "
+    cQuery +=     " AND SB1.D_E_L_E_T_ = ' ' "
+    cQuery += ") TAB "
+    cQuery += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.F.,.F.)
+
+    conout("cQuery")
+    conout(cQuery)    
+
+    //Posiciona no registro inicial 
+    (cAlias)->( dbGoto(nStart) )
+    
+    while !(cAlias)->(Eof())
+
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        cDescEmp := FWGrpName()
+        cDescFil := FWFilialName(cEmpAnt,(cAlias)->G2_FILIAL,1)
+
+        cRotPad := ""
+        if (cAlias)->G2_CODIGO == (cAlias)->B1_OPERPAD 
+            cRotPad := STR0004 //STR0004 - Roteiro Padrão
+        endif
+
+        dbSelectArea('SH1')
+        dbSetOrder(1)
+        Msseek(xFilial('SH1')+(cAlias)->H3_RECALTE)
+
+        ojItems := JsonObject():new()
+
+        for nX := 1 To Len(self:aStruct)
+            //Campos auxiliares
+            if self:aStruct[nX][1] $ 'DESCEMP'
+                ojItems[self:aStruct[nX][1]] := cDescEmp
+            elseif self:aStruct[nX][1] $ 'DESCFIL'
+                ojItems[self:aStruct[nX][1]] := cDescFil
+            elseif self:aStruct[nX][1] $ 'ROTPAD'
+                ojItems[self:aStruct[nX][1]] := cRotPad
+            elseif self:aStruct[nX][1] $ 'DESCALTE'
+                ojItems[self:aStruct[nX][1]] := SH1->H1_DESCRI   
+            elseif self:aStruct[nX][1] $ 'DESCTIPO'
+                IF (cAlias)->H3_TIPO == "A"
+                    ojItems[self:aStruct[nX][1]] := STR0005 //STR0005 - Alternativo
+                ELSEIF (cAlias)->H3_TIPO == "S"
+                    ojItems[self:aStruct[nX][1]] := STR0006 //STR0006 - Secundário
+                ENDIF
+            Else 
+                //Campos do select principal
+                ojItems[self:aStruct[nX][1]] := (cAlias)->&(self:aStruct[nX][5])  
+            EndIf
+        next nX
+    
+        self:oData:appendData(ojItems)
+
+        (cAlias)->(DBSkip())
+
+    enddo 
+  
+    //Se não for o último registro indica que terá próxima página
+    self:setHasNext( lHasNext )
+
+    (cAlias)->(DBCloseArea())
+    
+return self:oData
+
+/*/{Protheus.doc} getSchema
+Retorna a estrutura dos campos
+ 
+@return object: self:oSchema
+
+@author breno.ferreira
+@since 22/05/2023
+@version 1.0
+/*/
+method getSchema() as object class OperacaoTReportsBusinessObject
+    Local nX        := 0 as numeric
+
+    self:aFields := {"G2_FILIAL","G2_CODIGO","G2_RECURSO","G2_OPERAC","G2_DESCRI","G2_TPOPER","G2_FERRAM","G2_LINHAPR",;
+                     "G2_TPLINHA","G2_MAOOBRA","G2_SETUP","G2_LOTEPAD","G2_TEMPAD","G2_TEMPSOB","G2_TPSOBRE",;
+                     "G2_TEMPDES","G2_TPDESD","G2_DESPROP","G2_CTRAB","G2_FORMSTP","H1_DESCRI","H1_CODIGO","B1_COD",;
+                     "B1_DESC","B1_OPERPAD","H3_RECALTE","H3_TIPO","H3_EFICIEN"}
+                     
+    self:aStruct := PcpTrGetStruct(self:aFields)
+
+    //Campos Auxiliares
+    AAdd(self:aStruct , {"DESCEMP", "DESC_EMP", "string", "DESC_EMP", "DESC_EMP"})
+    AAdd(self:aStruct , {"DESCFIL", "DESC_FIL", "string", "DESC_FIL", "DESC_FIL"})
+    AAdd(self:aStruct , {"ROTPAD", "ROT_PAD", "string", "ROT_PAD", "ROT_PAD"})
+    AAdd(self:aStruct , {"DESCALTE", "DESC_ALTE", "string", "DESC_ALTE", "DESC_ALTE"})
+    AAdd(self:aStruct , {"DESCTIPO", "DESC_TIPO", "string", "DESC_TIPO", "DESC_TIPO"})
+
+    for nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    next nX
+
+return self:oSchema

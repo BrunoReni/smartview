@@ -1,0 +1,36 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include 'tlpp-core.th'
+#include 'tlpp-rest.th'  
+#include 'provpc110.ch'
+ 
+namespace custom.compras.pc.integratedprovider 
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T.)
+class SC7TReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object 
+endclass
+ 
+method new() as object class SC7TReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001) //"Pedido de Compras"
+return self
+ 
+method getDescription() as character class SC7TReportsBusinessObject
+return STR0002 //"Relatório Pedido de Compras"
+
+method getAreas() as array class SC7TReportsBusinessObject
+return {STR0003,STR0004,STR0005} //"Compras"##"Estoque"##"Financeiro"
+ 
+// Os filtros serão setados na interface do novo TReports
+method getData(nPage as numeric, oFilter as object) as object class SC7TReportsBusinessObject
+    self:oData:aliasToData("SC7", oFilter)
+return self:oData
+ 
+method getSchema() as object class SC7TReportsBusinessObject
+    self:oSchema:aliasToSchema("SC7")
+return self:oSchema

@@ -1,0 +1,156 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_GPER040SRD.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="CTT, RCH, RCJ, SRA, SRD, SRJ, SRV", name="Informações da folha fechada", country="ALL", initialRelease="12.1.2210")
+class GPER040SRDTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class GPER040SRDTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Informações da folha fechada"
+return self
+ 
+method getDescription() as character class GPER040SRDTReportsBusinessObject
+return STR0003//"Objeto contendo informações da folha fechada, processo, periodo, centro de custo, funcionários, funções e verbas"
+ 
+method getAreas() as array class GPER040SRDTReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class GPER040SRDTReportsBusinessObject
+    local aAreaSRA as array
+    local cAlias as character
+    local cCatFunc as character
+    local cCodFunc as character
+    local cDepIR as character
+    local cDepSalFam as character
+    local cDescFunc as character
+    local cQuery as character    
+    local cSitFol as character
+    local dDataFim as date
+    local dDataIni as date
+    local lHasNext as logical
+    local nStart as numeric
+    local nEnd as numeric
+
+    aAreaSRA    := SRA->( GetArea() )
+    lHasNext    := .F.
+    
+    SRA->( dbSetOrder(1) )
+    
+    self:setPageSize(100)
+
+    //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize() + 1
+
+    cQuery  := "SELECT * FROM ("
+    cQuery  +=      "SELECT ROW_NUMBER() OVER(ORDER BY SRD.RD_FILIAL, SRD.RD_MAT, SRD.RD_PERIODO, SRD.RD_SEMANA, SRD.RD_ROTEIR, SRD.RD_CC, SRD.RD_PD ASC) AS LINHA, SRD.RD_FILIAL, SRD.RD_MAT, SRD.RD_CC, SRD.RD_PD, SRD.RD_HORAS, SRD.RD_VALOR, SRD.RD_PROCES, SRD.RD_PERIODO, SRD.RD_SEMANA, SRD.RD_ROTEIR, SRD.RD_INSS, SRD.RD_IR, SRD.RD_FGTS, RCJ.RCJ_DESCRI, RCH.RCH_DTINI, RCH.RCH_DTFIM, RCH.RCH_DTPAGO, CTT.CTT_DESC01, SRA.RA_NOME, SRA.RA_NOMECMP, SRA.RA_TPCONTR, SRA.RA_CODFUNC, SRA.RA_ADMISSA, SRA.RA_DEMISSA, SRA.RA_CATFUNC, SRA.RA_SALARIO, SRA.RA_DEPIR, SRA.RA_DEPSF, SRA.RA_PERCADT, SRA.RA_HRSMES, SRA.RA_SITFOLH, SRJ.RJ_DESC, SRV.RV_DESC, SRV.RV_TIPOCOD FROM " + RetSqlName("SRD") + " SRD "
+    cQuery  +=      "INNER JOIN " + RetSqlName("RCJ") + " RCJ ON " + FWJoinFilial( "RCJ", "SRD" ) + " AND RCJ.RCJ_CODIGO = SRD.RD_PROCES AND RCJ.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "INNER JOIN " + RetSqlName("RCH") + " RCH ON " + FWJoinFilial( "RCH", "SRD" ) + " AND RCH.RCH_PROCES = SRD.RD_PROCES AND RCH.RCH_PER = SRD.RD_PERIODO AND RCH.RCH_NUMPAG = SRD.RD_SEMANA AND RCH.RCH_ROTEIR = SRD.RD_ROTEIR AND RCH.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "INNER JOIN " + RetSqlName("CTT") + " CTT ON " + FWJoinFilial( "CTT", "SRD" ) + " AND CTT.CTT_CUSTO = SRD.RD_CC AND CTT.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "INNER JOIN " + RetSqlName("SRA") + " SRA ON " + FWJoinFilial( "SRA", "SRD" ) + " AND SRA.RA_MAT = SRD.RD_MAT AND SRA.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "INNER JOIN " + RetSqlName("SRJ") + " SRJ ON " + FWJoinFilial( "SRJ", "SRA" ) + " AND SRJ.RJ_FUNCAO = SRA.RA_CODFUNC AND SRJ.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "INNER JOIN " + RetSqlName("SRV") + " SRV ON " + FWJoinFilial( "SRV", "SRD" ) + " AND SRV.RV_COD = SRD.RD_PD AND SRV.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "WHERE SRD.D_E_L_E_T_ = ' '"
+    //Os filtros serão setados na interface do novo TReports
+    if oFilter:hasFilter()
+        cQuery +=   " AND " + oFilter:getSQLExpression()
+    endif
+    cQuery  += ") AS TAB "
+    cQuery  += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    cAlias := MPSysOpenQuery(cQuery)
+
+    while !(cAlias)->(Eof())
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        SRA->( dbSeek( (cAlias)->RD_FILIAL + (cAlias)->RD_MAT ) )
+        cDepIR      := SubStr( GPRETSR9("SRA", LastDay(dDataIni), "RA_DEPIR"), 1, 4 )
+        cDepSalFam  := SubStr( GPRETSR9("SRA", LastDay(dDataIni), "RA_DEPSF"), 1, 4 )
+        cSitFol     := RetSituacao( (cAlias)->RD_FILIAL, (cAlias)->RD_MAT, .F., dDataFim, Nil, Nil, Nil, dDataIni )[1]
+        dDataIni    := sToD( (cAlias)->RCH_DTINI )
+        dDataFim    := sToD( (cAlias)->RCH_DTFIM )
+        fBuscaFunc( dDataIni, @cCodFunc, @cDescFunc, @cCatFunc )
+        
+        self:oData:appendData({"RD_FILIAL": (cAlias)->RD_FILIAL,;
+                "RD_MAT": (cAlias)->RD_MAT,;
+                "RD_CC": (cAlias)->RD_CC,;
+                "RD_PD": (cAlias)->RD_PD, ;
+                "RD_HORAS": (cAlias)->RD_HORAS, ;
+                "RD_VALOR": (cAlias)->RD_VALOR, ;
+                "RD_PROCES": (cAlias)->RD_PROCES, ;
+                "RD_PERIODO": (cAlias)->RD_PERIODO, ;
+                "RD_SEMANA": (cAlias)->RD_SEMANA, ;
+                "RD_ROTEIR": (cAlias)->RD_ROTEIR, ;
+                "RD_INSS": (cAlias)->RD_INSS, ;
+                "RD_IR": (cAlias)->RD_IR, ;
+                "RD_FGTS": (cAlias)->RD_FGTS, ;
+                "RCJ_DESCRI": (cAlias)->RCJ_DESCRI, ;
+                "RCH_DTINI": FwTimeStamp( 5, dDataIni, "00:00:00" ), ;
+                "RCH_DTFIM": FwTimeStamp( 5, dDataFim, "00:00:00" ), ;
+                "RCH_DTPAGO": FwTimeStamp( 5, sToD( (cAlias)->RCH_DTPAGO), "00:00:00" ), ;
+                "CTT_DESC01": (cAlias)->CTT_DESC01,;
+                "RA_NOME": (cAlias)->RA_NOME,;
+                "RA_NOMECMP": (cAlias)->RA_NOMECMP,;
+                "RA_TPCONTR": (cAlias)->RA_TPCONTR,;
+                "RA_CODFUNC": cCodFunc,;
+                "RA_ADMISSA": FwTimeStamp( 5, sToD( (cAlias)->RA_ADMISSA ), "00:00:00" ), ;
+                "RA_DEMISSA": Iif( !Empty((cAlias)->RA_DEMISSA), FwTimeStamp( 5, sToD( (cAlias)->RA_DEMISSA ), "00:00:00" ), ""), ;
+                "RA_CATFUNC": cCatFunc,;
+                "DESCCAT": Alltrim( fDesc( "SX5", "28"+cCatFunc, "X5DESCRI()", Nil, (cAlias)->RD_FILIAL ) ),;
+                "RA_SALARIO": fBuscaSal(dDataIni, Nil, Nil, .F.), ;
+                "RA_DEPIR": Iif( !Empty(cDepIR), cDepIR, "0"), ;
+                "RA_DEPSF": Iif( !Empty(cDepSalFam), cDepSalFam, "0"), ;
+                "RA_PERCADT": (cAlias)->RA_PERCADT, ;
+                "RA_HRSMES": (cAlias)->RA_HRSMES, ;
+                "RA_SITFOLH": cSitFol, ;
+                "DESCSIT": AllTrim( fDesc( "SX5", "31"+cSitFol, "X5DESCRI()", NIL, (cAlias)->RD_FILIAL ) ), ;
+                "RJ_DESC": cDescFunc,;                
+                "RV_DESC": (cAlias)->RV_DESC, ;
+                "RV_TIPOCOD": (cAlias)->RV_TIPOCOD })
+        (cAlias)->( dbSkip() )
+    enddo
+
+    //Se não for o último registro indica que terá próxima página
+    self:setHasNext( lHasNext )
+    
+    (cAlias)->( DBCloseArea() )
+
+    RestArea( aAreaSRA )
+
+return self:oData
+ 
+method getSchema() as object class GPER040SRDTReportsBusinessObject
+    local aFieldsRCH as array
+    local aFieldsSRA as array
+    local aFieldsSRD as array
+    local aFieldsSRV as array
+    
+    aFieldsRCH := { "RCH_DTINI", "RCH_DTFIM", "RCH_DTPAGO" }
+    aFieldsSRA := { "RA_NOME",  "RA_NOMECMP", "RA_TPCONTR", "RA_CODFUNC", "RA_ADMISSA", "RA_DEMISSA", "RA_CATFUNC", "RA_SALARIO", "RA_DEPIR", "RA_DEPSF", "RA_PERCADT", "RA_HRSMES", "RA_SITFOLH" }
+    aFieldsSRD := { "RD_FILIAL", "RD_MAT", "RD_CC", "RD_PD", "RD_HORAS", "RD_VALOR", "RD_PROCES", "RD_PERIODO", "RD_SEMANA", "RD_ROTEIR", "RD_INSS", "RD_IR", "RD_FGTS" }
+    aFieldsSRV := { "RV_DESC", "RV_TIPOCOD" }
+    
+    self:oSchema:aliasToSchema("CTT", "CTT_DESC01")
+    self:oSchema:aliasToSchema("RCH", aFieldsRCH)  
+    self:oSchema:aliasToSchema("RCJ", "RCJ_DESCRI")
+    self:oSchema:aliasToSchema("SRA", aFieldsSRA)
+    self:oSchema:aliasToSchema("SRD", aFieldsSRD)
+    self:oSchema:aliasToSchema("SRJ", "RJ_DESC")
+    self:oSchema:aliasToSchema("SRV", aFieldsSRV)
+    self:oSchema:addProperty("DESCCAT", "Descrição Categoria", "string", "Desc. Cat.", "DESCCAT")
+    self:oSchema:addProperty("DESCSIT", "Descrição Situação", "string", "Desc. Sit.", "DESCSIT")
+return self:oSchema

@@ -1,0 +1,35 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_RGB.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="RGB", name="Tabela RGB - Lançamentos por funcionário", country="ALL", initialRelease="12.1.2210")
+class RGBTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class RGBTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Tabela RGB - Lançamentos por funcionário"
+return self
+ 
+method getDescription() as character class RGBTReportsBusinessObject
+return STR0003//"Objeto com os registros da tabela RGB - Lançamentos por funcionário"
+ 
+method getAreas() as array class RGBTReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class RGBTReportsBusinessObject
+    self:oData:aliasToData("RGB", oFilter)
+return self:oData
+ 
+method getSchema() as object class RGBTReportsBusinessObject
+    self:oSchema:aliasToSchema("RGB")
+return self:oSchema

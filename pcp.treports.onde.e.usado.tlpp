@@ -1,0 +1,325 @@
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "pcp.treports.onde.e.usado.ch"
+
+Static lPCPREVATU := FindFunction('PCPREVATU')  .AND.  SuperGetMv("MV_REVFIL",.F.,.F.)
+
+namespace totvs.protheus.sigapcp.treportsintegratedprovider
+
+@totvsFrameworkTReportsIntegratedProvider(active=.T.)
+
+/*/{Protheus.doc} OndeEUsadoTReportsBusinessObject
+Classe para criação do Objeto de Negócio para listagem do relatório 'Onde é Usado.'
+
+@author ana.paula
+@since 26/05/2023
+@version 1.0
+/*/
+class OndeEUsadoTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields as array
+    protected data aStruct as array
+endclass
+
+/*/{Protheus.doc} new
+Método de instância da classe
+ 
+@return object: self
+
+@author ana.paula
+@since 26/05/2023
+@version 1.0
+/*/ 
+method new() as object class OndeEUsadoTReportsBusinessObject
+    _Super:new()
+    //Define a Área
+    self:appendArea(STR0001)//STR0001 - "PCP"    
+ 
+    //Define o nome do Objeto de Negócio
+    self:setDisplayName(STR0002)//STR0002 - "Estrutura"
+    
+    //Define a descrição do Objeto de Negócio
+    self:setDescription(STR0003)//STR0003 - "Relação Simplificada das Estruturas"
+
+    self:setPergunte("MTR400") //Indica o pergunte que será utilizado no relatório
+return self
+
+/*/{Protheus.doc} getData
+Retorna os dados do objeto de negócio
+ 
+@param nPage, numérico, indica a página atual do relatório
+@param oFilter, objeto, contém o filtro do TReports
+ 
+@return object: self:oData
+
+@author ana.paula
+@since 26/05/2023
+@version 1.0
+/*/
+method getData(nPage as numeric, oFilter as object) as object class OndeEUsadoTReportsBusinessObject
+    local cAlias     := GetNextAlias() as character
+    local cDescEmp   as character
+    local cDescFil   as character
+    local cQuery     := "" as character
+    Local cRevAtu	 as character
+    local jParams    as json
+    local lHasNext   := .F. as logical
+    local mv_par01   as character //Do Componente?
+    local mv_par02   as character //Ate o Componente?
+    local mv_par03   as numeric //Listar Componentes Vencidos ? ?
+    local mv_par04   as numeric //Visualizar Todos Niveis ?     ?
+    local mv_par05   as numeric //Cons. Revisoes na  Estrutura ??
+    Local lPCPREVATU := FindFunction('PCPREVATU')  .AND.  SuperGetMv("MV_REVFIL",.F.,.F.) as logical
+    local nEnd       := 0 as numeric
+    local nStart     := 0 as numeric
+    local nX         := 0 as numeric
+    local ojItems    := Nil as json     
+    
+    Private aMopc    := {} as array
+    Private lNegEstr :=GETMV("MV_NEGESTR") as logical
+
+    self:setPageSize(40)
+
+    jParams := oFilter:getParameters() //metodo para retorno do json dos parâmetros
+
+    mv_par01 := jParams["MV_PAR01"][1] //Do Componente?
+    mv_par02 := jParams["MV_PAR02"][1] //Ate o Componente?
+    mv_par03 := jParams["MV_PAR03"][1] //Listar Componentes Vencidos ? 
+    mv_par04 := jParams["MV_PAR04"][1] //Visualizar Todos Niveis ?        
+    mv_par05 := jParams["MV_PAR05"][1] //Cons. Revisoes na  Estrutura ?
+
+    //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize()
+
+    //mv_par04 - Visualizar Todos Niveis ? (1-Sim/2-Não)
+    if mv_par04 == 1
+        //Query Recursiva - Invertida (Partindo dos componentes) da SG1
+        cQuery := " WITH ExplodeEstrutura(G1_FILIAL, "
+        cQuery +=                         " G1_COMP, 
+        cQuery +=                         " G1_COD, "
+        cQuery +=                         " G1_TRT, "
+        cQuery +=                         " G1_REVINI, "
+        cQuery +=                         " G1_REVFIM, "
+        cQuery +=                         " G1_QUANT, "
+        cQuery +=                         " G1_NIV, "
+        cQuery +=                         " COMP_INI, "
+        cQuery +=                         " NIVEL, "
+        cQuery +=                         " NIVEL_PAI) "
+        cQuery += " AS( "
+        cQuery += " SELECT SG1_Base.G1_FILIAL, 
+        cQuery +=        " SG1_Base.G1_COMP, "
+        cQuery +=        " SG1_Base.G1_COD, "
+        cQuery +=        " SG1_Base.G1_TRT, "
+        cQuery +=        " SG1_Base.G1_REVINI, "
+        cQuery +=        " SG1_Base.G1_REVFIM, "
+        cQuery +=        " SG1_Base.G1_QUANT, "
+        cQuery +=        " SG1_Base.G1_NIV, "
+        cQuery +=        " SG1_Base.G1_COMP as COMP_INI, "
+        cQuery +=        " 2 as NIVEL, "
+        cQuery +=        " CAST(ROW_NUMBER() OVER(ORDER BY SG1_Base.G1_FILIAL,  SG1_Base.G1_COMP, SG1_Base.G1_COD,  SG1_Base.G1_TRT ASC) AS VARCHAR) as NIVEL_PAI "
+        cQuery +=   " FROM " + RetSqlName("SG1") + " SG1_Base "
+        cQuery +=  " WHERE SG1_Base.G1_FILIAL = '" + xFilial("SG1") + "'"
+        cQuery +=    " AND SG1_Base.G1_COMP >= '" + mv_par01 + "' "
+        cQuery +=    " AND SG1_Base.G1_COMP <= '" + mv_par02 + "' "
+        If mv_par03 == 2
+	        cQuery += " AND SG1_Base.G1_INI <= '"+DTOS(dDataBase)+"' "
+            cQuery += " AND SG1_Base.G1_FIM >= '"+DTOS(dDataBase)+"' "
+        EndIf
+        cQuery +=    " AND SG1_Base.D_E_L_E_T_ = ' ' "
+        cQuery +=  " UNION ALL "
+        cQuery += " SELECT SG1_Rec.G1_FILIAL, "
+        cQuery +=        " SG1_Rec.G1_COMP, "
+        cQuery +=        " SG1_Rec.G1_COD, "
+        cQuery +=        " SG1_Rec.G1_TRT, "
+        cQuery +=        " SG1_Rec.G1_REVINI, "
+        cQuery +=        " SG1_Rec.G1_REVFIM, "
+        cQuery +=        " SG1_Rec.G1_QUANT, "
+        cQuery +=        " SG1_Rec.G1_NIV, "
+        cQuery +=        " Qry_Recurs.COMP_INI as COMP_INI, "
+        cQuery +=        " Qry_Recurs.NIVEL+1 as NIVEL, "
+        cQuery +=        " CAST(Qry_Recurs.NIVEL_PAI + CAST(ROW_NUMBER() OVER(ORDER BY SG1_Rec.G1_FILIAL,  SG1_Rec.G1_COMP,  SG1_Rec.G1_COD, SG1_Rec.G1_TRT ASC) as varchar) as varchar) as NIVEL_PAI "
+        cQuery +=   " FROM " + RetSqlName("SG1") + " SG1_Rec" 
+        cQuery +=  " INNER JOIN ExplodeEstrutura Qry_Recurs " 
+        cQuery +=     " ON Qry_Recurs.G1_COD = SG1_Rec.G1_COMP "
+        cQuery +=  " WHERE SG1_Rec.D_E_L_E_T_ = ' '  "
+        cQuery +=    " AND SG1_Rec.G1_FILIAL = '" + xFilial("SG1") + "') "
+        //Query do resultado
+        cQuery += " SELECT * FROM ("
+        cQuery +=  " SELECT ROW_NUMBER() OVER(ORDER BY Resultado.G1_FILIAL , "
+        cQuery +=                                    " Resultado.COMP_INI, "
+        cQuery +=                                    " Resultado.NIVEL_PAI, " 
+        cQuery +=                                    " Resultado.G1_COMP, "  
+        cQuery +=                                    " Resultado.G1_COD ASC) LINHA, "
+        //Campos da SG1 - Query Recursiva
+        cQuery +=         " Resultado.G1_FILIAL, "
+        cQuery +=         " Resultado.G1_COMP, "
+        cQuery +=         " Resultado.G1_COD, "
+        cQuery +=         " Resultado.G1_TRT, "
+        cQuery +=         " Resultado.G1_REVINI, "
+        cQuery +=         " Resultado.G1_REVFIM, "
+        cQuery +=         " Resultado.G1_QUANT, "
+        cQuery +=         " Resultado.G1_NIV, "
+        //Campos SB1
+        cQuery +=         " SB1.B1_DESC, "
+        cQuery +=         " SB1.B1_TIPO, "
+        cQuery +=         " SB1.B1_GRUPO, "
+        cQuery +=         " SB1.B1_UM, "
+        //Campos auxiliares
+        cQuery +=         " Resultado.COMP_INI, "
+        cQuery +=         " Resultado.NIVEL, "
+	    cQuery +=         " Resultado.NIVEL_PAI "
+        cQuery +=    " FROM ExplodeEstrutura Resultado " 
+        cQuery +=   " INNER JOIN " + RetSqlName("SB1") + " SB1 "
+        cQuery +=      " ON SB1.B1_FILIAL   = '" + FWxFilial("SB1") + "' " 
+        cQuery +=     " AND SB1.B1_COD     = Resultado.G1_COD "  
+        cQuery +=     " AND SB1.D_E_L_E_T_ = ' ' "
+        cQuery +=      " ) TAB "
+        cQuery += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+    else
+        //Query simples da SG1
+        cQuery += "SELECT * FROM ("
+        cQuery +=   "SELECT ROW_NUMBER() OVER(ORDER BY SG1_Base.G1_FILIAL , 
+        cQuery +=                                    " SG1_Base.G1_COMP,  
+        cQuery +=                                    " SG1_Base.G1_COD ASC) LINHA, " 
+        //SG1
+        cQuery +=         " SG1_Base.G1_FILIAL,  "
+        cQuery +=         " SG1_Base.G1_COMP,  "
+        cQuery +=         " SG1_Base.G1_COD,  "
+        cQuery +=         " SG1_Base.G1_TRT,  "
+        cQuery +=         " SG1_Base.G1_REVINI,  "
+        cQuery +=         " SG1_Base.G1_REVFIM,  "
+        cQuery +=         " SG1_Base.G1_QUANT,  "
+        cQuery +=         " SG1_Base.G1_NIV,  "
+        cQuery +=         " SB1.B1_DESC,  "
+        cQuery +=         " SB1.B1_TIPO,  "
+        cQuery +=         " SB1.B1_GRUPO,  "
+        cQuery +=         " SB1.B1_UM,  "
+        cQuery +=         " SG1_Base.G1_COMP as COMP_INI, "
+        cQuery +=         " 2 as NIVEL,  "
+        cQuery +=         " CAST(ROW_NUMBER() OVER(ORDER BY SG1_Base.G1_FILIAL,  SG1_Base.G1_COMP, SG1_Base.G1_COD, SG1_Base.G1_TRT ASC) AS VARCHAR) as NIVEL_PAI  
+	    cQuery +=    " FROM " + RetSqlName("SG1") + " SG1_Base "
+        cQuery +=   " INNER JOIN " + RetSqlName("SB1") + " SB1 "
+        cQuery +=      " ON SB1.B1_FILIAL  = '" + FWxFilial("SB1") + "' " 
+        cQuery +=     " AND SB1.B1_COD     = SG1_Base.G1_COD "  
+        cQuery +=     " AND SB1.D_E_L_E_T_ = ' ' "
+        cQuery +=   " WHERE SG1_Base.G1_FILIAL = '" + FWxFilial("SG1") + "' " 
+        cQuery +=     " AND SG1_Base.G1_COMP >= '" + mv_par01 + "' "
+        cQuery +=     " AND SG1_Base.G1_COMP <= '" + mv_par02 + "' "
+        If mv_par03 == 2
+	        cQuery += " AND SG1_Base.G1_INI <= '"+DTOS(dDataBase)+"' "
+            cQuery += " AND SG1_Base.G1_FIM >= '"+DTOS(dDataBase)+"' "
+        EndIf
+        cQuery +=    " AND SG1_Base.D_E_L_E_T_ = ' ' "
+        cQuery += ") TAB "
+        cQuery += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+    end if
+
+    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.F.,.F.)
+
+    conout("cQuery")
+    conout(cQuery)    
+
+    //Posiciona no registro inicial 
+    (cAlias)->( dbGoto(nStart))
+    
+    while !(cAlias)->(Eof())
+
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        //Valida revisão atual do produto
+        If (mv_par05 == 1)
+            dbSelectArea('SB1')
+		    dbSetOrder(1)
+		    MsSeek(xFilial('SB1')+(cAlias)->G1_COD)
+
+            cRevAtu := IIF(lPCPREVATU , PCPREVATU(SB1->B1_COD), SB1->B1_REVATU )
+
+            If !(cRevAtu >= (cAlias)->G1_REVINI .And. cRevAtu <= (cAlias)->G1_REVFIM)
+	            (cAlias)->( dbSkip() )
+			    Loop
+            Endif            
+        EndIf
+
+        //Leitura da SB1 para buscar dados do componente da estrutura
+        //Essa leitura da SB1 sempre tem que ser a última antes do appendData
+        //Todas as outras devem ocorrer antes desse ponto
+        dbSelectArea('SB1')
+		dbSetOrder(1)
+		MsSeek(xFilial('SB1')+(cAlias)->COMP_INI)
+        
+        cDescEmp := FWGrpName()
+        cDescFil := FWFilialName(cEmpAnt,(cAlias)->G1_FILIAL,1)
+
+        ojItems := JsonObject():new()
+
+        for nX := 1 To Len(self:aStruct)
+            If self:aStruct[nX][1] $ 'DESCCOMP/UMCOMP/TPCOMP/GRUPOCOMP'
+                //Campos Auxiliares
+                ojItems[self:aStruct[nX][1]] := SB1->&(self:aStruct[nX][5]) 
+            elseIf self:aStruct[nX][1] $ 'DESCEMP'
+                ojItems[self:aStruct[nX][1]] := cDescEmp
+            elseif self:aStruct[nX][1] $ 'DESCFIL'
+                ojItems[self:aStruct[nX][1]] := cDescFil
+            else
+                //Campos do select principal
+                ojItems[self:aStruct[nX][1]] := (cAlias)->&(self:aStruct[nX][5]) 
+            Endif
+        next nX
+    
+        self:oData:appendData(ojItems)
+
+        (cAlias)->(DBSkip())
+
+    enddo 
+  
+    //Se não for o último registro indica que terá próxima página
+    self:setHasNext( lHasNext )
+
+    (cAlias)->(DBCloseArea())
+    
+return self:oData
+
+/*/{Protheus.doc} getSchema
+Retorna a estrutura dos campos
+ 
+@return object: self:oSchema
+
+@author ana.paula
+@since 26/05/2023
+@version 1.0
+/*/
+method getSchema() as object class OndeEUsadoTReportsBusinessObject
+    Local nX        := 0 as numeric
+
+    //Campos do select principal
+    self:aFields := {"G1_FILIAL","G1_COMP","G1_COD","G1_TRT","G1_REVINI","G1_REVFIM","G1_QUANT","G1_NIV",;
+                     "B1_DESC","B1_TIPO","B1_GRUPO","B1_UM"}
+                     
+    self:aStruct := PcpTrGetStruct(self:aFields)
+
+    //Campos Auxiliares
+    AAdd(self:aStruct , {"COMPINI", "COMP_INI", "string", "COMP_INI", "COMP_INI"})
+    AAdd(self:aStruct , {"DESCCOMP", "DESC_COMP", "string", "DESC_COMP", "B1_DESC"})
+    AAdd(self:aStruct , {"TPCOMP", "TP_COMP", "string", "TP_COMP", "B1_TIPO"})
+    AAdd(self:aStruct , {"UMCOMP", "UM_COMP", "string", "UM_COMP", "B1_UM"})
+    AAdd(self:aStruct , {"GRUPOCOMP", "GRUPO_COMP", "string", "GRUPO_COMP", "B1_GRUPO"})
+    AAdd(self:aStruct , {"NIVEL", "NIVEL", "number", "NIVEL", "NIVEL"})
+    AAdd(self:aStruct , {"NIVELPAI", "NIVEL_PAI", "number", "NIVEL_PAI", "NIVEL_PAI"})
+    AAdd(self:aStruct , {"DESCEMP", "DESC_EMP", "string", "DESC_EMP", "DESC_EMP"})
+    AAdd(self:aStruct , {"DESCFIL", "DESC_FIL", "string", "DESC_FIL", "DESC_FIL"})
+    
+    for nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    next nX
+
+return self:oSchema

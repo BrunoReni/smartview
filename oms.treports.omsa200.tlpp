@@ -1,0 +1,223 @@
+#include "msobject.ch"
+#include "TREPORTS_OMSA200DAK.CH"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+
+namespace totvs.protheus.sigaoms.mapa_cargas.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAOMS", tables="DAK, DAI, SF2", name=STR0001, country="ALL", initialRelease="12.1.2210") //"Listagem de Cargas por NF"
+class OMSA200DAKTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} New
+Metodo de instancia da classe.
+@type Metodo
+@author Rafael Souza  
+@version 12
+@since 10/05/2023 
+*/
+//-------------------------------------------------------------------
+method new() as object class OMSA200DAKTReportsBusinessObject
+    _Super:new()
+    //Define o nome do Objeto de Negócio
+    self:setDisplayName(STR0001)//"Listagem de Cargas por NF"
+
+    //Indica o pergunte que será utilizado no relatório
+    self:setPergunte("OMRT01") 
+    
+    //Indica que o LookUp será do tipo padrão LookUp
+    self:setIsLookUp(.T.)
+
+return self
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getDescription
+Metodo que retorna a descrição do objeto de negócio.
+@type Metodo
+@author Rafael Souza  
+@version 12
+@since 10/05/2023 
+*/
+//------------------------------------------------------------------- 
+method getDescription() as character class OMSA200DAKTReportsBusinessObject
+return STR0002 //"Objeto contendo informações da Listagem de Cargas por NF"
+ 
+method getAreas() as array class OMSA200DAKTReportsBusinessObject
+return {"SIGAOMS"}
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getData
+Metodo que retorna o Objeto de dados.
+@type Metodo
+@author Rafael Souza  
+@version 12
+@since 10/05/2023 
+*/
+//-------------------------------------------------------------------  
+method getData(nPage as numeric, oFilter as object) as object class OMSA200DAKTReportsBusinessObject
+    local aAreaDAK as array
+    local cAlias as character
+    local cNomeMot as character
+    local cNomeCli as character
+    local cDescVei as character
+    local cDescVei2 as character
+    local cDescVei3 as character   
+    local cNomeAjuda1 as character
+    local cNomeAjuda2 as character 
+    local cNomeAjuda3 as character  
+    local cQuery as character
+    local lHasNext as logical
+    local nCount as numeric
+    local nSkip as numeric
+    Local nTipoOper as numeric 
+    Local jParams as json
+    Local cDataDe as character 
+    Local cDataAte as character  
+    
+    jParams     := oFilter:getParameters() //metodo para retorno do json dos parâmetros
+    aAreaDAK    := DAK->( GetArea() )
+    lHasNext    := .F.
+    nTipoOper   := OsVlEntCom() // Utiliza operador Logístico
+    cDataDe     := ArrTokStr(jParams['MV_PAR03'])
+    cDataAte    := ArrTokStr(jParams['MV_PAR04'])  
+    
+    self:setPageSize(100)
+
+    If ValType(cDataDe) == "C"
+        cDataDe     := StrTran( cDataDe , "-" , "" )
+        cDataAte    := StrTran( cDataAte , "-" , "" )
+    EndIf 
+
+    cQuery  := "SELECT DAK.DAK_FILIAL, DAK.DAK_COD, DAK.DAK_SEQCAR, DAK.DAK_CAMINH, DAK.DAK_VEIC2, DAK.DAK_VEIC3, DAK.DAK_MOTORI, DAK.DAK_AJUDA1, DAK.DAK_AJUDA2, DAK.DAK_AJUDA3, DAK.DAK_PESO, DAK.DAK_CAPVOL, DAK.DAK_PTOENT, DAK.DAK_VALOR, DAK.DAK_DATA, DAK.DAK_HORA, SF2.F2_SEQENT, DAI.DAI_FILPV, DAI.DAI_NFISCA, SF2.F2_SEQENT, SF2.F2_SERIE, SF2.F2_CLIENT, SF2.F2_LOJA, SF2.F2_PLIQUI "
+    cQuery  += "FROM " + RetSqlName("DAK") + " DAK "
+    cQuery  += "INNER JOIN " + RetSqlName("DAI") + " DAI ON " + FWJoinFilial( "DAI", "DAK" ) + " AND DAI.DAI_COD = DAK.DAK_COD AND DAI.D_E_L_E_T_ = ' ' "
+    If nTipoOper != 1
+        cQuery  +=      "INNER JOIN " + RetSqlName("SF2") + " SF2 ON SF2.F2_FILIAL = DAI.DAI_FILPV AND SF2.F2_DOC = DAI.DAI_NFISCA AND SF2.D_E_L_E_T_ = ' ' "
+    Else
+        cQuery  +=      "INNER JOIN " + RetSqlName("SF2") + " SF2 ON " + FWJoinFilial( "SF2", "DAI" ) + " AND SF2.F2_DOC = DAI.DAI_NFISCA AND SF2.D_E_L_E_T_ = ' ' "
+    EndIf
+    cQuery  +=      "WHERE DAK.D_E_L_E_T_ = ' '"
+    If Len(jParams['MV_PAR01']) > 0
+        cQuery += " AND DAK.DAK_COD    BETWEEN '" + ArrTokStr(jParams['MV_PAR01']) + "' AND '" +  ArrTokStr(jParams['MV_PAR02']) + "' "
+        cQuery += " AND DAK.DAK_CAMINH BETWEEN '" + ArrTokStr(jParams['MV_PAR05']) + "' AND '" +  ArrTokStr(jParams['MV_PAR06']) + "' "
+        cQuery += " AND DAK.DAK_MOTORI BETWEEN '" + ArrTokStr(jParams['MV_PAR07']) + "' AND '" +  ArrTokStr(jParams['MV_PAR08']) + "' "
+        cQuery += " AND DAK.DAK_DATA >= '" + cDataDe + "' "
+        cQuery += " AND DAK.DAK_DATA <= '" + cDataAte + "' "
+    EndIf  
+    //Os filtros serão setados na interface do novo TReports
+    If oFilter:hasFilter()
+        cQuery +=   " AND " + oFilter:getSQLExpression()
+    EndIf
+
+    cQuery  += "GROUP BY DAK.DAK_FILIAL, DAK.DAK_COD, DAK.DAK_SEQCAR, DAK.DAK_CAMINH, DAK.DAK_VEIC2, DAK.DAK_VEIC3, DAK.DAK_MOTORI, DAK.DAK_AJUDA1, DAK.DAK_AJUDA2, DAK.DAK_AJUDA3, DAK.DAK_PESO, DAK.DAK_CAPVOL, DAK.DAK_PTOENT, DAK.DAK_VALOR, DAK.DAK_DATA, DAK.DAK_HORA, SF2.F2_SEQENT, DAI.DAI_FILPV, DAI.DAI_NFISCA, SF2.F2_SERIE, SF2.F2_CLIENT, SF2.F2_LOJA, SF2.F2_PLIQUI "
+   
+    cAlias := MPSysOpenQuery(cQuery)
+
+    //Posiciona no registro inicial
+    If nPage == 1
+        (cAlias)->( DBGoTop() )
+    Else
+        nSkip := ((nPage - 1) * self:getPageSize()) 
+        (cAlias)->( DBSkip(nSkip))
+    EndIf
+
+    while !(cAlias)->(Eof())
+
+        cNomeMot    := Posicione("DA4",1,xFilial("DA4")+(cAlias)->DAK_MOTORI,"DA4_NREDUZ")
+        cNomeCli    := Posicione("SA1",1,xFilial("SA1")+(cAlias)->F2_CLIENT+(cAlias)->F2_LOJA,"A1_NREDUZ")
+        cDescVei    := Posicione("DA3",1,xFilial("DA3")+(cAlias)->DAK_CAMINH,"DA3_DESC")
+        cDescVei2   := Posicione("DA3",1,xFilial("DA3")+(cAlias)->DAK_VEIC2,"DA3_DESC")
+        cDescVei3   := Posicione("DA3",1,xFilial("DA3")+(cAlias)->DAK_VEIC3,"DA3_DESC")
+        cNomeAjuda1 := Posicione("DAU",1,xFilial("DAU")+(cAlias)->DAK_AJUDA1,"DAU_NREDUZ")
+        cNomeAjuda2 := Posicione("DAU",1,xFilial("DAU")+(cAlias)->DAK_AJUDA2,"DAU_NREDUZ")
+        cNomeAjuda3 := Posicione("DAU",1,xFilial("DAU")+(cAlias)->DAK_AJUDA3,"DAU_NREDUZ")
+        dDataCarga  := sToD( (cAlias)->DAK_DATA )
+
+        self:oData:appendData({"DAK_FILIAL": (cAlias)->DAK_FILIAL,;
+                "DAK_COD":      (cAlias)->DAK_COD,;
+                "DAK_SEQCAR":   (cAlias)->DAK_SEQCAR,;
+                "DAK_CAMINH":   (cAlias)->DAK_CAMINH,;
+                "DESC_VEI":     cDescVei,;
+                "DAK_VEIC2":    (cAlias)->DAK_VEIC2,;
+                "DESC_VEI2":    cDescVei2,;
+                "DAK_VEIC3":    (cAlias)->DAK_VEIC3,;
+                "DESC_VEI3":    cDescVei3,;
+                "DAK_MOTORI":   (cAlias)->DAK_MOTORI,;
+                "NOMEMOT":      cNomeMot,;
+                "DAK_AJUDA1":   (cAlias)->DAK_AJUDA1,;
+                "NOMEAJUDA1":   cNomeAjuda1,;
+                "DAK_AJUDA2":   (cAlias)->DAK_AJUDA2,;
+                "NOMEAJUDA2":   cNomeAjuda2,;
+                "DAK_AJUDA3":   (cAlias)->DAK_AJUDA3,;
+                "NOMEAJUDA3":   cNomeAjuda3,;
+                "DAK_PESO":     (cAlias)->DAK_PESO,;
+                "DAK_CAPVOL":   (cAlias)->DAK_CAPVOL,;
+                "DAK_PTOENT":   (cAlias)->DAK_PTOENT,;
+                "DAK_VALOR":    (cAlias)->DAK_VALOR,;
+                "DAK_DATA":     FwTimeStamp( 5, dDataCarga, "00:00:00" ),; 
+                "DAK_HORA":     (cAlias)->DAK_HORA,;
+                "F2_SEQENT":    (cAlias)->F2_SEQENT,;
+                "DAI_FILPV":    (cAlias)->DAI_FILPV,;
+                "DAI_NFISCA":   (cAlias)->DAI_NFISCA,;
+                "F2_SERIE":     (cAlias)->F2_SERIE,;
+                "F2_CLIENT":    (cAlias)->F2_CLIENT,;
+                "F2_LOJA":      (cAlias)->F2_LOJA,;
+                "NOME_CLI":     cNomeCli,;
+                "F2_PLIQUI":    (cAlias)->F2_PLIQUI })
+        (cAlias)->( dbSkip() )
+        nCount++
+
+         //Sai do loop quando chegar no tamanho de itens da página
+        If nCount == self:getPageSize()
+            Exit
+        Endif
+
+    EndDo
+
+    //Se não for o último registro indica que terá próxima página
+    self:setHasNext( !(cAlias)->(EoF()) )
+    
+    (cAlias)->( DBCloseArea() )
+
+    RestArea( aAreaDAK )
+
+return self:oData
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getSchema
+Metodo que retorna a Estrutura de dados.
+@type Metodo
+@author Rafael Souza  
+@version 12
+@since 10/05/2023 
+*/
+//-------------------------------------------------------------------   
+method getSchema() as object class OMSA200DAKTReportsBusinessObject
+    local aFieldsDAK as array
+    local aFieldsSF2 as array 
+    
+    aFieldsDAK := { "DAK_FILIAL", "DAK_COD", "DAK_SEQCAR", "DAK_CAMINH", "DAK_VEIC2", "DAK_VEIC3","DAK_MOTORI", "DAK_AJUDA1", "DAK_AJUDA2", "DAK_AJUDA3", "DAK_PESO", "DAK_CAPVOL", "DAK_PTOENT", "DAK_VALOR", "DAK_DATA", "DAK_HORA"  }
+    aFieldsSF2 := { "F2_SEQENT", "F2_SERIE", "F2_CLIENT", "F2_LOJA", "F2_PLIQUI" }
+        
+    self:oSchema:aliasToSchema("DAI", "DAI_FILPV")
+    self:oSchema:aliasToSchema("DAI", "DAI_NFISCA")
+    self:oSchema:aliasToSchema("DAK", aFieldsDAK)  
+    self:oSchema:aliasToSchema("SF2", aFieldsSF2)  
+   
+    self:oSchema:addProperty("DESC_VEI", STR0007 + STR0008 , "string", "Desc. Vei.", "DESC_VEI")
+    self:oSchema:addProperty("DESC_VEI2", STR0007 + STR0008 , "string", "Desc. Vei2.", "DESC_VEI2")
+    self:oSchema:addProperty("DESC_VEI3", STR0007 + STR0008 , "string", "Desc. Vei3.", "DESC_VEI3")
+    self:oSchema:addProperty("NOMEMOT", STR0003 + STR0004 , "string", "Nome Mot.", "NOMEMOT")
+    self:oSchema:addProperty("NOME_CLI",STR0003 + STR0005 , "string", "Nome Cli.", "NOME_CLI")
+    self:oSchema:addProperty("NOMEAJUDA1", STR0003 + STR0006 , "string", "Nome Ajud.", "NOMEAJUDA1")
+    self:oSchema:addProperty("NOMEAJUDA2", STR0003 + STR0006 , "string", "Nome Ajud2.", "NOMEAJUDA2")
+    self:oSchema:addProperty("NOMEAJUDA3", STR0003 + STR0006 , "string", "Nome Ajud3.", "NOMEAJUDA3")
+
+return self:oSchema

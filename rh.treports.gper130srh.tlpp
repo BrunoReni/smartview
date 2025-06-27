@@ -1,0 +1,116 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_GPER130.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="CTT, SRA, SRH", name="Aviso de férias a partir de Cálculo de Férias", country="ALL", initialRelease="12.1.2210")
+class GPER130SRHTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class GPER130SRHTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0004)//"Aviso de férias a partir de Cálculo de Férias"
+return self
+ 
+method getDescription() as character class GPER130SRHTReportsBusinessObject
+return STR0005//"Objeto contendo informações do aviso de férias a partir de Cálculo de Férias"
+ 
+method getAreas() as array class GPER130SRHTReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class GPER130SRHTReportsBusinessObject
+    local aInfo as array
+    local cAlias as character
+    local cDescCTT as character
+    local cQuery as character
+    local cUltFil as character
+    local lHasNext as logical
+    local nStart as numeric
+    local nEnd as numeric
+ 
+    lHasNext := .F.
+    
+    self:setPageSize(100)
+
+    //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize() + 1
+
+    cQuery  := "SELECT * FROM ("
+    cQuery  +=      "SELECT ROW_NUMBER() OVER(ORDER BY SRH.RH_FILIAL, SRH.RH_MAT, SRH.RH_DATABAS, SRH.RH_DATAINI ASC) AS LINHA, SRH.RH_FILIAL, SRH.RH_MAT, SRH.RH_DATABAS, SRH.RH_DBASEAT, SRH.RH_DATAINI, SRH.RH_DATAFIM, SRH.RH_DTAVISO, SRH.RH_DTRECIB, SRH.RH_DFERIAS, SRH.RH_DIALREM, SRH.RH_DIALRE1, SRA.RA_CC, SRA.RA_NOME, SRA.RA_NOMECMP, SRA.RA_NUMCP, SRA.RA_SERCP FROM " + RetSqlName("SRH") + " SRH "
+    cQuery  +=      "INNER JOIN " + RetSqlName("SRA") + " SRA ON SRA.RA_FILIAL = SRH.RH_FILIAL AND SRA.RA_MAT = SRH.RH_MAT AND SRA.D_E_L_E_T_ = ' ' "
+    cQuery  +=      "WHERE SRH.D_E_L_E_T_ = ' '"    
+    //Os filtros serão setados na interface do novo TReports
+    if oFilter:hasFilter()
+        cQuery +=   " AND " + oFilter:getSQLExpression()
+    endif
+    cQuery  += ") AS TAB "    
+    cQuery  += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    cAlias := MPSysOpenQuery(cQuery)
+
+    while !(cAlias)->(Eof())
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        cDescCTT    := DescCc( (cAlias)->RA_CC, (cAlias)->RH_FILIAL )
+
+        If cUltFil != (cAlias)->RH_FILIAL
+            cUltFil := (cAlias)->RH_FILIAL
+            fInfo(@aInfo, (cAlias)->RH_FILIAL)
+        EndIf
+
+        self:oData:appendData({"RH_FILIAL": (cAlias)->RH_FILIAL,;
+                "RH_MAT": (cAlias)->RH_MAT,;
+                "RH_DATABAS": FwTimeStamp( 5, sToD( (cAlias)->RH_DATABAS ), "00:00:00" ),;
+                "RH_DBASEAT": FwTimeStamp( 5, sToD( (cAlias)->RH_DBASEAT ), "00:00:00" ),;
+                "RH_DATAINI": FwTimeStamp( 5, sToD( (cAlias)->RH_DATAINI ), "00:00:00" ),;
+                "RH_DATAFIM": FwTimeStamp( 5, sToD( (cAlias)->RH_DATAFIM ), "00:00:00" ),;
+                "RH_DTAVISO": FwTimeStamp( 5, sToD( (cAlias)->RH_DTAVISO ), "00:00:00" ),;
+                "RH_DTRECIB": FwTimeStamp( 5, sToD( (cAlias)->RH_DTRECIB ), "00:00:00" ),;
+                "RETORNO": FwTimeStamp( 5, sToD( (cAlias)->RH_DATAFIM ) + 1, "00:00:00" ),;
+                "FILCID": aInfo[5],;
+                "FILNOME": aInfo[3],;
+                "RH_DFERIAS": (cAlias)->RH_DFERIAS,;
+                "RH_DIALREM": (cAlias)->RH_DIALREM,;
+                "RH_DIALRE1": (cAlias)->RH_DIALRE1,;
+                "RA_CC": (cAlias)->RA_CC,;
+                "CTT_DESC01": cDescCTT,;
+                "RA_NOME": (cAlias)->RA_NOME,;
+                "RA_NOMECMP": (cAlias)->RA_NOMECMP,;
+                "RA_NUMCP": (cAlias)->RA_NUMCP,;
+                "RA_SERCP": (cAlias)->RA_SERCP })
+        (cAlias)->( dbSkip() )
+    enddo
+
+//Se não for o último registro indica que terá próxima página
+self:setHasNext( lHasNext )
+ 
+(cAlias)->( DBCloseArea() )
+
+return self:oData
+ 
+method getSchema() as object class GPER130SRHTReportsBusinessObject
+    local aFieldsSRA as array
+    local aFieldsSRH as array
+    
+    aFieldsSRA := { "RA_CC", "RA_NOME", "RA_NOMECMP", "RA_NUMCP", "RA_SERCP" }
+    aFieldsSRH := { "RH_FILIAL", "RH_MAT", "RH_DATABAS", "RH_DBASEAT", "RH_DATAINI", "RH_DATAFIM", "RH_DTAVISO", "RH_DTRECIB", "RH_DFERIAS", "RH_DIALREM", "RH_DIALRE1" }
+    
+    self:oSchema:aliasToSchema("CTT", "CTT_DESC01")
+    self:oSchema:aliasToSchema("SRA", aFieldsSRA)
+    self:oSchema:aliasToSchema("SRH", aFieldsSRH)
+    self:oSchema:addProperty("RETORNO", "Data do retorno", "date", "Dt.Retorno", "RETORNO")
+    self:oSchema:addProperty("FILCID", "Cidade Filial", "string", "Cidade Fil.", "FILCID")
+    self:oSchema:addProperty("FILNOME", "Nome Filial", "string", "Nome Filial", "FILNOME")
+return self:oSchema

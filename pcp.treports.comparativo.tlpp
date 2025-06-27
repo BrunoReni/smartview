@@ -1,0 +1,358 @@
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "pcp.treports.comparativo.ch"
+
+namespace totvs.protheus.sigapcp.treportsintegratedprovider
+
+@totvsFrameworkTReportsIntegratedProvider(active=.T.)
+
+static cTipoTemp  := GetMV("MV_TPHR") as character
+
+/*/{Protheus.doc} ComparativoTReportsBusinessObject
+Classe para criação do Objeto de Negócio para listagem do Comparativo Real X Previsto
+
+@author breno.ferreira
+@since 24/05/2023
+@version 1.0
+/*/
+class ComparativoTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields as array
+    protected data aStruct as array
+endclass
+
+/*/{Protheus.doc} new
+Método de instância da classe
+ 
+@return object: self
+
+@author breno.ferreira
+@since 24/05/2023
+@version 1.0
+/*/ 
+method new() as object class ComparativoTReportsBusinessObject
+    _Super:new()
+    //Define a Área
+    self:appendArea(STR0001)//STR0001 = "PCP"   
+ 
+    //Define o nome do Objeto de Negócio
+    self:setDisplayName(STR0002)//STR0002 - "Comparativo"
+    
+    //Define a descrição do Objeto de Negócio
+    self:setDescription(STR0003)//STR0003 - "Relátorio Comparativo Real X Previsto"
+
+    self:setPergunte("MTR895") //Indica o pergunte que será utilizado no relatário
+return self
+
+/*/{Protheus.doc} getData
+Retorna os dados do objeto de negócio
+ 
+@param nPage, numérico, indica a página atual do relatário
+@param oFilter, objeto, contêm o filtro do TReports
+ 
+@return object: self:oData
+
+@author breno.ferreira
+@since 24/05/2023
+@version 1.0
+/*/
+method getData(nPage as numeric, oFilter as object) as object class ComparativoTReportsBusinessObject
+    local cAlias     := GetNextAlias() as character
+    local cDescEmp   as character
+    local cDescFil   as character
+    local cHrPrev    as character
+    local cHrReal    as character
+    local cQuery     := "" as character
+    local cRoteiro   as character
+    local jParams    as json
+    local lHasNext   := .F. as logical
+    local mv_par01   as character //De OP ? 
+    local mv_par02   as character //Ate OP ?
+    local mv_par03   as character //De Recurso ? 
+    local mv_par04   as character //Ate Recurso ?
+    local mv_par05   as date //De Data Apontam. ?  
+    local mv_par06   as date //Ate Data Apontam. ?
+    local mv_par07   as character //De Operador ?
+    local mv_par08   as character //Ate Operador ? 
+    local nEnd       := 0 as numeric
+    local nStart     := 0 as numeric
+    local nX         := 0 as numeric
+    local ojItems    := Nil as json
+
+    self:setPageSize(40)
+
+    jParams := oFilter:getParameters() //metodo para retorno do json dos parâmetros
+
+    mv_par01 := jParams["MV_PAR01"][1] //De OP ?                      
+    mv_par02 := jParams["MV_PAR02"][1] //Ate OP ?                      
+    mv_par03 := jParams["MV_PAR03"][1] //De Recurso ?                 
+    mv_par04 := jParams["MV_PAR04"][1] //Ate Recurso ?                 
+    mv_par05 := pcpconvdat(jParams["MV_PAR05"][1],1) //De Data Apontam. ?                 
+    mv_par06 := pcpconvdat(jParams["MV_PAR06"][1],1) //Ate Data Apontam. ?  
+    mv_par07 := jParams["MV_PAR07"][1] //De Operador ?                              
+    mv_par08 := jParams["MV_PAR08"][1] //Ate Operador ?
+    
+    //Seta o primeiro item e o Último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize()
+    
+    cQuery += "SELECT * FROM ("
+    cQuery +=   "SELECT ROW_NUMBER() OVER(ORDER BY SH6.H6_FILIAL , "
+    cQuery +=                                    " SH6.H6_OP, "
+    cQuery +=                                    " SH6.H6_PRODUTO ASC) LINHA, " 
+    //SH6
+    cQuery +=         " SH6.H6_FILIAL, "
+    cQuery +=         " SH6.H6_OP, "
+    cQuery +=         " SH6.H6_PRODUTO, "
+    cQuery +=         " SH6.H6_OPERAC, "
+    cQuery +=         " SH6.H6_RECURSO, "
+    cQuery +=         " SH6.H6_FERRAM, "
+    cQuery +=         " SH6.H6_OPERADO, "
+    cQuery +=         " SH6.H6_QTDPROD, "
+    cQuery +=         " SH6.H6_QTDPERD, "
+    cQuery +=         " SH6.H6_DTAPONT, "
+    cQuery +=         " SH6.H6_TIPO, "
+    cQuery +=         " SH6.H6_TEMPO, "
+    cQuery +=         " SH6.H6_TIPOTEM, "
+    cQuery +=         " SH6.H6_SEQ, "
+    cQuery +=         " SH6.H6_DATAINI, "
+    cQuery +=         " SH6.H6_HORAINI, "
+    cQuery +=         " SH6.H6_DATAFIN, "
+    cQuery +=         " SH6.H6_HORAFIN, "
+    //SC2
+    cQuery +=         " SC2.C2_FILIAL, "
+    cQuery +=         " SC2.C2_NUM, "
+    cQuery +=         " SC2.C2_ITEM, "
+    cQuery +=         " SC2.C2_SEQUEN, "
+    cQuery +=         " SC2.C2_ITEMGRD, "
+    cQuery +=         " SC2.C2_QUANT, "
+    cQuery +=         " SC2.C2_ROTEIRO, "
+    cQuery +=         " SC2.C2_QUJE, "
+    //SB1
+    cQuery +=         " SB1.B1_FILIAL, "
+    cQuery +=         " SB1.B1_COD, "
+    cQuery +=         " SB1.B1_OPERPAD, "
+    //SH1
+    cQuery +=         " SH1.H1_FILIAL, "
+    cQuery +=         " SH1.H1_CODIGO, "
+    cQuery +=         " SH1.H1_DESCRI, "
+    cQuery +=         " SH1.H1_MAOOBRA, "
+    //SH4
+    cQuery +=         " SH4.H4_FILIAL, "
+    cQuery +=         " SH4.H4_CODIGO, "
+    cQuery +=         " SH4.H4_DESCRI "
+
+	cQuery +=    " FROM " + RetSqlName("SH6") + " SH6 "
+    cQuery +=    " LEFT JOIN " + RetSqlName("SC2") + " SC2 "
+    cQuery +=        " ON SC2.C2_FILIAL = '" + FWxFilial("SC2") + "' " 
+    cQuery +=        " AND SC2.C2_NUM = SUBSTRING(SH6.H6_OP,1,6) "
+    cQuery +=        " AND SC2.C2_ITEM = SUBSTRING(SH6.H6_OP,7,2) "
+    cQuery +=        " AND SC2.C2_SEQUEN = SUBSTRING(SH6.H6_OP,9,3) "
+    cQuery +=        " AND SC2.C2_ITEMGRD = SUBSTRING(SH6.H6_OP,12,3) "  
+    cQuery +=        " AND SC2.D_E_L_E_T_ = ' ' "
+    cQuery +=    " LEFT JOIN " + RetSqlName("SB1") + " SB1 "
+    cQuery +=        " ON SB1.B1_FILIAL = '" + FWxFilial("SB1") + "' "
+    cQuery +=        " AND SB1.B1_COD = SH6.H6_PRODUTO "  
+    cQuery +=        " AND SB1.D_E_L_E_T_ = ' ' "
+    cQuery +=    " LEFT JOIN " + RetSqlName("SH1") + " SH1 "
+    cQuery +=        " ON SH1.H1_FILIAL = '" + FWxFilial("SH1") + "' "
+    cQuery +=        " AND SH1.H1_CODIGO = SH6.H6_RECURSO "
+    cQuery +=        " AND SH1.D_E_L_E_T_ = ' ' "
+    cQuery +=    " LEFT JOIN " + RetSqlName("SH4") + " SH4 "
+    cQuery +=        " ON SH4.H4_FILIAL = '" + FWxFilial("SH4") + "' "
+    cQuery +=        " AND SH4.H4_CODIGO = SH6.H6_FERRAM "
+    cQuery +=        " AND SH4.D_E_L_E_T_ = ' ' "
+    cQuery +=    " WHERE SH6.H6_FILIAL = '" + FWxFilial("SH6") + "' "         
+    cQuery +=        " AND SH6.H6_OP   >= '" + mv_par01 + "' " 
+    cQuery +=        " AND SH6.H6_OP   <= '" + mv_par02 + "' "	 
+    cQuery +=        " AND SH6.H6_RECURSO    >= '" + mv_par03 + "' "	 
+    cQuery +=        " AND SH6.H6_RECURSO    <= '" + mv_par04 + "' "
+    cQuery +=        " AND SH6.H6_DTAPONT   >= '" + Dtos(mv_par05) + "' "
+    cQuery +=        " AND SH6.H6_DTAPONT   <= '" + Dtos(mv_par06) + "' "
+    cQuery +=        " AND SH6.H6_OPERADO   >= '" + mv_par07 + "' "
+    cQuery +=        " AND SH6.H6_OPERADO   <= '" + mv_par08 + "' "
+    cQuery +=        " AND SH6.H6_TIPO IN ('P',' ' ) "	  
+	cQuery +=        " AND SH6.D_E_L_E_T_ = ' ' "
+    cQuery += ") TAB "
+    cQuery += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.F.,.F.)
+
+    conout("cQuery")
+    conout(cQuery)  
+
+    //Posiciona no registro inicial 
+    (cAlias)->( dbGoto(nStart) )
+    
+    while !(cAlias)->(Eof())
+
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        cDescEmp := FWGrpName()
+        cDescFil := FWFilialName(cEmpAnt,(cAlias)->H6_FILIAL,1)
+
+        If !Empty((cAlias)->C2_ROTEIRO)
+			cRoteiro:=(cAlias)->C2_ROTEIRO
+		Else
+			cRoteiro:=(cAlias)->B1_OPERPAD
+		EndIf
+
+        If Empty(cRoteiro)
+			cRoteiro := StrZero(1, Len(SG2->G2_CODIGO))
+		Endif
+
+        dbSelectArea("SG2")    
+		a630SeekSG2(1,(cAlias)->H6_PRODUTO,xFilial("SG2")+(cAlias)->(H6_PRODUTO+cRoteiro+H6_OPERAC))
+
+        cHrPrev := HRPREVCALC(cAlias)
+        cHrReal	:= TimeH6(NIL, NIL, cAlias)
+        If cTipoTemp == "C"
+            cHrReal := StrTran(cHrReal, ":", ".")
+        EndIf
+
+        ojItems := JsonObject():new()
+
+        for nX := 1 To Len(self:aStruct)
+            //Campos auxiliares
+            if self:aStruct[nX][1] $ 'DESCEMP'
+                ojItems[self:aStruct[nX][1]] := cDescEmp
+            elseif self:aStruct[nX][1] $ 'DESCFIL'
+                ojItems[self:aStruct[nX][1]] := cDescFil
+            ELSEIF self:aStruct[nX][1] $ 'G2DESCRI'
+                ojItems[self:aStruct[nX][1]] := SG2->G2_DESCRI
+            elseif self:aStruct[nX][1] $ 'HRREAL'
+                ojItems[self:aStruct[nX][1]] := cHrReal
+            elseif self:aStruct[nX][1] $ 'HRPREV'
+                ojItems[self:aStruct[nX][1]] := cHrPrev    
+            Else 
+                //Campos do select principal
+                if self:aStruct[nX][1] == "H6DTAPONT" //Converter data para o formato padrão - 2023-01-27T15:31:43Z
+                    ojItems[self:aStruct[nX][1]] := FwTimeStamp(6, Stod((cAlias)->&(self:aStruct[nX][5])))
+                else
+                    ojItems[self:aStruct[nX][1]] := (cAlias)->&(self:aStruct[nX][5]) 
+                endif 
+            EndIf
+        next nX
+    
+        self:oData:appendData(ojItems)
+
+        (cAlias)->(DBSkip())
+
+    enddo 
+  
+    //Se não for o Último registro indica que terá próxima página
+    self:setHasNext( lHasNext )
+
+    (cAlias)->(DBCloseArea())
+    
+return self:oData
+
+/*/{Protheus.doc} getSchema
+Retorna a estrutura dos campos
+ 
+@return object: self:oSchema
+
+@author breno.ferreira
+@since 24/05/2023
+@version 1.0
+/*/
+method getSchema() as object class ComparativoTReportsBusinessObject
+    Local nX        := 0 as numeric
+
+    self:aFields := {"H6_FILIAL","H6_OP","H6_PRODUTO","H6_OPERAC","H6_RECURSO","H6_FERRAM",; 
+                     "H6_OPERADO","H6_QTDPROD","H6_QTDPERD","H6_DTAPONT","H6_TIPO","H6_TEMPO",; 
+                     "H6_TIPOTEM","H6_SEQ","H6_DATAINI","H6_HORAINI","H6_DATAFIN","H6_HORAFIN",;
+                     "C2_FILIAL","C2_NUM","C2_ITEM","C2_SEQUEN","C2_ITEMGRD",;
+                     "C2_QUANT","C2_ROTEIRO","C2_QUJE","B1_FILIAL","B1_COD","B1_OPERPAD",;
+                     "H1_FILIAL","H1_CODIGO","H1_DESCRI","H1_MAOOBRA","H4_FILIAL","H4_CODIGO",; 
+                     "H4_DESCRI","G2_DESCRI"}
+                     
+    self:aStruct := PcpTrGetStruct(self:aFields)
+
+    //Campos Auxiliares
+    AAdd(self:aStruct , {"DESCEMP", "DESC_EMP", "string", "DESC_EMP", "DESC_EMP"})
+    AAdd(self:aStruct , {"DESCFIL", "DESC_FIL", "string", "DESC_FIL", "DESC_FIL"})
+    AAdd(self:aStruct , {"HRREAL", "HR_REAL", "string", "HR_REAL", "HR_REAL"})
+    AAdd(self:aStruct , {"HRPREV", "HR_PREV", "string", "HR_PREV", "HR_PREV"})
+
+    for nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    next nX
+
+return self:oSchema
+
+Static Function HRPREVCALC(cAliasSH6, cAliasSC2)
+Local aTotal  := {}
+Local cTime   := Nil
+Local nLotPad := If(SG2->G2_LOTEPAD==0,1,SG2->G2_LOTEPAD)
+Local nQuant  := 0
+Local nTemPad := If(SG2->G2_TEMPAD ==0,1,SG2->G2_TEMPAD)
+Local nTempo  := Nil
+
+Default cAliasSH6 := "SH6"
+Default cAliasSC2 := "SC2"
+
+nQuant  := (cAliasSH6)->(H6_QTDPROD+H6_QTDPERD)
+
+If cTipoTemp == ""
+	cTipoTemp:=GetMV("MV_TPHR")
+EndIf
+
+//|---------------------------------------------------------------------|
+//|  Se MV_TPHR for N (Normal) devo converter G2_TEMPAD para            |
+//|  centesimal para permitir multiplicar pela quantidade produzida     |
+//|---------------------------------------------------------------------|
+If cTipoTemp == "N"
+	nTemPad := Int(nTemPad) + (Mod(nTemPad, 1) / 0.6)
+Endif
+
+// Calcula Tempo de Duração baseado no Tipo de Operacao
+If SG2->G2_TPOPER $ " 1"
+	nTempo := nQuant * nTemPad / nLotPad
+	dbSelectArea("SH1")
+	dbSeek(xFilial("SH1")+(cAliasSH6)->H6_RECURSO)
+	If Found() .And. SH1->H1_MAOOBRA # 0
+		nTempo :=Round( nTempo / H1_MAOOBRA,5)
+	EndIf
+	dbSelectArea(cAliasSH6)
+ElseIf SG2->G2_TPOPER == "4"
+	nQuantAloc:= nQuant % nLotPad
+	nQuantAloc:= Int(nQuant)+If(nQuantAloc>0,nLotPad-nQuantAloc,0)
+	nTempo := Round(nQuantAloc * ( nTemPad / nLotPad ),5)
+	dbSelectArea("SH1")
+	dbSeek(xFilial("SH1")+(cAliasSH6)->H6_RECURSO)
+	If Found() .And. SH1->H1_MAOOBRA # 0
+		nTempo :=Round( nTempo / H1_MAOOBRA,5)
+	EndIf
+	dbSelectArea(cAliasSH6)
+ElseIf SG2->G2_TPOPER == "2"
+	aTotal := FH6Total(cAliasSC2->C2_NUM+cAliasSC2->C2_ITEM+cAliasSC2->C2_SEQUEN,(cAliasSH6)->H6_OPERAC)
+	If nQuant == 0
+		nTemPad := (nTemPad/(aTotal[3] + aTotal[2])) * aTotal[3]
+		nTempo := (nTemPad/aTotal[3])* 1
+	else
+		nTemPad := (nTemPad/(aTotal[2] + aTotal[3]))*aTotal[2]
+		nTempo := (nTemPad/aTotal[1])* nQuant
+	EndIf
+
+ElseIf SG2->G2_TPOPER == "3"
+	nTempo := nTemPad
+EndIf
+
+If cTipoTemp == "N"
+	cTime := StrZero(Int(nTempo), 3) + ":" + StrZero(Mod(nTempo, 1) * 100, 2)
+	cTime := A680ConvHora(cTime, "C", "N")
+else
+    cTime := StrZero(Int(nTempo), 3) + "." + StrZero(Mod(nTempo, 1) * 100, 2)
+Endif
+
+Return cTime

@@ -1,0 +1,240 @@
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "pcp.treports.perda.ch"
+
+namespace totvs.protheus.sigapcp.treportsintegratedprovider
+
+@totvsFrameworkTReportsIntegratedProvider(active=.T.)
+
+/*/{Protheus.doc} PerdaTReportsBusinessObject
+Classe para criação do Objeto de Negócio para listagem da perdas de produção
+
+@author ana.paula
+@since 10/05/2023
+@version 1.0
+/*/
+class PerdaTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields as array
+    protected data aStruct as array
+endclass
+
+/*/{Protheus.doc} new
+Método de instância da classe
+ 
+@return object: self
+
+@author ana.paula
+@since 10/05/2023
+@version 1.0
+/*/ 
+method new() as object class PerdaTReportsBusinessObject
+    _Super:new()
+    //Define a Área
+    self:appendArea(STR0001)//STR0001 = "PCP"   
+ 
+    //Define o nome do Objeto de Negócio
+    self:setDisplayName(STR0002)//STR0002 - "Perda"
+    
+    //Define a descrição do Objeto de Negócio
+    self:setDescription(STR0003)//STR0003 - "Relação das Perdas de Produção"
+
+    self:setPergunte("MTR235") //Indica o pergunte que será utilizado no relatório
+return self
+
+/*/{Protheus.doc} getData
+Retorna os dados do objeto de negócio
+ 
+@param nPage, numérico, indica a página atual do relatório
+@param oFilter, objeto, contém o filtro do TReports
+ 
+@return object: self:oData
+
+@author ana.paula
+@since 10/05/2023
+@version 1.0
+/*/
+method getData(nPage as numeric, oFilter as object) as object class PerdaTReportsBusinessObject
+    local aTabGen    := {} as array
+    local cAlias     := GetNextAlias() as character
+    local cDescEmp   as character
+    local cDescFil   as character
+    local cMotivo    := '' as character 
+    local cQuery     := "" as character
+    local cTipo      as character
+    local jParams    as json
+    local lHasNext   := .F. as logical
+    local nEnd       := 0 as numeric
+    local nI         := 0 as numeric
+    local nStart     := 0 as numeric
+    local nTamNum    := TamSX3("X5_CHAVE")[1]  as numeric
+    local nX         := 0 as numeric
+    local ojItems    := Nil as json
+    
+    Private aMopc    := {} as array
+    Private lNegEstr :=GETMV("MV_NEGESTR") as logical
+
+    self:setPageSize(40)
+
+    jParams := oFilter:getParameters() //metodo para retorno do json dos parâmetros
+
+    mv_par01 := jParams["MV_PAR01"][1] //De  OP ?                      
+    mv_par02 := jParams["MV_PAR02"][1] //Ate OP ?                      
+    mv_par03 := jParams["MV_PAR03"][1] //De  Produto ?                 
+    mv_par04 := jParams["MV_PAR04"][1] //Ate Produto ?                 
+    mv_par05 := jParams["MV_PAR05"][1] //De  Recurso ?                 
+    mv_par06 := jParams["MV_PAR06"][1] //Ate Recurso ?                 
+    mv_par07 := jParams["MV_PAR07"][1] //De  Motivo ?                  
+    mv_par08 := jParams["MV_PAR08"][1] //Ate Motivo ?                  
+    mv_par09 := pcpconvdat(jParams["MV_PAR09"][1],1) //De  Data ? 
+    mv_par10 := pcpconvdat(jParams["MV_PAR10"][1],1) //Ate  Data ?                    
+
+    //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize()
+    
+    cQuery += "SELECT * FROM ("
+    cQuery +=   "SELECT ROW_NUMBER() OVER(ORDER BY SBC.BC_FILIAL , "
+    cQuery +=                                    " SBC.BC_OP, "
+    cQuery +=                                    " SBC.BC_PRODUTO ASC) LINHA, " 
+    //SBC
+    cQuery +=         " SBC.BC_FILIAL, "
+    cQuery +=         " SBC.BC_TIPO, "
+    cQuery +=         " SBC.BC_OP, "
+    cQuery +=         " SBC.BC_PRODUTO, "
+    cQuery +=         " SBC.BC_QUANT, "
+    cQuery +=         " SBC.BC_LOCORIG, "
+    cQuery +=         " SBC.BC_MOTIVO, "
+    cQuery +=         " SBC.BC_CODDEST, "
+    cQuery +=         " SBC.BC_QTDDEST, "
+    cQuery +=         " SBC.BC_DATA, "
+    cQuery +=         " SBC.BC_RECURSO, "
+    cQuery +=         " SBC.BC_OPERAC , "
+    cQuery +=         " SBC.BC_OPERADO "   
+	cQuery +=    " FROM " + RetSqlName("SBC") + " SBC "
+    cQuery +=   " WHERE SBC.BC_FILIAL = '" + FWxFilial("SBC") + "' " 
+    cQuery +=     " AND BC_OP    	 >= '" + mv_par01 + "' " 
+    cQuery +=     " AND BC_OP        <= '" + mv_par02 + "' " 
+    cQuery +=     " AND BC_PRODUTO   >= '" + mv_par03 + "' "	 
+    cQuery +=     " AND BC_PRODUTO   <= '" + mv_par04 + "' "	 
+    cQuery +=     " AND BC_RECURSO   >= '" + mv_par05 + "' "	 
+    cQuery +=     " AND BC_RECURSO   <= '" + mv_par06 + "' "	 
+    cQuery +=     " AND BC_MOTIVO    >= '" + mv_par07 + "' "	 
+    cQuery +=     " AND BC_MOTIVO    <= '" + mv_par08 + "' "	 
+    cQuery +=     " AND BC_DATA      >= '" + Dtos(mv_par09) + "' "	 
+    cQuery +=     " AND BC_DATA      <= '" + Dtos(mv_par10) + "' "
+	cQuery +=     " AND SBC.D_E_L_E_T_ = ' ' "
+    cQuery += ") TAB "
+    cQuery += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.F.,.F.)
+
+    conout("cQuery")
+    conout(cQuery)    
+
+    //Posiciona no registro inicial 
+    (cAlias)->( dbGoto(nStart) )
+    
+    while !(cAlias)->(Eof())
+
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        //Descrição do Motivo
+        If campoCYO()
+        	CYO->(DbSetOrder(1))
+        	If CYO->(dbSeek(xFilial("CYO")+(cAlias)->BC_MOTIVO))
+        		cMotivo := CYO->CYO_DSRF 
+        	EndIF
+        Else
+        	aTabGen := FWGetSX5('43')
+
+        	nI := ASCAN(aTabGen, {|x| x[3]==Padr(codMotivo,nTamNum)}) 
+
+        	If nI > 0 
+        		cMotivo := aTabGen[nI][4]
+        	Else
+        		cMotivo := ' '
+        	Endif
+        EndIF
+
+        If (cAlias)->BC_TIPO == "R"
+            cTipo := "Refugo"
+        Elseif (cAlias)->BC_TIPO == "S"
+            cTipo := "Scrap"
+        EndIf
+
+        cDescEmp := FWGrpName()
+        cDescFil := FWFilialName(cEmpAnt,(cAlias)->BC_FILIAL,1)
+
+        ojItems := JsonObject():new()
+
+        for nX := 1 To Len(self:aStruct)
+            //Campos auxiliares
+            If self:aStruct[nX][1] $ 'DESCTP'
+                ojItems[self:aStruct[nX][1]] := cTipo
+            elseif self:aStruct[nX][1] $ 'DESCMOT'                
+                ojItems[self:aStruct[nX][1]] := cMotivo
+            elseif self:aStruct[nX][1] $ 'DESCEMP'
+                ojItems[self:aStruct[nX][1]] := cDescEmp
+            elseif self:aStruct[nX][1] $ 'DESCFIL'
+                ojItems[self:aStruct[nX][1]] := cDescFil
+            Else 
+                //Campos do select principal
+                If self:aStruct[nX][1] == "BCDATA" //Converter data para o formato padrão - 2023-01-27T15:31:43Z
+                    ojItems[self:aStruct[nX][1]] := FwTimeStamp(6, Stod((cAlias)->&(self:aStruct[nX][5])))
+                Else                
+                    ojItems[self:aStruct[nX][1]] := (cAlias)->&(self:aStruct[nX][5])  
+                EndIf
+            EndIf
+        next nX
+    
+        self:oData:appendData(ojItems)
+
+        (cAlias)->(DBSkip())
+
+    enddo 
+  
+    //Se não for o último registro indica que terá próxima página
+    self:setHasNext( lHasNext )
+
+    (cAlias)->(DBCloseArea())
+    
+return self:oData
+
+/*/{Protheus.doc} getSchema
+Retorna a estrutura dos campos
+ 
+@return object: self:oSchema
+
+@author ana.paula
+@since 10/05/2023
+@version 1.0
+/*/
+method getSchema() as object class PerdaTReportsBusinessObject
+    Local nX        := 0 as numeric
+
+    self:aFields := {"BC_TIPO","BC_OP","BC_PRODUTO","BC_QUANT","BC_LOCORIG","BC_MOTIVO","BC_CODDEST",;
+                     "BC_QTDDEST","BC_DATA","BC_RECURSO","BC_OPERAC","BC_OPERADO"}
+                     
+    self:aStruct := PcpTrGetStruct(self:aFields)
+
+    //Campos Auxiliares
+    AAdd(self:aStruct , {"DESCTP", "DESC_TP", "string", "DESC_TP", "DESC_TP"})
+    AAdd(self:aStruct , {"DESCMOT", "DESC_MOT", "string", "DESC_MOT", "DESC_MOT"})
+    AAdd(self:aStruct , {"DESCEMP", "DESC_EMP", "string", "DESC_EMP", "DESC_EMP"})
+    AAdd(self:aStruct , {"DESCFIL", "DESC_FIL", "string", "DESC_FIL", "DESC_FIL"})
+
+    for nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    next nX
+
+return self:oSchema

@@ -1,0 +1,116 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_GPER690.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="CTT, RCE, RHH, SRA", name="Conferência de dissídio - Atualização Salarial", country="ALL", initialRelease="12.1.2210")
+class GPER690RHHTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class GPER690RHHTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Conferência de dissídio - Atualização Salarial"
+return self
+ 
+method getDescription() as character class GPER690RHHTReportsBusinessObject
+return STR0002 //"Objeto contendo informações das atualizações salarias decorrentes de dissídio"
+ 
+method getAreas() as array class GPER690RHHTReportsBusinessObject
+return {"RH"}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class GPER690RHHTReportsBusinessObject
+    local cAlias as character
+    local cQuery as character
+    local cDescCTT as character
+    local cCodCCT as character
+    local nStart as numeric
+    local nEnd as numeric
+    local lHasNext as logical
+    local lTemCCt as logical
+
+    lHasNext := .F.
+    lTemCCt  := RCE->(ColumnPos("RCE_CCT")) > 0
+ 
+    self:setPageSize(100)
+
+     //Seta o primeiro item e o último da página atual
+    nStart := ((nPage - 1) * self:getPageSize()) + 1
+    nEnd   := nPage * self:getPageSize() + 1
+
+    cQuery  := "SELECT * FROM ("
+    cQuery  +=      "SELECT ROW_NUMBER() OVER(ORDER BY RHH.RHH_FILIAL, RHH.RHH_MAT, RHH.RHH_DTACOR ASC) AS LINHA, RHH.RHH_FILIAL, RHH.RHH_MAT, RHH.RHH_DTACOR, RHH.RHH_CC, RHH.RHH_ITEM, RHH.RHH_CLVL, RHH.RHH_SINDIC, SRA.RA_NOME, SRA.RA_ADMISSA, SRA.RA_DEMISSA, RHH.RHH_VL, RHH.RHH_CALC, RHH.RHH_INDICE FROM " + RetSqlName("RHH") + " RHH "
+    cQuery  += "INNER JOIN " + RetSqlName("SRA") + " SRA ON " + FWJoinFilial( "SRA", "RHH" ) + " AND SRA.RA_MAT = RHH.RHH_MAT AND SRA.D_E_L_E_T_ = ' ' "
+    cQuery  += "WHERE RHH.D_E_L_E_T_ = ' ' AND RHH.RHH_VB = '000'" 
+
+    //Os filtros serão setados na interface do novo TReports
+    if oFilter:hasFilter()
+        cQuery += " AND " + oFilter:getSQLExpression()
+    endif
+
+    cQuery  += ") AS TAB "
+    cQuery  += "WHERE LINHA BETWEEN '" + cValToChar(nStart) + "' AND '" + cValToChar(nEnd) + "'"
+
+    cAlias := MPSysOpenQuery(cQuery)
+
+    //Posiciona no registro inicial 
+    (cAlias)->( dbSkip(nStart) )
+
+    while !(cAlias)->(Eof())
+
+        If (cAlias)->LINHA > (nEnd - 1)
+            lHasNext := .T.
+            Exit
+        EndIf
+
+        cDescCTT    := DescCc( (cAlias)->RHH_CC, (cAlias)->RHH_FILIAL )
+        cCodCCT     := If(lTemCCT .and. !Empty((cAlias)->RHH_SINDIC), fDesc("RCE",(cAlias)->RHH_SINDIC, "RCE_CCT",,(cAlias)->RHH_FILIAL) , " ")
+
+        self:oData:appendData({"RHH_FILIAL": (cAlias)->RHH_FILIAL,;
+                "RHH_MAT": (cAlias)->RHH_MAT,;
+                "RHH_DTACOR": FwTimeStamp( 5, sToD( (cAlias)->RHH_DTACOR ), "00:00:00" ),;
+                "RA_NOME": (cAlias)->RA_NOME,;
+                "RA_ADMISSA": FwTimeStamp( 5, sToD( (cAlias)->RA_ADMISSA ), "00:00:00" ),; 
+                "RA_DEMISSA": FwTimeStamp( 5, sToD( (cAlias)->RA_DEMISSA ), "00:00:00" ),;                
+                "SALANT": (cAlias)->RHH_VL,;
+                "SALNEW": (cAlias)->RHH_CALC,;
+                "RHH_CC": (cAlias)->RHH_CC,;
+                "RHH_ITEM": (cAlias)->RHH_ITEM,;
+                "RHH_CLVL": (cAlias)->RHH_CLVL,;
+                "RHH_SINDIC": (cAlias)->RHH_SINDIC,;
+                "RCE_CCT": cCodCCT,;
+                "CTT_DESC01": cDescCTT,;
+                "PERCREAJ": (cAlias)->RHH_INDICE })
+        (cAlias)->( dbSkip() )
+
+    enddo
+
+//Se não for o último registro indica que terá próxima página
+self:setHasNext( lHasNext )
+ 
+(cAlias)->( DBCloseArea() )
+
+return self:oData
+ 
+method getSchema() as object class GPER690RHHTReportsBusinessObject
+    local aFieldsSRA as array
+    local aFieldsRHH as array
+    
+    aFieldsRHH := { "RHH_FILIAL", "RHH_MAT", "RHH_DTACOR", "RHH_CC", "RHH_ITEM", "RHH_CLVL", "RHH_SINDIC" }
+    aFieldsSRA := { "RA_NOME", "RA_ADMISSA", "RA_DEMISSA" }
+    
+    self:oSchema:aliasToSchema("CTT", "CTT_DESC01")
+    self:oSchema:aliasToSchema("RCE", "RCE_CCT")
+    self:oSchema:aliasToSchema("RHH", aFieldsRHH)
+    self:oSchema:aliasToSchema("SRA", aFieldsSRA)
+    self:oSchema:addProperty("SALANT", "Salário Anterior", "number", "Salário Anterior", "SALANT")
+    self:oSchema:addProperty("SALNEW", "Novo Salário", "number", "Novo Salário", "SALNEW")
+    self:oSchema:addProperty("PERCREAJ", "Perc. Reajuste", "number", "Perc. Reajuste", "PERCREAJ")
+return self:oSchema

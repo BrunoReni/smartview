@@ -1,0 +1,35 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_SQ3.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="SQ3", name="Tabela SQ3 - Cargos", country="ALL", initialRelease="12.1.2210")
+class SQ3TReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class SQ3TReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Tabela SQ3 - Cargos"
+return self
+ 
+method getDescription() as character class SQ3TReportsBusinessObject
+return STR0003//"Objeto com os registros da tabela SQ3 - Cargos"
+ 
+method getAreas() as array class SQ3TReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class SQ3TReportsBusinessObject
+    self:oData:aliasToData("SQ3", oFilter)
+return self:oData
+ 
+method getSchema() as object class SQ3TReportsBusinessObject
+    self:oSchema:aliasToSchema("SQ3")
+return self:oSchema

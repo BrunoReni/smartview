@@ -1,0 +1,35 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "TREPORTS_SRJ.ch"
+
+namespace totvs.protheus.rh.treportsintegratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAGPE", tables="SRJ", name="Tabela SRJ - Funções", country="ALL", initialRelease="12.1.2210")
+class SRJTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+ 
+method new() as object class SRJTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName(STR0001)//"Tabela SRJ - Funções"
+return self
+ 
+method getDescription() as character class SRJTReportsBusinessObject
+return STR0003//"Objeto com os registros da tabela SRJ - Funções"
+ 
+method getAreas() as array class SRJTReportsBusinessObject
+return {STR0002}//"RH"
+ 
+method getData(nPage as numeric, oFilter as object) as object class SRJTReportsBusinessObject
+    self:oData:aliasToData("SRJ", oFilter)
+return self:oData
+ 
+method getSchema() as object class SRJTReportsBusinessObject
+    self:oSchema:aliasToSchema("SRJ")
+return self:oSchema

@@ -1,0 +1,52 @@
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-rest.th"
+#include "tlpp-core.th"
+#include 'PROTHEUS.CH'
+#include 'FWMVCDEF.CH'
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} PcpTrGetStruct
+Prepara a estrutura dos campos do relatório
+ 
+@param aCpos array: Array com os campos do relatório
+ 
+@return array: Array com a estrutura dos campos
+ 
+@author ana.paula
+@since 03/05/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+function PcpTrGetStruct(aCpos As Array) As Array
+    Local aDeParaCpo    := {{"C", "string"}, {"D", "date"}, {"N", "number"}, {"L", "boolean"}} as array
+    Local aCpoTmp       := {} as array
+    Local cCampo        := "" as character
+    Local cCpoQry       := "" as character
+    Local cTipR         := "" as character
+    Local nPos          := 0 as numeric
+    Local nC            := 0 as numeric
+    
+    for nC := 1 to Len(aCpos)
+        cCpoQry := aCpos[nC]
+        nPos    := AT(".", aCpos[nC]) + 1
+        
+        if nPos > 0
+            cCampo := Substr(cCpoQry, nPos)
+        else
+            cCampo := cCpoQry
+        endif
+        
+        cTipo := GetSx3Cache(cCampo, "X3_TIPO")
+        
+        if (nPos := aScan(aDeParaCpo, {|c| c[01] = cTipo})) > 0
+            cTipR := aDeParaCpo[nPos, 02]
+        else
+            cTipR := "string"
+        endif
+    
+        AAdd(aCpoTmp, {strTran(cCampo, "_", ""), FWSX3Util():GetDescription(cCampo), cTipR, cCampo, cCampo})
+    next nC
+ 
+return (aCpoTmp)
