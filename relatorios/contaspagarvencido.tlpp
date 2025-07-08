@@ -1,0 +1,112 @@
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+
+namespace custom.financeiro.contaspagarvencidointegratedprovider
+
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAFIN", tables="SE2, SA2", name="Contas a Pagar Vencidas", country="ALL", initialRelease="12.1.2210")
+class ContasPagarVencidoTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+    public method new() as object
+    public method getAreas() as array
+    public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+endclass
+
+method new() as object class ContasPagarVencidoTReportsBusinessObject
+    _Super:new()
+    self:setDisplayName("Contas a Pagar Vencidas")
+    self:setDescription("Relatorio de contas a pagar vencidas")
+    self:setPergunte("FINCPV")
+return self
+
+method getDescription() as character class ContasPagarVencidoTReportsBusinessObject
+return "Relatorio de contas a pagar vencidas"
+
+method getAreas() as array class ContasPagarVencidoTReportsBusinessObject
+return {"Financeiro"}
+
+method getData(nPage as numeric, oFilter as object) as object class ContasPagarVencidoTReportsBusinessObject
+    local cAlias    as character
+    local cQuery    as character
+    local jParams   as json
+    local mv_par01  as character
+    local mv_par02  as character
+    local nCount    := 0 as numeric
+
+    self:setPageSize(50)
+
+    jParams  := oFilter:getParameters()
+    mv_par01 := iif("MV_PAR01" $ jParams, jParams["MV_PAR01"][1], "")
+    mv_par02 := iif("MV_PAR02" $ jParams, jParams["MV_PAR02"][1], "")
+
+    cQuery  := "SELECT SE2.E2_FILIAL, SE2.E2_FORNEC, SE2.E2_LOJA, SE2.E2_NUM, SE2.E2_PARCELA, "
+    cQuery +=        "SE2.E2_EMISSAO, SE2.E2_VENCTO, SE2.E2_VALOR, SE2.E2_SALDO, "
+    cQuery +=        "SA2.A2_NOME, SA2.A2_END, SA2.A2_BAIRRO, SA2.A2_MUN "
+    cQuery += "FROM " + RetSqlName("SE2") + " SE2 "
+    cQuery += "INNER JOIN " + RetSqlName("SA2") + " SA2 "
+    cQuery +=        " ON SA2.A2_FILIAL = SE2.E2_FILIAL "
+    cQuery +=        " AND SA2.A2_COD = SE2.E2_FORNEC "
+    cQuery +=        " AND SA2.A2_LOJA = SE2.E2_LOJA "
+    cQuery +=        " AND SA2.D_E_L_E_T_ = ' ' "
+    cQuery += "WHERE SE2.D_E_L_E_T_ = ' ' "
+    cQuery +=      "AND SE2.E2_VENCTO < '" + DToS(Date()) + "' "
+    cQuery +=      "AND SE2.E2_SALDO > 0 "
+    if !Empty(mv_par01)
+        cQuery += "AND SE2.E2_FORNEC BETWEEN '" + mv_par01 + "' AND '" + mv_par02 + "' "
+    endif
+    if oFilter:hasFilter()
+        cQuery += "AND " + oFilter:getSQLExpression()
+    endif
+
+    cAlias := MPSysOpenQuery(cQuery)
+    if nPage == 1
+        (cAlias)->(DBGoTop())
+    else
+        (cAlias)->(DBSkip((nPage-1)*self:getPageSize()))
+    endif
+
+    while !(cAlias)->(Eof())
+        self:oData:appendData({;
+            "E2_FILIAL":  (cAlias)->E2_FILIAL,;
+            "E2_FORNEC":  (cAlias)->E2_FORNEC,;
+            "E2_LOJA":    (cAlias)->E2_LOJA,;
+            "E2_NUM":     (cAlias)->E2_NUM,;
+            "E2_PARCELA": (cAlias)->E2_PARCELA,;
+            "E2_EMISSAO": FwTimeStamp(5, sToD((cAlias)->E2_EMISSAO), "00:00:00"),;
+            "E2_VENCTO":  FwTimeStamp(5, sToD((cAlias)->E2_VENCTO), "00:00:00"),;
+            "E2_VALOR":   (cAlias)->E2_VALOR,;
+            "E2_SALDO":   (cAlias)->E2_SALDO,;
+            "A2_NOME":    (cAlias)->A2_NOME,;
+            "A2_END":     (cAlias)->A2_END,;
+            "A2_BAIRRO":  (cAlias)->A2_BAIRRO,;
+            "A2_MUN":     (cAlias)->A2_MUN })
+
+        (cAlias)->(DBSkip())
+        nCount++
+        if nCount == self:getPageSize()
+            exit
+        endif
+    enddo
+
+    self:setHasNext(!(cAlias)->(Eof()))
+    (cAlias)->(DBCloseArea())
+
+return self:oData
+
+method getSchema() as object class ContasPagarVencidoTReportsBusinessObject
+    self:oSchema:aliasToSchema("SE2", "E2_FILIAL")
+    self:oSchema:aliasToSchema("SE2", "E2_FORNEC")
+    self:oSchema:aliasToSchema("SE2", "E2_LOJA")
+    self:oSchema:aliasToSchema("SE2", "E2_NUM")
+    self:oSchema:aliasToSchema("SE2", "E2_PARCELA")
+    self:oSchema:aliasToSchema("SE2", "E2_EMISSAO")
+    self:oSchema:aliasToSchema("SE2", "E2_VENCTO")
+    self:oSchema:aliasToSchema("SE2", "E2_VALOR")
+    self:oSchema:aliasToSchema("SE2", "E2_SALDO")
+    self:oSchema:aliasToSchema("SA2", "A2_NOME")
+    self:oSchema:aliasToSchema("SA2", "A2_END")
+    self:oSchema:aliasToSchema("SA2", "A2_BAIRRO")
+    self:oSchema:aliasToSchema("SA2", "A2_MUN")
+return self:oSchema
