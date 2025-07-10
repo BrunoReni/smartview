@@ -1,0 +1,980 @@
+#INCLUDE "MATA126.CH"
+#INCLUDE "PROTHEUS.CH"
+
+#DEFINE CRLF Chr(13)+Chr(10)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Descri‡…o ³ PLANO DE MELHORIA CONTINUA        ³Programa     MATA130.PRX³±±        	
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ITEM PMC  ³ Responsavel              ³ Data                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Fun‡„o    ³ MATA126  ³ Autor ³Rodrigo de A Sartorio  ³ Data ³ 23/12/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Aglutinacao de SCs                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function MATA126()
+
+Local oDlg
+Local oUsado
+Local oObjPer
+Local nUsado := 0
+
+PRIVATE cCadastro	:= OemToAnsi(STR0001)	//"Aglutina SCs"
+PRIVATE cMarca		:= GetMark()
+PRIVATE lConsEntCtb	:= .F.
+PRIVATE lExistMV14	:= .F.
+
+//Verifica as perguntas selecionadas
+Pergunte("MTA126",.F.)
+
+//Verifica se o MV_PAR14 existe
+lExistMV14 := MT126SX1()
+
+//Variaveis utilizadas para parametros
+//mv_par01        	// De SC
+//mv_par02        	// Ate SC
+//mv_par03        	// Data de
+//mv_par04        	// Data ate
+//mv_par05        	// De Almoxarifado
+//mv_par06        	// Ate Almoxarifado
+//mv_par07        	// De Produto
+//mv_par08        	// Ate Produto
+//mv_par09        	// De Grupo
+//mv_par10        	// Ate Grupo
+//mv_par11        	// De Tipo
+//mv_par12       	// Ate Tipo
+//mv_par13       	// Considera SCs = Firme ou Prevista
+//mv_par14       	// Considera entidades contabeis Não ou Sim
+
+DEFINE MSDIALOG oDlg FROM  119,5 TO 323,605 TITLE cCadastro PIXEL
+	@ 15, 20 TO 90,120 LABEL OemToAnsi(STR0002) OF oDlg  PIXEL	//"Per¡odos para a Aglutina‡„o"
+	@ 15,135 TO 50,280 OF oDlg  PIXEL
+	
+	@ 25,140 SAY OemToAnsi(STR0003) SIZE 130, 7 OF oDlg PIXEL	//"Este programa permite que as solicitacoes de compra"
+	@ 32,140 SAY OemToAnsi(STR0004) SIZE 130, 7 OF oDlg PIXEL	//"de um mesmo produto sejam aglutinadas conforme os"
+	@ 39,140 SAY OemToAnsi(STR0005) SIZE 130, 7 OF oDlg PIXEL	//"per¡odos definidos ao lado."
+	@ 25,25 RADIO oUsado VAR nUsado 3D SIZE 70,10 PROMPT	OemToAnsi(STR0006),;	//"Per¡odo Di rio"
+															OemToAnsi(STR0007),;	//"Per¡odo Semanal"
+															OemToAnsi(STR0008),;	//"Per¡odo Quinzenal"
+															OemToAnsi(STR0009),;	//"Per¡odo Mensal"
+															OemToAnsi(STR0010),;	//"Per¡odo Trimestral"
+															OemToAnsi(STR0011) OF oDlg PIXEL	//"Per¡odo Semestral"
+	DEFINE SBUTTON FROM 78, 196 TYPE 5 ACTION PERGUNTE("MTA126",.T.) ENABLE OF oDlg
+	DEFINE SBUTTON FROM 78, 223 TYPE 1 ACTION (MTA126EXEC(@nUsado),oDlg:End()) ENABLE OF oDlg
+	DEFINE SBUTTON FROM 78, 250 TYPE 2 ACTION oDlg:End() ENABLE OF oDlg
+ACTIVATE MSDIALOG oDlg
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³MTA126EXEC³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 04/01/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Executa montagem do arquivo de trabalho e do markbrowse    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA126                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function MTA126EXEC(nPeriodo)
+
+Local oTempTable	:= Nil
+Local nTotRegs		:= 0
+Local cNomeTrb		:= ""
+Local aStru			:= {}
+Local nTamNum		:= TamSX3("C1_NUM")[1]
+Local cSavAlias		:= ""
+
+If nPeriodo > 0
+	AADD(aStru,{"MARK"		, "C",02,0})
+	AADD(aStru,{"NUMSC"		, "C",nTamNum,0})
+	AADD(aStru,{"AGLUT"		, "C",nTamNum,0})
+	AADD(aStru,{"PRODUTO"	, "C",TAMSX3("B1_COD")[1],0})
+	AADD(aStru,{"TPOP"		, "C",01,0})
+	AADD(aStru,{"DESCR"		, "C",TAMSX3("B1_DESC")[1],0})
+	AADD(aStru,{"QUANT"		, "N",16,4})
+	AADD(aStru,{"PREVISTA"	, "D",08,0})
+	AADD(aStru,{"DATAORI"	, "D",08,0})   
+	AADD(aStru,{"CC"		, "C",TAMSX3("C1_CC")[1],0})
+	AADD(aStru,{"CONTA"		, "C",TAMSX3("C1_CONTA")[1],0})
+	AADD(aStru,{"ITEMCTA"	, "C",TAMSX3("C1_ITEMCTA")[1],0})
+	AADD(aStru,{"REGS"		, "N",04,0})
+	AADD(aStru,{"TPSC"		, "C",1,0})
+	AADD(aStru,{"DESTPSC"	, "C",20,0})
+	AADD(aStru,{"REGIST"	, "N",12,0})
+	AADD(aStru,{"FORNECE"	, "C",TAMSX3("C1_FORNECE")[1],0})
+	AADD(aStru,{"LOJA"		, "C",TAMSX3("C1_LOJA")[1],0})
+
+	cSavAlias := Alias()
+	
+	oTempTable := FWTemporaryTable():New( "TRB" )
+	oTempTable:SetFields( aStru )
+	oTempTable:AddIndex("indice1", {"REGS"} )
+	oTempTable:AddIndex("indice2", {"MARK","PRODUTO","TPOP","PREVISTA","FORNECE","LOJA" } )
+	oTempTable:Create()
+	
+	A126Aglut(nPeriodo,@nTotRegs)
+	A126Browse(nTotRegs)
+	
+	oTempTable:Delete()
+	If !Empty(cSavAlias)
+		dbSelectArea(cSavAlias)
+	Endif
+ 
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A126Aglut ³ Autor ³Rodrigo de A Sartorio  ³ Data ³ 23/12/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Processa a aglutinacao das Solicitacoes de Compra          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA126                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A126Aglut(nTipo,nTotRegs)
+
+LOCAL cAliasOri	:= Alias()
+LOCAL dData		:= CtoD("//")
+Local cIndex	:= ""
+Local cKey		:= ""
+Local cCond		:= ""
+LOCAL nIndex	:= 0
+Local nx		:= 0
+LOCAL dDataFim  := CtoD("//")
+Local nRegistro	:= 0
+LOCAL cCompara	:= ""
+LOCAL cDescric	:= ""
+LOCAL lSkip		:= .F.
+LOCAL cAliasSC1	:= "SC1"    
+LOCAL aRegsOk	:= {}
+LOCAL nAchou	:= 0    
+LOCAL cFiltro	:= ""
+Local lPmsInt	:= IsIntegTop(,.T.)
+Local aAreaAFG	:={}
+
+//Verifica a existencia do campo AFG_VIAINT
+dbSelectArea("AFG")
+aAreaAFG:=AFG->(GetArea())
+
+//Variaveis utilizadas para parametros
+//mv_par01        	// De SC
+//mv_par02        	// Ate SC
+//mv_par03        	// Data de
+//mv_par04        	// Data ate
+//mv_par05        	// De Almoxarifado
+//mv_par06        	// Ate Almoxarifado
+//mv_par07        	// De Produto
+//mv_par08        	// Ate Produto
+//mv_par09        	// De Grupo
+//mv_par10        	// Ate Grupo
+//mv_par11        	// De Tipo
+//mv_par12       	// Ate Tipo
+//mv_par13       	// Considera SCs = Firme ou Prevista
+//mv_par14       	// Considera entidades contabeis Não ou Sim
+
+dbSelectArea("SC1")
+
+If lExistMV14
+	If mv_par14 == 1 //Não considera entidades contabeis
+		lConsEntCtb := .F.
+	Elseif mv_par14 == 2 //Considera entidades contabeis
+		lConsEntCtb := .T.
+	Endif
+Endif
+
+If !lConsEntCtb //Não considera entidades contabeis
+	cKey := "C1_FILIAL+C1_PRODUTO+C1_TPOP+DTOS(C1_DATPRF)"
+Else
+	cKey := "C1_FILIAL+C1_PRODUTO+C1_TPOP+C1_CC+C1_CONTA+C1_ITEMCTA+C1_CLVL+DTOS(C1_DATPRF)"
+Endif
+
+//Ponto de Entrada para mudar a Key de aglutinacao das SCs
+If ExistBlock("MA126QSC")
+	cKey := ExecBlock("MA126QSC",.F.,.F.,{cKey})
+	If ValType(cKey) <> "C"
+		cKey := "C1_FILIAL+C1_PRODUTO+C1_TPOP+DTOS(C1_DATPRF)"
+	EndIf
+	
+	nAchou := AT("+DTOS(C1_DATPRF)",cKey)
+	If nAchou > 0
+		cKey := Substr(cKey,1,nAchou-1)+Substr(cKey,nAchou+16)+"+DTOS(C1_DATPRF)"
+	Endif	
+EndIf
+
+cAliasSC1:= GetNextAlias()
+
+cCond := " SELECT SC1.*,R_E_C_N_O_ C1REC"
+cCond += " FROM " + RetSqlName("SC1") + " SC1"
+cCond += " WHERE C1_FILIAL = '" + xFilial('SC1') + "'"
+cCond += " AND C1_QUJE = 0"
+cCond += " AND (C1_COTACAO = '" + Criavar('C1_COTACAO',.F.) + "' OR C1_COTACAO = 'IMPORT')"
+
+// AVALIA TIPO DE SOLICITACAO DE COMPRA
+If mv_par13 == 1
+	cCond+= " AND (C1_TPOP = 'F' OR C1_TPOP = ' ')"
+ElseIf mv_par13 == 2
+	cCond+= " AND C1_TPOP = 'P'"
+EndIf
+
+cCond += " AND C1_NUM >= '" + mv_par01 + "' AND C1_NUM <= '" + mv_par02 + "'"
+cCond += " AND C1_DATPRF >= '" + DtoS(mv_par03) + "' AND C1_DATPRF <= '"+ DtoS(mv_par04) + "'"
+cCond += " AND C1_LOCAL >= '" + mv_par05 + "' AND C1_LOCAL <= '" + mv_par06 + "'"
+cCond += " AND C1_PRODUTO >= '" + mv_par07 + "' AND C1_PRODUTO<='" + mv_par08 + "'"
+cCond += " AND C1_APROV <> 'B' AND C1_APROV <> 'R'"
+cCond += " AND C1_RESIDUO <> 'S'" 
+cCond += " AND D_E_L_E_T_=' ' "
+
+//Ponto de Entrada para adicionar filtro BOPS: 152687
+If ExistBlock("MA126FIL")
+	cFiltro := ExecBlock("MA126FIL",.F.,.F.,{cCond})
+	cCond	:= If(ValType(cFiltro) == "C",cFiltro,cCond)
+EndIf		
+
+cCond += " ORDER BY " + SqlOrder(cKey)	
+cCond := ChangeQuery(cCond)
+
+dbUseArea(.T.,"TOPCONN",TcGenQry(,,cCond),cAliasSC1,.T.,.T.)
+
+aEval(SC1->(dbStruct()), {|x| If(x[2] <> "C", TcSetField(cAliasSC1,x[1],x[2],x[3],x[4]),Nil)})	
+  
+nAchou := AT("+DTOS(C1_DATPRF)",cKey)
+If nAchou > 0
+	cKey := Substr(cKey,1,nAchou-1)
+Endif
+
+While !Eof()
+
+	// Valida caracteristicas do produto
+	If !(SB1->(MsSeek(xFilial("SB1")+(cAliasSC1)->C1_PRODUTO)) .And. SB1->B1_GRUPO >= mv_par09 .And. SB1->B1_GRUPO <= mv_par10 .And. ;
+		SB1->B1_TIPO >= mv_par11 .And. SB1->B1_TIPO <= mv_par12)
+		dbSkip()
+		Loop		
+	EndIf		
+
+	// Nao permitir a aglutinacao de uma SC gerada no Totvs Obras e Projetos.
+	If lPmsInt
+		AFG->(DbSetOrder(2))
+		AFG->(DbSeek(xFilial("AFG")+(cAliasSC1)->C1_NUM+(cAliasSC1)->C1_ITEM))
+		If AFG->AFG_VIAINT == "S"	
+			dbSkip()
+			Loop		
+		EndIf	
+	EndIf
+
+    cCompara:= &(cKey)  
+
+	dData   := C1_DATPRF
+	aRegsOk := {}
+	
+	// Verifica todos do mesmo tipo
+	While !Eof() .And. cCompara == &(cKey) .And. A126Periodo(dData,C1_DATPRF,nTipo)
+		// Valida caracteristicas do produto
+		If !(SB1->(MsSeek(xFilial("SB1")+(cAliasSC1)->C1_PRODUTO)) .And. SB1->B1_GRUPO >= mv_par09 .And. SB1->B1_GRUPO <= mv_par10 .And. ;
+			SB1->B1_TIPO >= mv_par11 .And. SB1->B1_TIPO <= mv_par12)
+			dbSkip()
+			Loop		
+		EndIf		
+		nRegistro := C1REC
+		AADD(aRegsOk,nRegistro)
+		dbSkip()
+	Enddo
+	
+	// Caso tenha mais de uma SC para aglutinar
+	If Len(aRegsOk) > 1
+		dDataFim:= ""
+		nTotRegs++
+		
+		For nx:=1 to Len(aRegsOk)	
+			SC1->(dbGoto(aRegsOk[nx]))
+				
+			// Menor data prevista de NECESSIDADE
+			If Empty(dDataFim)
+				dDataFim:=SC1->C1_DATPRF
+			ElseIf !Empty(dDataFim) .And. SC1->C1_DATPRF < dDataFim
+				dDataFim:=SC1->C1_DATPRF
+			EndIf
+	
+			//Filtro das SCs (De ... Ate)
+			If SB1->(MsSeek(xFilial("SB1")+SC1->C1_PRODUTO))
+				cDescric := Left(SB1->B1_DESC,30)
+			EndIf
+			
+			dbSelectArea("TRB")
+			RecLock("TRB",.T.)
+			Replace MARK      With cMarca
+			Replace NUMSC     With SC1->C1_NUM
+			Replace PRODUTO   With SC1->C1_PRODUTO
+			Replace TPOP      With If(Empty(SC1->C1_TPOP),"F",SC1->C1_TPOP)
+			Replace DESCR	  With cDescric
+			Replace QUANT     With SC1->C1_QUANT
+			Replace PREVISTA  With dDataFim
+			Replace DATAORI   With SC1->C1_DATPRF
+			Replace CC		  With SC1->C1_CC
+			Replace CONTA	  With SC1->C1_CONTA
+			Replace ITEMCTA	  With SC1->C1_ITEMCTA
+			Replace REGS      With nTotRegs
+			Replace TPSC      With SC1->C1_TPSC
+			Replace DESTPSC   With GetDescCmb('C1_TPSC',SC1->C1_TPSC) 
+			Replace REGIST    With aRegsOk[nx]
+			Replace FORNECE	  With SC1->C1_FORNECE
+			Replace LOJA	  With SC1->C1_LOJA
+			MsUnlock()
+		Next nx
+	EndIf
+	dbSelectArea(cAliasSC1)
+End
+
+dbSelectArea(cAliasSC1)
+dbCloseArea()
+
+// Restaura area original
+If !Empty(aAreaAFG)
+	RestArea(aAReaAFG)
+Endif
+
+dbSelectArea(cAliasOri)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A126Periodo³ Autor ³Rodrigo de A Sartorio  ³ Data ³ 23/12/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se as SCs estao no periodo p/ aglutinacao          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA126                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A126Periodo(dDatRef,dData,nTipo)
+
+LOCAL lRet := .F.
+Local nMes := 0
+
+Do Case
+	Case nTipo == 1 // Diario
+		If dDatRef == dData
+			lRet := .T.
+		EndIf
+	Case nTipo == 2 // Semanal
+		If Month(dDatRef) == Month(dData)
+			While Dow(dDatRef) != 2
+				dDatRef--
+			End
+			If dData < dDatRef + 7
+				lRet := .T.
+			EndIf
+		EndIf	
+	Case nTipo == 3 // Quinzenal
+		If Month(dDatRef) == Month(dData)
+			If Day(dDatRef) <=15
+				If Day(dData) <= 15
+					lRet := .T.
+				EndIf
+			Else
+				If Day(dData) > 15
+					lRet := .T.
+				EndIf
+			EndIf
+		EndIf	
+	Case nTipo == 4 // Mensal
+		If Month(dDatRef) == Month(dData)
+			lRet := .T.
+		EndIf
+	Case nTipo == 5 // Trimestral
+		nRef := Month(dDatRef)
+		nMes := Month(dData)
+		If nRef >=1 .and. nRef <= 3
+			If nMes >= 1 .and. nMes <= 3
+				lRet := .T.
+			EndIf
+		ElseIf nRef >=4 .and. nRef <= 6
+			If nMes >=4 .and. nMes <= 6
+				lRet := .T.
+			EndIf
+		ElseIf nRef >=7 .and. nRef <= 9
+			If nMes >=7 .and. nMes <= 9
+				lRet := .T.
+			EndIf
+		ElseIf nRef >=10 .and. nRef <= 12
+			If nMes >=10 .and. nMes <= 12
+				lRet := .T.
+			EndIf
+		EndIf
+	Case nTipo == 6 // Semestral
+		If Month(dDatRef) <= 6
+			If Month(dData) <= 6
+				lRet := .t.
+			EndIf
+		Else
+			If Month(dData) > 6
+				lRet := .t.
+			EndIf
+		EndIf
+EndCase
+
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A126Browse ³ Autor ³Rodrigo de A Sartorio  ³ Data ³ 23/12/04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Mostra o Browse para marcacao das SCs                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA126                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A126Browse(nTotRegs)
+
+LOCAL aSize 	:= MsAdvSize()
+LOCAL aObjects 	:= {}
+
+PRIVATE lInverte:=.F.
+PRIVATE oDlg
+PRIVATE inclui 	:= .T.
+Private nOpca	:=0
+
+AAdd( aObjects, { 100, 100, .T., .T. } )
+aInfo := { aSize[1],aSize[2],aSize[3],aSize[4],3,3}
+aObj  := MsObjSize( aInfo, aObjects, .T. )
+
+//Redefinicao do aCampos para utilisar no MarkBrow
+
+aCampos := {{"MARK","A126Marca",STR0013},;		//"Ok"
+			{"NUMSC","A126Marca",STR0014},;		//"Solicitacao de Compras"
+			{"PRODUTO","A126Marca",STR0015},;	//"Produto"
+			{"TPOP","A126Marca",STR0027},;		//"Tipo da Solicitacao"
+			{"DESCR","A126Marca",STR0023},;		//"Descricao do Produto"
+			{"QUANT","A126Marca",STR0016},;		//"Quantidade"
+			{"PREVISTA","A126Marca",STR0025},;  //"Data Prevista"		
+			{"DATAORI","A126Marca",STR0024},;	// "Data Original"
+			{"DESTPSC","A126Marca",STR0030},;	// "Descrição do Tipo da SC
+			{"FORNECE","A126Marca",STR0031},; 	// "Fornecedor
+			{"LOJA","A126Marca",STR0032}}   	// "Loja
+
+dbSelectArea("TRB")
+dbGotop()
+If BOF() .and. EOF()
+	HELP(" ",1,"RECNO")
+	Return
+Else
+	DEFINE MSDIALOG oDlg TITLE OemToAnsi(STR0017) From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
+	cAlias:=Alias()
+	oMark := MsSelect():New(cAlias,"MARK",,aCampos,linverte,cMarca,aObj[1])
+	oMark:oBrowse:lCanAllMark:=.T.
+	oMark:oBrowse:lHasMark	 :=.T.
+	oMark:bMark 			 := {| | A126ESCOL(cMarca,lInverte,oDlg)}
+	oMark:oBrowse:bAllMark	 := {| | A126MarkAll(cMarca,oDlg)}
+	ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{||nopca:=1,If(MTA126OK(),oDlg:End(),)},{||nopca:=0,oDlg:End()})
+EndIf
+
+If nOpca == 1
+	//Aglutina SCs
+	Processa({|lEnd| A126Make(@lEnd,nTotRegs)},cCadastro,OemToAnsi(STR0018),.F.)	//"Aglutinando SCs Selecionadas..."
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A126Make  ³ Autor ³ Ary Medeiros          ³ Data ³ 02/06/93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Grava as SCs aglutinadas, acerta os empenhos e remove as OPs³±±
+±±³          ³ antigas do SC1.                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA126                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A126Make(lEnd,nTotRegs)
+Local dDtPrev:=dDataBase,aRegs:={},nWhile:=0,nQuant:=0,nx,aCampos:={},nQuant2UM:=0
+Local cNumSc:=""
+Local aNewCampos := {}
+Local lApaga	:= .T.
+Local aTipos 	:= {}
+Local nPos		:= 0
+Local nI		:= 0
+Local nI2		:= 0
+Local cNTipos	:= ""
+Local lRet		:= .T.
+Local nX		:= 0
+Local lVerFor	:= .T.
+Local cFornec	:= ""
+Local cLoja		:= ""
+Local aCTBEnt	:= {}
+Local nEnt		:= 0
+Local nDeb		:= 0
+Local cCpo		:= ""
+
+dbSelectArea("SC1")
+dbSetOrder(2)
+
+ProcRegua(nTotRegs)
+
+dbSelectArea("TRB")
+dbSetOrder(1)
+dbGotop()
+
+cFornec := SC1->C1_FORNECE 	
+cLoja	:= SC1->C1_LOJA	 	
+
+While !Eof()
+	If !Empty(TRB->MARK)	
+		nPos := aScan( aTipos, {|x| AllTrim(x[1]+x[6]+dtos(x[7])+x[8]+x[9]) == AllTrim(TRB->TPSC+TRB->PRODUTO+dtos(TRB->PREVISTA)+TRB->FORNECE+TRB->LOJA)} )
+		If nPos == 0
+			Aadd(aTipos,{TRB->TPSC,1,.F.,TRB->DESTPSC,{TRB->REGIST},TRB->PRODUTO,TRB->PREVISTA,TRB->FORNECE,TRB->LOJA})		
+		Else
+			aTipos[nPos,2] += 1
+			aTipos[nPos,3] := .T.			
+			Aadd(aTipos[nPos,5],TRB->REGIST)			
+		EndIf
+		dDtPrev:=TRB->PREVISTA
+	EndIf				
+	dbSkip()	
+EndDo
+
+aSort(aTipos,,,{|x,y| If(x[3],"0","1") < If(y[3],"0","1")})
+
+For nI := 1 To Len(aTipos)
+	If !aTipos[nI, 3]
+		Exit
+	EndIf
+	
+	Begin Transaction
+	nQuant:=0 
+	nQuant2UM:=0
+	nWhile:=REGS	
+	IncProc()
+	aRegs:={}
+	aRegs := aClone(aTipos[nI,5])
+	
+	dDtPrev:= aTipos[nI,7]
+	
+	For nI2 := 1 To Len(aRegs)
+	
+		SC1->(dbGoto(aRegs[nI2]))
+		// Soma quantidade de todas as SCs
+		nQuant+=SC1->C1_QUANT	
+		nQuant2UM+=SC1->C1_QTSEGUM
+		
+		// Só ira gravar fornecedor se forem iguais. 
+		If lVerFor .And. Empty(cFornec + cLoja)
+			cFornec := SC1->C1_FORNECE
+			cLoja	:= SC1->C1_LOJA	
+			lVerFor := .F.
+		ElseIf !Empty(cFornec + cLoja) .And. SC1->(C1_FORNECE+C1_LOJA) != (cFornec+cLoja)
+			cFornec := SC1->C1_FORNECE 		
+			cLoja	:= SC1->C1_LOJA	 	
+		EndIf					
+		
+	Next nI2
+	
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se o aRegs está preenchido para efetuar a aglutinação entre os produtos semelhantes³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+    if Len(aRegs) != 0
+		// Descobre numero da SC
+		cNumSc:=CriaVar("C1_NUM")
+		// Garante que pegou um numero de solicitacao de compra
+		While Empty(cNumSC) .Or. SC1->(dbSeek(xFilial("SC1")+SC1->C1_PRODUTO+cNumSC))
+			cNumSc:=GetNumSC1(.T.)
+		End
+		If ( __lSX8 )
+			ConfirmSX8()
+		Endif
+		dbSelectArea("SC1")
+		dbGoto(aRegs[Len(aRegs)])
+		// Copia todas as informacoes menos campos contidos no array aCampos
+		aCampos:={}
+		Aadd(aCampos,{"C1_OP"   ,""})
+		Aadd(aCampos,{"C1_NUM"  ,cNumSC})
+		Aadd(aCampos,{"C1_ITEM",StrZero(1,Len(SC1->C1_ITEM),0)})
+		Aadd(aCampos,{"C1_PRODUTO",SC1->C1_PRODUTO})
+		Aadd(aCampos,{"C1_QUANT",nQuant})    
+		Aadd(aCampos,{"C1_QTSEGUM",nQuant2UM})
+		Aadd(aCampos,{"C1_DATPRF",dDtPrev})
+		Aadd(aCampos,{"C1_OBS",OemToAnsi(STR0026)})
+		aadd(aCampos,{"C1_SOLICIT"	,cUsername}) 	
+		aadd(aCampos,{"C1_EMISSAO"	,ddatabase})
+		aadd(aCampos,{"C1_TPOP"	,SC1->C1_TPOP})
+		If lConsEntCtb
+			aadd(aCampos,{"C1_CC"	,SC1->C1_CC})
+			aadd(aCampos,{"C1_CONTA"	,SC1->C1_CONTA})			
+			aadd(aCampos,{"C1_ITEMCTA" ,SC1->C1_ITEMCTA})
+			aadd(aCampos,{"C1_CLVL"	,SC1->C1_CLVL})
+			
+			aCTBEnt := CtbEntArr()
+			
+			For nEnt := 1 to Len(aCTBEnt)
+				For nDeb := 1 to 2
+					cCpo := "C1_EC"+aCTBEnt[nEnt]
+					If nDeb == 1
+						cCpo += "DB"
+					Else
+						cCpo += "CR"
+					EndIf	
+					If !Empty(&(cCpo))
+						aadd(aCampos,{cCpo, SC1->&(cCpo)})
+					EndIf
+				Next nDeb
+			Next nEnt
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ponto de Entrada para alterar valores de outros campos na Aglutinacao     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ExistBlock("MA126CPO")
+			aNewCampos := ExecBlock("MA126CPO",.F.,.F.,{aCampos} )
+			For nX := 1 to Len(aNewCampos)
+				If ValType(aNewCampos) == "A"
+					Aadd(aCampos,aNewCampos[nX])
+				EndIf
+			Next nX
+		EndIf
+				
+		// Reposiciona ultimo registro	
+		dbSelectArea("SC1")
+		dbGoto(aRegs[Len(aRegs)])
+		lRet := A126INCSC(aCampos)
+		If lRet
+			// Destrava registros	
+			SC1->(MsUnlock())
+			
+			//Manda uma alteração para avaliar SC e se necessario gerar alçada
+			A126ATUSC(cNumSC, cFornec, cLoja)
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Ponto de Entrada para avaliar a exclusao das SCs relacionadas   ³
+			//³ BOPS: 152687                                                    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ExistBlock("MA126ASC")
+				lApaga := ExecBlock("MA126ASC",.F.,.F.,{cNumSC})
+				lApaga := IIF(ValType(lApaga) != "L",.T.,lApaga)
+			EndIf	
+			
+			// Apaga todas as SCs relacionadas
+			If lApaga
+				For nx:=1 to Len(aRegs)
+					dbGoto(aRegs[nx])
+					// Avalia SC que sera excluida
+					MaAvalSC("SC1",2,NIL,NIL,.F.,.T.)	
+					Reclock("SC1",.F.)
+					dbDelete()
+					MsUnlock()      
+				Next nx             
+			EndIf        
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Ponto de Entrada apos gravacao da nova SC          BOPS: 152687 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ExistBlock("MA126GRV")
+				ExecBlock("MA126GRV",.F.,.F.,{cNumSC,aRegs})
+			EndIf   
+		Endif		
+	EndIf            
+		dbSelectArea("TRB")
+		End Transaction        
+	
+Next nI
+
+aSort(aTipos,,,{|x,y| If(x[3],"0","1") > If(y[3],"0","1")})
+
+For nI := 1  To Len(aTipos)
+	If aTipos[nI,3]
+		Exit
+	Else			
+		cNTipos += aTipos[nI,4] + CRLF 
+	EndIf
+Next nI
+
+If Len(AllTrim(cNTipos))> 0
+	Aviso(STR0028, STR0029 + CRLF + CRLF + cNtipos,{'OK'},2)
+EndIf					
+			
+Return lRet                                     
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡…o   ³MTA126OK  ³ Autor ³Rodrigo de A. Sartorio ³ Data ³ 04/01/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡…o³ Confirmacao antes de executar a Aglutinacao.               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MTA126OK                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function MTA126OK()
+LOCAL cText:=OemToAnsi(STR0019)+CHR(13)	//"Esta rotina ir  aglutinar as Solicitacoes de Compra"
+cText+=OemToAnsi(STR0020)+CHR(13)	//"conforme os parƒmetros selecionados."
+cText+=OemToAnsi(STR0021)	//"Confirma a aglutina‡„o das SCs ?"
+Return (MsgYesNo(cText,OemToAnsi(STR0022)))	//"Aten‡„o"
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A126Escol  ³ Autor ³Rodrigo de A.Sartorio³ Data ³ 04/01/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Escolhe as Ops para Aglutinar                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA126                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A126Escol(cMarca,lInverte,oDlg)
+iF IsMark("MARK",cMarca,lInverte)
+	RecLock("TRB",.F.)
+	If !lInverte
+		Replace TRB->MARK With cMarca
+	Else
+		Replace TRB->MARK With "  "
+	Endif
+	MsUnlock()
+Else
+	RecLock("TRB",.F.)
+	If !lInverte
+		Replace TRB->MARK With "  "
+	Else
+		Replace TRB->MARK With cMarca
+	Endif
+	MsUnlock()
+Endif
+oDlg:Refresh()
+Return .T.
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A126MarkAll³ Autor ³Rodrigo de A.Sartorio³ Data ³ 04/01/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Inverte as OPs Marcadas/Desmarcadas                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA126                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A126MarkAll(cMarca,oDlg)
+LOCAL nRecno:=Recno()
+dbGotop()
+Do While !Eof()
+	RecLock("TRB",.F.)
+	If Empty(TRB->MARK)
+		Replace TRB->MARK With cMarca
+	Else
+		Replace TRB->MARK With "  "
+	Endif
+	MsUnlock()
+	dbSkip()
+EndDo
+dbGoto(nRecno)
+oDlg:Refresh()
+Return .T.
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A126INCSC   ³ Autor ³Leandro Nishihata      ³ Data ³ 29-11-2018 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³inclusao da solicitação de compras aglutinada                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³Generico        												´±±
+±±³ aCampos[1]  = C1_OP							 							 ±±
+±±³ aCampos[2]  = C1_NUM													 ±±
+±±³ aCampos[3]  = C1_ITEM													 ±±
+±±³ aCampos[4]  = C1_QUANT													 ±±    
+±±³ aCampos[5]  = C1_QTSEGUM												 ±±
+±±³ aCampos[6]  = C1_DATPRF													 ±±
+±±³ aCampos[7]  = C1_OBS													 ±±
+±±³ aCampos[8]  = C1_PRODUTO												 ±±
+±±³ aCampos[9]  = C1_SOLICIT										 		 ±±
+±±³ aCampos[10] = C1_EMISSAO								                 ±± 
+±±³ aCampos[11] = C1_TPOP								                     ±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A126INCSC(aCampos)
+Local cDetalhe	:= ""
+Local aCab  	  := {}
+Local aLin 	      := {}
+Local aItem		  := {}
+Local nx,nI       := 0
+Local aHeaderSC   := {"C1_NUM","C1_SOLICIT","C1_EMISSAO","C1_UNIDREQ","C1_CODCOMP"}
+Local lRet        := .T.
+Private aErroAuto := {}
+PRIVATE lMsErroAuto    := .F.// variável que define que o help deve ser gravado no arquivo de log e que as informações estão vindo à partir da rotina automática.
+Private lMsHelpAuto	   := .F.    // força a gravação das informações de erro em array para manipulação da gravação ao invés de gravar direto no arquivo temporário 
+Private lAutoErrNoFile := .T. 
+
+DEFAULT aCampos	:= {}
+
+For nX:= 1 to len(aCampos)
+		If ascan(aHeaderSC,aCampos[nx][1]) <> 0	
+			aadd(aCab,{aCampos[nx][1]   ,aCampos[nx][2]})		
+		Else			
+			aadd(aLin,{aCampos[nx][1]   ,aCampos[nx][2],Nil})			
+		EndIf
+Next nX
+aadd(aItem,aLin)	
+If Len(aCab) > 0 .And. Len(aItem) > 0
+	MSExecAuto({|x,y,z| mata110(x,y,z)},aCab,aItem,3)
+Endif
+IF lMsErroAuto
+    aLog := GETAUTOGRLOG()
+	For nI := 1 To Len(aLog)
+		if !Empty(Alltrim(aLog[nI])) 
+			cDetalhe += ALLTRIM(aLog[nI]) + CRLF
+		endif
+	Next nI
+	Help("",1,"A126SCINC", , cDetalhe,1,0)
+    lRet := .F.
+    DisarmTransaction()
+ENDIF     
+Return lRet
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A126ATUSC()
+Atualiza SC
+@author Rodrigo M Pontes
+@Param cNumSC:	Numero da solicitação de compras gerada pela aglutinação
+@since 28/06/2018
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+
+Static Function A126ATUSC(cNumSC, cFornec, cLoja)
+
+Local aArea		:= GetArea()
+Local aCab		:= {}
+Local aLin		:= {}
+Local aItem		:= {}
+Local aCTBEnt	:= {}
+Local nEnt		:= 0
+Local nDeb		:= 0
+Local cCpo		:= ""
+
+SC1->(DbSetOrder(1))
+If SC1->(DbSeek(xFilial("SC1") + cNumSC))
+	
+	aadd(aCab,{"C1_NUM"    	,cNumSC})		
+	aadd(aCab,{"C1_SOLICIT"	,SC1->C1_SOLICIT})		
+	aadd(aCab,{"C1_EMISSAO"	,SC1->C1_EMISSAO})
+	
+	While SC1->(!EOF()) .And. SC1->C1_NUM == cNumSC
+		aLin := {}			
+		aadd(aLin,{"C1_ITEM"   ,SC1->C1_ITEM,Nil})			
+		aadd(aLin,{"C1_PRODUTO",SC1->C1_PRODUTO,Nil})			
+		aadd(aLin,{"C1_QUANT"  ,SC1->C1_QUANT,Nil})
+		aadd(aLin,{"C1_SOLICIT",SC1->C1_SOLICIT,Nil})
+		aadd(aLin,{"C1_OBS"    ,SC1->C1_OBS,Nil})
+		aadd(aLin,{"C1_TPOP"   ,SC1->C1_TPOP,Nil})
+		aadd(aLin,{"C1_DATPRF" ,SC1->C1_DATPRF,Nil})
+		If !Empty(cFornec)
+			aadd(aLin,{"C1_FORNECE" ,cFornec,Nil})
+		EndIf
+		If !Empty(cLoja)
+			aadd(aLin,{"C1_LOJA" ,cLoja,Nil})
+		EndIf
+		If lConsEntCtb // Mantém as entidades contábeis
+			aadd(aLin,{"C1_CC"  	,SC1->C1_CC,Nil})			
+			aadd(aLin,{"C1_CONTA"	,SC1->C1_CONTA,Nil})			
+			aadd(aLin,{"C1_ITEMCTA" ,SC1->C1_ITEMCTA,Nil})
+			aadd(aLin,{"C1_CLVL"	,SC1->C1_CLVL,Nil})	
+			
+			aCTBEnt := CtbEntArr()
+			
+			For nEnt := 1 to Len(aCTBEnt)
+				For nDeb := 1 to 2
+					cCpo := "C1_EC"+aCTBEnt[nEnt]
+					If nDeb == 1
+						cCpo += "DB"
+					Else
+						cCpo += "CR"
+					EndIf	
+					If !Empty(&(cCpo))
+						aadd(aLin,{cCpo, SC1->&(cCpo),NIL})
+					EndIf
+				Next nDeb
+			Next nEnt	
+		Else // Limpa entidades contabeis
+			aadd(aLin,{"C1_CC"   	,"",Nil})			
+			aadd(aLin,{"C1_CONTA"	,"",Nil})			
+			aadd(aLin,{"C1_ITEMCTA" ,"",Nil})
+			aadd(aLin,{"C1_CLVL"	,"",Nil})
+		Endif
+		aadd(aItem,aLin)
+		SC1->(DbSkip())
+	Enddo
+Endif
+
+If Len(aCab) > 0 .And. Len(aItem) > 0
+	MSExecAuto({|x,y,z| mata110(x,y,z)},aCab,aItem,4)
+Endif
+
+RestArea(aArea)
+
+Return
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} MT126SX1()
+Verifica se o MV_PAR14 existe
+@author Junior.Mauricio
+@Param lExistMV14
+@since 25/07/2018
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+
+Static Function MT126SX1()
+
+Local aArea := GetArea()
+Local cPerg := PadR("MTA126",Len(SX1->X1_GRUPO))
+Local lRet  := .F.
+
+dbSelectArea("SX1")
+dbSetOrder(1)
+
+If SX1->(DbSeek(cPerg+"14"))
+	lRet  := .T.
+EndIf
+
+RestArea(aArea)
+
+Return lRet

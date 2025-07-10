@@ -1,0 +1,296 @@
+#INCLUDE 'Protheus.ch'
+#INCLUDE 'TOPCONN.ch'
+#INCLUDE 'COMA160.ch'
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัอออออออออออออออออออออหออออออัออออออออออออปฑฑ
+ฑฑบPrograma  ณ COMA160  บAutor  ณ Rodrigo Toledo Silvaบ Data ณ  15/10/12  บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯอออออออออออออออออออออสออออออฯออออออออออออนฑฑ
+ฑฑบDescricao ณ Envio da programacao de entrega ao TOTVS Colabora็ใo		  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ TOTVS Colaboracao (Programacao de Entrega)          		  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Function COMA160()
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณ Inicializa variaveis                                         ณ
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+Local oTNewProc := NIL
+Local cTexto    := ""
+Local bProcess  := {|oself| COM160Exec(oSelf)}
+Local cPerg 	:= "COM160"
+
+#IFDEF TOP
+	cTexto := OemToAnsi(STR0001)+CRLF  //Objetivo desta rotina ้ permitir o envio automแtico dos pedidos de compra em aberto aos 
+	cTexto += OemToAnsi(STR0002)+CRLF  //responsแveis pelos fornecimentos dos produtos requisitados com objetivo de planejar as 
+	cTexto += OemToAnsi(STR0003)+CRLF //entregas a serem realizadas pelo fornecedor para que este atenda aos prazos acordados.
+	//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+	//ณ Sintaxe da tNewProcess():New( cFunction, cTitle, bProcess, cDescription, cPerg, aInfoCustom ) |
+	//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+	oTNewProc := tNewProcess():New("COM160",STR0004,bProcess,cTexto,cPerg,,,,,,.T.) //Envio Programa็ใo de Entrega TOTVS Colabora็ใo
+#ELSE
+	ApMsgAlert(STR0008,STR0010) //'A rotina estแ preparada para ser processada somente em ambientes TOPCONNECT/DBACCESS.
+#ENDIF
+	
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑฺฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฟฑฑ
+ฑฑณFun…o    ณ COM160Exec ณ Autor ณ Rodrigo Toledo SilvaณData  ณ16/10/2012ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณDescri…o ณ Inicializa o processamento de envio programacao de entrega ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณParametrosณ oTNewProc = Objeto tNewProcess()                           ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณ Uso      ณ TOTVS Colaboracao                                          ณฑฑ
+ฑฑภฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤูฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+/*/
+Static Function COM160Exec(oTNewProc)
+
+ACOMGrvLog(oTNewProc,STR0005) //"Inicio Processamento"
+COM160Proc(oTNewProc:lEnd,oTNewProc)
+ACOMGrvLog(oTNewProc,STR0006) //"Fim Processamento"
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑฺฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤยฤฤฤฤฤฤยฤฤฤฤฤฤฤฤฤฤฟฑฑ
+ฑฑณFuno    ณA710GrvTm ณ Autor ณRodrigo Toleo Silva	ณ Data ณ 15/10/12 ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณDescri…o ณGrava um log com os principais processos do MRP             ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณParametrosณ ExpO1 : Objeto tNewProcess                                 ณฑฑ
+ฑฑณ          ณ ExpC2 : Texto a ser gravado no log                         ณฑฑ
+ฑฑรฤฤฤฤฤฤฤฤฤฤลฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤดฑฑ
+ฑฑณ Uso      ณMATA710                                                     ณฑฑ
+ฑฑภฤฤฤฤฤฤฤฤฤฤมฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤูฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Function ACOMGrvLog(oMainPainel, cTexto)
+
+If (oMainPainel <> Nil) .And. !Empty(cTexto)
+	oMainPainel:SaveLog(ctexto)
+EndIf
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออออหออออออัอออออออออออปฑฑ
+ฑฑบPrograma  ณ COMA160  บAutor  ณ Rodrigo Toledo Silva บ Data ณ  15/10/12 บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออออสออออออฯอออออออออออนฑฑ
+ฑฑบDescricao ณ Monta query da tabela SC7 para enviar a mensagem de    	  บฑฑ
+ฑฑบ 		 ณ programacao de entrega ao TOTVS Colaboracao				  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบParametrosณ ExpO1 : lEnd - Cancela o processamento                     บฑฑ
+ฑฑบ          ณ ExpC2 : Objeto tNewProcess                         		  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ TOTVS Colaboracao (Programacao de Entrega)          		  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Function COM160Proc(lEnd, oTNewProc)
+Local lRet    := .T.
+Local nQtdReg := 0
+
+If (!SuperGetMV("MV_TPOPDOC",.F.,.F.))
+	Help(" ",1,"COMXCOL_03")
+	lRet := .F.
+EndIf
+
+If lRet .And. (SC7->(FieldPos("C7_TPCOLAB")) == 0 .Or. SC7->(FieldPos("C7_IDTSS")) == 0)
+	Help(" ",1,"COMXCOL_01")
+	lRet := .F.
+EndIf
+
+If lRet .And. !FindFunction("FWLSEnable") .Or. !FWLSEnable(TOTVS_COLAB_ONDEMAND)
+	Help(" ",1,"COMXCOL_02")
+	lRet := .F.
+EndIf
+
+If lRet
+	/*ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+	  ณ EXECUTA A QUERY PARA PROCESSAR OS PEDIDOS DE COMPRA EM ABERTO ณ
+	  ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู*/
+	BeginSQL Alias "TMP"
+	
+	SELECT C7_NUM
+	FROM %Table:SC7%
+	WHERE C7_FILIAL = %xFilial:SC7% AND
+		%NotDel% AND
+		C7_FORNECE >= %Exp:mv_par01% AND C7_FORNECE <= %Exp:mv_par02% AND
+		C7_DATPRF BETWEEN %Exp:mv_par03% AND %Exp:mv_par04% AND
+		(C7_QUANT - C7_QUJE - C7_QTDACLA) > 0 AND C7_TPOP<>'F' AND
+		C7_ENCER = %Exp:CriaVar("C7_ENCER",.F.)% AND C7_RESIDUO <> 'S' AND
+		C7_CONAPRO <> 'B' AND C7_TIPO = 2 AND
+		C7_TPCOLAB IN ('   ','PEP')
+	GROUP BY C7_NUM
+	
+	EndSQL
+	//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+	//ณ Soma a quantidade de registros para processar a regua ณ
+	//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+	While TMP->(!EOF())
+		nQtdReg := nQtdReg+1 
+		TMP->(dbSkip())
+	End	
+	If (oTNewProc<>Nil)
+		oTNewProc:SetRegua1(nQtdReg)
+		TMP->(dbGoTop())
+	EndIf	
+	While lRet .And. !lEnd .And. TMP->(!EOF())
+		oTNewProc:IncRegua1(STR0007 + TMP->C7_NUM) // Aguarde... Processando a programa็ใo de entrega
+		//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+		//ณ Chama a funcao ExpXML_PE para construcao da ณ
+		//| mensagem XML de programacao de entrega		ณ
+		//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+		If !(lRet := ExpXML_PE(TMP->C7_NUM,oTNewProc))
+			Aviso(STR0008,STR0009,{"Ok"}) //"Atencao, Documento nใo enviado para o TOTVS Colabora็ใo por falha de comunica็ใo com o TSS."Ok
+		EndIf
+
+		TMP->(dbSkip())
+	End
+
+	TMP->(dbCloseArea())
+EndIf
+
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ ExpXML_PEบAutor  ณRodrigo Toledo Silvaบ Data ณ  15/10/12   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDescricao ณ Criacao do arquivo XML da mensagem programacao de entrega  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบParametrosณ cNumPed: Numero do pedido de compra			  	  		  บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ TOTVS Colaboracao                                  		  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Function ExpXML_PE(cNumPed)
+Local aAreaSC7    := SC7->(GetArea())
+Local aAreaSA2    := SA2->(GetArea())
+Local aAreaSM0    := SM0->(GetArea())
+Local cXml	      := ""
+Local cItem       := StrZero(0,TamSX3("C7_ITEM")[1])
+Local lRet		  := .F.	
+Local cIdERP	  := ""
+Local cIDTss	  := ""
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณCabecalho programacao de entrega TAG BUINESSCONTENT |
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+SC7->(dbSetOrder(1))
+SC7->(dbSeek(xFilial("SC7")+cNumPed))
+
+cXml += '<BusinessContent>'
+cXml += '<funcmsgprog>'+IIf((SC7->C7_TPCOLAB == "PEP" .And. !Empty(SC7->(C7_IDTSS))),"4","9")+'</funcmsgprog>'
+cXml += '<documentnumber>'+cNumPed+'</documentnumber>'
+cXml += '<dhemisdocument>'+STRZERO(Year(SC7->C7_EMISSAO),4)+'-'+STRZERO(Month(SC7->C7_EMISSAO),2)+'-'+STRZERO(Day(SC7->C7_EMISSAO),2)+"T"+Time()+'</dhemisdocument>'
+SA2->(dbSetOrder(1))
+If SA2->(dbSeek(xFilial("SA2")+SC7->(C7_FORNECE+C7_LOJA)))
+	cXml += '<vendortaxid>'+SA2->A2_CGC+'</vendortaxid>'
+EndIf
+SM0->(dbSetorder(1))
+If SM0->(dbSeek(M0_CODIGO+SC7->C7_FILENT)) //Confirmar se realmente eh o C7_FILENT
+	cXml += '<buyercnpj>'+SM0->M0_CGC+'</buyercnpj>' 
+EndIf
+cXml += '<vendorname>'+AllTrim(PadR(SA2->A2_NOME,40))+'</vendorname>'
+cXml += '<corporatebuyer>'+AllTrim(PadR(SM0->M0_NOMECOM,40))+'</corporatebuyer>'
+cXml += '<codbuyer>'+SC7->C7_FILENT+'</codbuyer>'
+cXml += '<transpmode>1</transpmode>'
+cXml += '<observation>'+SC7->C7_OBS+'</observation>'
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณItens da programacao de entrega TAG ITENSDELIVERYSCHEDULINGINFORMATION |
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู   
+cXML += '<LISTOFITENSDELIVERYSCHEDULING>'
+While !SC7->(EOF()) .And. SC7->(C7_FILIAL+C7_NUM) == xFilial("SC7")+cNumPed
+	cItem := Soma1(cItem)
+	cXML += '<ITENSDELIVERYSCHEDULINGINFORMATION>'
+	cXML += '<numseqlineitem>'+cItem+'</numseqlineitem>'
+	cXML += '<numitem>'+SC7->C7_ITEM+'</numitem>'
+	cXML += '<typecodprod>BP</typecodprod>'
+	cXML += '<itemcode>'+AllTrim(SC7->C7_PRODUTO)+'</itemcode>'
+	If !Empty(Posicione("SA5",1,xFilial("SA5")+SC7->C7_PRODUTO,"A5_CODPRF"))
+		cXML += '<prodcodsuplli>'+AllTrim(Posicione("SA5",1,xFilial("SA5")+SC7->C7_PRODUTO,"A5_CODPRF"))+'</prodcodsuplli>'
+	EndIf	
+	cXML += '<itemdescription>'+AllTrim(PadR(SC7->C7_DESCRI,80))+'</itemdescription>'
+	cXML += '<numbuyrequest>'+cNumPed+'</numbuyrequest>'
+	cXML += '<numlastinvoice>0</numlastinvoice>'
+	cXML += '<serielastinvoice>0</serielastinvoice>'
+	cXML += '<dtemislastinvoice>1900-01-01T00:00:00</dtemislastinvoice>'
+	cXML += '<dtlastdelivery>'+STRZERO(Year(SC7->C7_DATPRF),4)+'-'+STRZERO(Month(SC7->C7_DATPRF),2)+'-'+STRZERO(Day(SC7->C7_DATPRF),2)+"T"+Time()+'</dtlastdelivery>'	
+	cXML += '<quantreceiv>'+AllTrim(Str(SC7->C7_QUJE))+'</quantreceiv>'
+	cXml += '<quantplann>'+AllTrim(Str(SC7->C7_QUANT))+'</quantplann>'	
+	cXml += '<manufactdest>'+SC7->C7_FILENT+'</manufactdest>'
+	cXml += '<programtype>12</programtype>' 
+	cXml += '<supplyfreq>F</supplyfreq>'
+	cXml += '<typesupply>'+IIf(!Empty(SC7->C7_OP),"P","X")+'</typesupply>'
+	cXml += '<weightitem>'+AllTrim(Str(SC7->C7_PESO_B))+'</weightitem>'
+	cXml += '<internalmensuunit>'+AllTrim(SC7->C7_UM)+'</internalmensuunit>'	
+	cXml += '<descunitmensure>'+AllTrim(Posicione("SAH",1,xFilial("SAH")+SC7->C7_UM,"AH_DESCPO"))+'</descunitmensure>'
+	//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+	//ณ Local de entrega das mercadorias |
+	//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+  	cXml += '<DELIVERIES>'
+ 	cXml += '<DELIVERY>'
+	cXml += '<idremit>'+cNumPed+'</idremit>'
+	cXml += '<dhdeliveryremit>'+SubStr(DtoS(SC7->C7_DATPRF),1,4)+'-'+SubStr(DtoS(SC7->C7_DATPRF),5,2)+'-'+SubStr(DtoS(SC7->C7_DATPRF),7,2)+"T23:59:00"+'</dhdeliveryremit>'
+	cXml += '<quantrequest>'+AllTrim(Str(SC7->(C7_QUANT-C7_QUJE)))+'</quantrequest>'
+	cXml += '<mensuunitprogdeli>'+AllTrim(SC7->C7_UM)+'</mensuunitprogdeli>'
+	cXml += '<descunitmensure>'+AllTrim(Posicione("SAH",1,xFilial("SAH")+SC7->C7_UM,"AH_DESCPO"))+'</descunitmensure>'	
+	If SC7->C7_TPOP == "F"
+		cXml += '<deliverystatus>1</deliverystatus>'
+	Else
+		cXml += '<deliverystatus>4</deliverystatus>'
+	EndIf
+ 	cXml += '</DELIVERY>'
+  	cXml += '</DELIVERIES>'
+	cXML += '</ITENSDELIVERYSCHEDULINGINFORMATION>'
+	SC7->(dbSkip())
+End
+cXML += '</LISTOFITENSDELIVERYSCHEDULING>'
+cXml += '</BusinessContent>'
+
+//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+//ณChama a funcao COMXCOLTSS para comunicacao com TSS |
+//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+   
+cIdErp := xFilial("SC7")+cNumPed
+lRet := COMXCOLNEO(xFilial("SC7")+cNumPed,cXML,cIdErp,'252')
+If lRet
+	//ฺฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฟ
+	//ณ Atualiza o campo TPCOLAB para que nao seja enviado como programacao de entrega |
+	//ภฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤู
+	SC7->(dbSeek(xFilial("SC7")+cNumPed))
+	While !SC7->(EOF()) .And. SC7->(C7_FILIAL+C7_NUM) == xFilial("SC7")+cNumPed .And. SC7->C7_TPCOLAB <> "PEF"
+		Reclock("SC7",.F.)
+ 		SC7->C7_TPCOLAB := IIf(IsInCallStack("COMA160"),"PEP",If(SC7->C7_TPCOLAB == "PEP","PEF","PC"))
+		SC7->C7_IDTSS := cIdErp
+		SC7->(MsUnlock())
+		SC7->(dbSkip())
+	End
+EndIf
+
+RestArea(aAreaSC7)
+RestArea(aAreaSA2)
+RestArea(aAreaSM0)
+Return lRet

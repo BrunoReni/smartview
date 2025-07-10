@@ -1,0 +1,929 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "MATA112.CH"
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MATA112
+Atualiza os arquivos de Importação para os Itens de SC e/ou 
+Contratos de Parceria
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function MATA112()
+                                             
+    Local cAliasProc    := ""
+    Local cFilSC1       := xFilial("SC1")
+    Local cFilSC3       := xFilial("SC3")
+    Local cFiltroUs
+
+    Local lIntegracao   := SuperGetMv("MV_EASY", .F., "N") == "S"
+    Local lAProvSI      := SuperGetMv("MV_APROVSI", .F., .F.)
+    Local lMT112FIL		:= ExistBlock("MT112FIL")
+    Local lMT112FILSC3  := ExistBlock("MT112FILSC3")      
+
+    Private aRotina     := MenuDef()
+
+    Private cCadastro   := STR0001 //"Itens de Solicitações"
+    Private cFilter     := ""  
+    Private cMarca      := GetMark()
+
+    Private lInverte    := .F.
+
+    Private oMark112    := Nil
+
+    //-- Se a integração não estiver ativada, não deve processar nada
+    If !lIntegracao
+        Help(" ", 1, "INTEGRACAO")
+    Else
+        
+        //-- Pergunte MTA112:
+        //-- mv_par01 [Cons.Param.Abaixo ? (1=Sim/2=Não)]
+        //-- mv_par02 [Da Solicitacao ?]
+        //-- mv_par03 [Ate a Solicitacao ?]
+        //-- mv_par04 [Unidade Requisitante ?]
+        //-- mv_par05 [Codigo do Comprador ?]
+        //-- mv_par06 [Tipo de Selecao ? (1=Item/2=Solicitação)]
+        //-- mv_par07 [Avaliar ? (1=Solicitação de Compras/2=Contrato de Parceria)]
+
+        If Pergunte("MTA112", .T.) .And. VldCntr()
+
+            //--Identifica o alias de processamento e seta os filtros
+            If mv_par07 == 1
+                cAliasProc := "SC1"
+            Else
+                cAliasProc := "SC3"
+            EndIf
+
+            If mv_par01 == 1
+                If cAliasProc == "SC1"
+                    cFilter := "C1_FILIAL=='" + cFilSC1 + "' .And. C1_RESIDUO == ' ' .And. C1_IMPORT == 'S' " + Iif(lAprovSI, " .And. (Empty(C1_APROV) .Or. C1_APROV  $ ' ,L')", "") + " .And. C1_NUM >= '" + mv_par02 + "' .And. C1_NUM <= '" + mv_par03 + "'"
+                Else
+                    cFilter := "C3_FILIAL=='" + cFilSC3 + "' .And. C3_RESIDUO == ' '" + Iif(lAprovSI, " .And. (Empty(C3_APROV) .Or. C3_APROV  $ ' ,L')", "") + " .And. C3_NUM >= '" + mv_par02 + "' .And. C3_NUM <= '" + mv_par03 + "'"  
+                EndIf    
+            Else
+                If cAliasProc == "SC1"                                   
+                    cFilter := "C1_RESIDUO == ' ' .And. C1_IMPORT=='S'" + Iif(lAprovSI, ".And. (Empty(C1_APROV) .Or. C1_APROV  $ ' ,L')", "")
+                Else 
+                    cFilter := "C3_RESIDUO == ' '" + Iif(lAprovSI, " .And. (Empty(C3_APROV) .Or. C3_APROV  $ ' ,L')", "")
+                EndIf
+            EndIf
+
+            //-- Ponto de entrada para filtro de usuário  
+            If cAliasProc == "SC1" .And. lMT112FIL
+                If ValType( cFiltroUs := ExecBlock( "MT112FIL", .F., .F., {cFilter}) ) == "C"
+                    cFilter := cFiltroUs
+                EndIf
+            ElseIf cAliasProc == "SC3" .And. lMT112FILSC3
+                If ValType( cFiltroUs := ExecBlock( "MT112FILSC3", .F., .F., {cFilter}) ) == "C"
+                    cFilter := cFiltroUs
+                EndIf
+            EndIf	
+            
+            If A112HasRg(cAliasProc, cFilter)
+                
+                //-- Configura o MarkBrowse
+                oMark112 := FWMarkBrowse():New()
+                
+                oMark112:SetDescription(STR0001)
+                oMark112:SetSeek(.T.)
+                oMark112:SetCustomMarkRec({|| A112Mark()})
+                oMark112:SetAllMark({|| A112AMark()})
+                oMark112:SetFilterDefault(cFilter)
+                oMark112:SetAlias(cAliasProc)
+
+                If cAliasProc == "SC1" 
+                    oMark112:SetFieldMark("C1_OK")
+                    oMark112:SetMark(cMarca, "SC1", "C1_OK")
+                    oMark112:AddLegend("Empty(C1_NUM_SI)" , "GREEN", STR0007) //"Item sem S.I. gerada"
+                    oMark112:AddLegend("!Empty(C1_NUM_SI)", "RED"  , STR0006) //"Item com S.I. gerada"
+                Else 
+                    oMark112:SetFieldMark("C3_OK")
+                    oMark112:SetMark(cMarca, "SC3", "C3_OK")
+                    oMark112:AddLegend("A112AvalCt()" , "GREEN", STR0007) //"Item sem S.I. gerada"
+                    oMark112:AddLegend("!A112AvalCt()", "RED"  , STR0006) //"Item com S.I. gerada"
+                EndIf
+
+                oMark112:Activate()
+
+            EndIf
+
+        EndIf
+
+    EndIf
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MenuDef
+Menu com as rotinas disponíveis
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Static Function MenuDef()
+
+Local aRot := {}
+
+    aAdd(aRot, {STR0002, "PesqBrw" , 0, 1, 0, .F.})	//"Pesquisar"
+    aAdd(aRot, {STR0003, "A112Gera", 0, 3, 0, .T.})	//"Gerar"
+    aAdd(aRot, {STR0005, "A112Leg" , 0, 2, 0, .T.})	//"Legenda"
+
+Return aRot
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112Leg
+Botão para exibir a legenda dos registros da MarkBrowse
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112Leg()
+
+    Local aLegenda	 := {}
+
+    aAdd(aLegenda, {"BR_VERDE"	 , STR0007})
+    aAdd(aLegenda, {"BR_VERMELHO", STR0006})
+
+
+    BrwLegenda(STR0001, STR0005, aLegenda)
+
+Return .T.
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} VldCntr
+Validação para contratos de parceria
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Static Function VldCntr()
+    
+    Local lRet 	:= .T.
+
+	If mv_par07 == 2
+	
+		If Empty(mv_par04) //Unidade Requisitante
+            Help("", 1, "AVG", STR0009, STR0011, 1, 0, .F.)
+            lRet := .F.
+        Else
+            lRet := ExistCpo("SY3", mv_par04)                                                                                                    
+        EndIf
+
+        If lRet 
+            If Empty(mv_par05) //Comprador
+                Help("", 1, "AVG", STR0009, STR0012, 1, 0, .F.)
+                lRet := .F.
+            Else
+                lRet := ExistCpo("SY1", mv_par05) 
+            EndIf
+        Endif        
+	EndIf
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112HasRg
+Verifica se o filtro aplicado retorna algum registro
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112HasRg(cAliasP, cFilt)
+    
+    Local lRet := .T.
+
+    DbSelectArea(cAliasP)
+    (cAliasP)->(DbSetFilter({|| .T.}, cFilt))
+    (cAliasP)->(DbGoTop())
+
+    If (cAliasP)->(Eof())
+        lRet := .F.
+        Help(" ", 1, "RECNO")
+    EndIf
+
+    (cAliasP)->(DbClearFilter())
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112Mark
+Marca ou desmarca único registro de acordo com seu tipo (SC1 ou SC3)
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112Mark()
+
+    Local lIsMark := oMark112:IsMark()
+
+    If mv_par07 == 1 // 1 = Solicitacao de Compra (SC1), 2 = Contrato Parceria (SC3)         
+        If mv_par06 == 2 //-- 1 = Marca ou desmarca somente item, 2 = Marca ou desmarca todo o documento
+            A112MkDoc(lIsMark, "SC1", xFilial("SC1"), SC1->C1_NUM, "C1_OK", "C1_FILIAL+C1_NUM")
+        Else
+            If Empty((SC1->C1_NUM_SI)) 
+                Reclock('SC1', .F.)
+                    SC1->C1_OK := Iif(lIsMark, Space(Len(SC1->C1_OK)), cMarca)
+                MsUnlock()
+            EndIf
+        EndIf
+    Else
+        If mv_par06 == 2 //-- 1 = Marca ou desmarca somente item, 2 = Marca ou desmarca todo o documento
+            A112MkDoc(lIsMark, "SC3", xFilial("SC3"), SC3->C3_NUM, "C3_OK", "C3_FILIAL+C3_NUM")
+        Else
+            If A112AvalCt()
+                Reclock('SC3', .F.)
+                    SC3->C3_OK := Iif(lIsMark, Space(Len(SC3->C3_OK)), cMarca)
+                MsUnlock()
+            EndIf
+        EndIf
+    EndIf
+
+    oMark112:Refresh(.F.)
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112MkDoc
+Marca ou desmarca todos os registros de um mesmo documento
+de acordo com seu tipo (SC1 ou SC3)
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Static Function A112MkDoc(lIsMk, cAliasP, cFilDoc, cNumDoc, cCpoOk, cKeyDoc)
+    
+    Local aArea   := GetArea()
+
+    Local cFilSW1 := xFilial("SW1")
+    Local cUpd    := ""
+
+    Local lAprvSI := SuperGetMv("MV_APROVSI", .F., .F.)
+    Local lUpdSC1 := !ExistBlock("MT112FIL")
+    Local lUpdSC3 := !ExistBlock("MT112FILSC3")
+
+    Default lIsMk   := oMark112:IsMark()
+
+    Default cAliasP := Alias()
+    Default cFilDoc := xFilial(cAliasP)
+    Default cNumDoc := &((cAliasP)->(Substr(cAliasP, 2, 2) + "_NUM"))
+    Default cCpoOk  := Substr(cAliasP, 2, 2) + "_OK"
+    Default cKeyDoc := Substr(cAliasP, 2, 2) + "_FILIAL" + "+" + Substr(cAliasP, 2, 2) + "_NUM"
+
+    (cAliasP)->(DbSetOrder(1))
+    (cAliasP)->(MsSeek(cFilDoc + cNumDoc)) 
+    
+    //-- Quando não existir filtro de usuário, será feita a marcação via UPDATE no banco de dados
+    //-- Caso o UPDATE falhe ou exista filtro de usuário, a marcação será via ADVPL
+    If cAliasP ==  "SC1" .And. lUpdSC1
+        
+        cUpd := " UPDATE " + RetSQLName("SC1") 
+        cUpd += " SET   C1_OK = CASE WHEN C1_OK = '" + cMarca + "' THEN '  ' ELSE '" + cMarca + "' END "
+        cUpd += " WHERE C1_FILIAL = '" + cFilDoc + "' "
+        cUpd += "       AND C1_NUM = '" + cNumDoc + "' "
+        If lAprvSI
+            cUpd += " AND (C1_APROV = ' ' OR C1_APROV = 'L') "
+        EndIf
+        cUpd += " AND C1_RESIDUO = ' ' AND C1_NUM_SI = '      ' AND C1_IMPORT = 'S' AND D_E_L_E_T_=' ' "
+
+        If TCSqlExec(cUpd) < 0
+            lUpdSC1 := .F.
+        EndIf
+
+    ElseIf cAliasP ==  "SC3" .And. lUpdSC3
+       
+        cUpd := " UPDATE " + RetSQLName("SC3")
+        cUpd += " SET   C3_OK = CASE WHEN C3_OK = '" + cMarca + "' THEN '  ' ELSE '" + cMarca + "' END "
+        cUpd += " WHERE C3_FILIAL = '" + cFilDoc + "' "
+        cUpd += "       AND C3_NUM = '" + cNumDoc + "' "
+        If lAprvSI
+            cUpd += " AND (C3_APROV = ' ' OR C3_APROV = 'L') "
+        EndIf
+        cUpd += "       AND C3_RESIDUO = ' ' "
+        cUpd += "       AND D_E_L_E_T_=' ' "
+        cUpd += "       AND NOT EXISTS (SELECT 1 FROM " + RetSQLName("SW1") + " SW1 WHERE SW1.W1_FILIAL = '" + cFilSW1 + "' AND SW1.W1_C3_NUM = C3_NUM AND SW1.W1_POSICAO = C3_ITEM AND SW1.W1_SEQ = '" + Str(0,2,0) + "' AND SW1.D_E_L_E_T_=' ') " 
+        
+        If TCSqlExec(cUpd) < 0
+            lUpdSC3 := .F.
+        EndIf
+
+    EndIf
+
+    If ( cAliasP == "SC1" .And. !lUpdSC1 ) .Or. (cAliasP == "SC3" .And. !lUpdSC3)
+        Do While !(cAliasP)->(Eof()) .And. &((cAliasP)->(cKeyDoc)) == (cFilDoc + cNumDoc)
+            If cAliasP == "SC1" .And. Empty((cAliasP)->C1_NUM_SI)
+                Reclock(cAliasP, .F.)
+                    &((cAliasP)->(cCpoOk)) := Iif(lIsMk, Space(Len(&(cCpoOk))), cMarca)
+                (cAliasP)->(MsUnlock())
+            ElseIf cAliasP == "SC3" .And. A112AvalCt(cFilSW1, (cAliasP)->C3_NUM + (cAliasP)->C3_ITEM)
+                Reclock(cAliasP, .F.)
+                    &((cAliasP)->(cCpoOk)) := Iif(lIsMk, Space(Len(&(cCpoOk))), cMarca)
+                (cAliasP)->(MsUnlock())
+            EndIf
+            (cAliasP)->(DbSkip())
+        EndDo
+    EndIf
+
+    RestArea(aArea)
+
+Return Nil 
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112AMark
+Marca ou desmarca todos os registros da MarkBrowse
+Para correto funcionamento o Alias processado deve estar com filtro
+aplicado, caso o filtro se perca, pode haver perda de integridade
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112AMark()
+    
+    Local cFilSW1 := xFilial("SW1")
+    Local cFilSC1 := xFilial("SC1")
+    Local cFilSC3 := xFilial("SC3")
+    Local cUpd    := ""
+
+    Local lAprvSI := SuperGetMv("MV_APROVSI", .F., .F.)
+    Local lUpdSC1 := !ExistBlock("MT112FIL")
+    Local lUpdSC3 := !ExistBlock("MT112FILSC3")
+
+    If mv_par07 == 1
+        //-- Quando não existir filtro de usuário, será feita a marcação via UPDATE no banco de dados
+        //-- Caso o UPDATE falhe ou exista filtro de usuário, a marcação será via ADVPL
+        If lUpdSC1 
+            cUpd := " UPDATE " + RetSQLName("SC1") 
+            cUpd += " SET   C1_OK = CASE WHEN C1_OK = '" + cMarca + "' THEN '  ' ELSE '" + cMarca + "' END "
+            cUpd += " WHERE C1_FILIAL = '" + cFilSC1 + "' "
+            If mv_par01 == 1 
+                cUpd += " AND C1_NUM BETWEEN '" + mv_par02 + "' AND '" + mv_par03 + "' "
+            EndIf 
+            If lAprvSI
+                cUpd += " AND (C1_APROV = ' ' OR C1_APROV = 'L') "
+            EndIf
+            cUpd += " AND C1_RESIDUO = ' ' AND C1_NUM_SI = '      ' AND C1_IMPORT = 'S' AND D_E_L_E_T_=' ' "
+
+            If TCSqlExec(cUpd) < 0
+                lUpdSC1 := .F.
+            EndIf
+        EndIf
+
+        If !lUpdSC1
+            SC1->(DbGoTop())
+            While !SC1->(Eof())
+                If Empty(SC1->C1_NUM_SI)
+                    lMarca := (SC1->C1_OK == cMarca)
+                    RecLock("SC1", .F.)
+                        SC1->C1_OK := If(lMarca, "", cMarca)
+                    SC1->(MsUnlock())
+                EndIf
+                SC1->(DbSkip())
+            EndDo
+        EndIf
+    Else
+        //-- Quando não existir filtro de usuário, será feita a marcação via UPDATE no banco de dados
+        //-- Caso o UPDATE falhe ou exista filtro de usuário, a marcação será via ADVPL
+        If lUpdSC3 
+            cUpd := " UPDATE " + RetSQLName("SC3")
+            cUpd += " SET  C3_OK = CASE WHEN C3_OK = '" + cMarca + "' THEN '  ' ELSE '" + cMarca + "' END "
+            cUpd += " WHERE C3_FILIAL = '" + cFilSC3 + "' "
+            If mv_par01 == 1 
+                cUpd += " AND C3_NUM BETWEEN '" + mv_par02 + "' AND '" + mv_par03 + "' "
+            EndIf 
+            If lAprvSI
+                cUpd += " AND (C3_APROV = ' ' OR C3_APROV = 'L') "
+            EndIf
+            cUpd += "       AND C3_RESIDUO = ' ' "
+            cUpd += "       AND D_E_L_E_T_=' ' "
+            cUpd += "       AND NOT EXISTS (SELECT 1 FROM " + RetSQLName("SW1") + " SW1 WHERE SW1.W1_FILIAL = '" + cFilSW1 + "' AND SW1.W1_C3_NUM = C3_NUM AND SW1.W1_POSICAO = C3_ITEM AND SW1.W1_SEQ = '" + Str(0,2,0) + "' AND SW1.D_E_L_E_T_=' ') " 
+            
+            If TCSqlExec(cUpd) < 0
+                lUpdSC3 := .F.
+            EndIf
+        EndIf
+
+        If !lUpdSC3
+            SC3->(DbGoTop())
+            While !SC3->(Eof())
+                If A112AvalCt(cFilSW1, SC3->C3_NUM + SC3->C3_ITEM)
+                    lMarca := (SC3->C3_OK == cMarca)
+                    RecLock("SC3", .F.)
+                        SC3->C3_OK := If(lMarca, "", cMarca)
+                    SC3->(MsUnLock())
+                EndIf
+                SC3->(DbSkip())
+            EndDo
+        EndIf
+    EndIf
+
+    oMark112:Refresh(.T.)
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112Gera
+Processamento do botão Gerar
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112Gera()
+
+    If mv_par07 == 1 //-- 1 = Solicitação de Compra (SC1), 2 = Contrato de Parceria (SC3)
+        Processa({|| A112GSC1()}, STR0017, STR0018, .F.) //"Aguarde" "Gravando itens da solicitação de importação..."
+    Else
+        Processa({|| A112GSC3()}, STR0017, STR0018, .F.) //"Aguarde" "Gravando itens da solicitação de importação..."
+    EndIf
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112GSC1
+Processa a geração de Solicitações de Importação para itens de
+Solicitações de Compra (SC1)
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112GSC1()
+    
+    Local aArea       := GetArea()
+    
+    Local cMarca      := oMark112:Mark()
+    Local cNumSC      := ""
+    Local cUnidReq    := ""
+    Local cCodComp    := ""
+    Local cNumSI      := ""
+    Local cFilSC1     := xFilial("SC1")
+    Local cFilSB1     := xFilial("SB1")
+    Local cFilSW0     := xFilial("SW0")
+    Local cFilSW1     := xFilial("SW1")
+    Local cFilSY3     := xFilial("SY3")
+    Local cAliasAux   := GetNextAlias()
+    Local cEmptNumSI  := Space(TamSX3("C1_NUM_SI")[1])
+    Local cEmptResid  := Space(TamSX3("C1_RESIDUO")[1])
+
+    Local lMT112GRV	  := ExistBlock("MT112GRV")
+    Local lMT112IT	  := ExistBlock("MT112IT")
+    Local lMT112NUM   := ExistBlock("MT112NUM")
+    Local lMT112OK    := ExistBlock("MT112OK")
+    Local lUnidCom    := SuperGetMv("MV_UNIDCOM", .F., 2) == 2 //A Segunda unidade de medida e a unidade de compra internacional
+    Local lOk         := .F.
+    Local lFirst      := .T.
+    Local lNaoGerou   := .F. 
+    Local lGeraSC     := .T.
+
+    Local nSaveSX8    := GetSX8Len()
+    Local nPosC1Nat   := SC1->(FieldPos("C1_NATUREZ"))
+    Local nTotReg     := 0
+
+	//Restaura o filtro definido na abertura do MarkBrowse
+    oMark112:SetFilterDefault(cFilter)
+
+    //-- Query para montar alias temporario de processamento
+    BeginSQL Alias cAliasAux
+		
+        SELECT 	C1_NUM,
+                C1_ITEM,
+                C1_PRODUTO,
+                C1_OK,
+                C1_UNIDREQ,
+                C1_CODCOMP,
+                ROW_NUMBER() OVER (PARTITION BY C1_NUM, C1_PRODUTO ORDER BY C1_NUM, C1_ITEM) AS REG,
+                SC1.R_E_C_N_O_ SC1RECNO
+        FROM 	%Table:SC1% SC1
+        WHERE 	SC1.C1_FILIAL       = %Exp:cFilSC1%   
+                AND SC1.C1_OK       = %Exp:cMarca%
+                AND SC1.C1_NUM_SI   = %Exp:cEmptNumSI%
+                AND SC1.C1_RESIDUO  = %Exp:cEmptResid%
+                AND SC1.%NotDel%
+        ORDER 
+        BY      C1_NUM, C1_ITEM
+    EndSQL
+
+    Count To nTotReg
+    (cAliasAux)->(DbGoTop())
+    ProcRegua(nTotReg)
+    
+    If nTotReg > 0
+        While !(cAliasAux)->(Eof())
+            
+            IncProc()
+            //-- Verifica se é uma nova SC
+            lFirst	:= .F.
+            If cNumSC <> (cAliasAux)->C1_NUM
+                cNumSC := (cAliasAux)->C1_NUM
+                lFirst := .T.
+            EndIf
+
+            //-- Posiciona na SC1 correspondente para processamento dos Pontos de Entrada
+            SC1->(DbGoTo((cAliasAux)->SC1RECNO))
+            
+            //-- Ponto de Entrada para avaliar se irá prosseguir com o processamento
+            If lFirst .And. lMT112OK
+                lGeraSC := ExecBlock("MT112OK", .F., .F.)
+                If ValType(lGeraSC) <> "L"
+                    lGeraSC := .T.
+                EndIf
+            EndIf
+
+            If !lGeraSC
+                lNaoGerou := .F.
+                Exit
+            EndIf
+
+            //Obtém campos obrigatórios para a S.I.
+            cUnidReq := Iif(!Empty(MV_PAR04) .And. Empty(SC1->C1_UNIDREQ), MV_PAR04, SC1->C1_UNIDREQ)
+            cCodComp := Iif(!Empty(MV_PAR05) .And. Empty(SC1->C1_CODCOMP), MV_PAR05, SC1->C1_CODCOMP)
+                
+            //-- Avalia se deve processar o registro
+            If SC1->C1_OK != cMarca .Or. !(SC1->C1_COTACAO == "IMPORT") .Or. Empty(cUnidReq) .Or. Empty(cCodComp) .Or. SC1->C1_RESIDUO == "S"
+                If Empty(cUnidReq) .Or. Empty(cCodComp)
+                    lNaoGerou := .T.
+                EndIf
+                (cAliasAux)->(DbSkip())
+                Loop
+            EndIf
+
+            Begin Transaction
+                
+                If lFirst
+                    
+                    //-- Controle de Numeração Automática da Capa da Solicitação de Importação
+                    DbSelectArea("SW0")
+                    cNumSI := GetSx8Num("SW0", "W0__NUM")
+                    
+                    //-- Ponto de entrada para possibilitar a troca do número da Solicitação de Importação
+                    If lMT112NUM
+                        cNumSI := ExecBlock("MT112NUM", .F., .F.)
+                    EndIf
+                    
+                    //-- Avalia numeração
+                    While !lOk
+                        If MsSeek(cFilSW0 + cUnidReq + cNumSI)
+                            While (GetSX8Len() > nSaveSX8)
+                                ConfirmSX8()
+                            EndDo
+                            cNumSI := GetSx8Num("SW0", "W0__NUM")
+                        Else
+                            lOk := .T.
+                        EndIf
+                    EndDo
+                    
+                    //-- Posiciona SY3 [Unidade Requisitante (C Custo)] para obter o Local Entrega (Y3_LE)
+                    DbSelectArea("SY3")
+                    DbSetOrder(1)
+                    MsSeek(cFilSY3 + cUnidReq)
+
+                    //-- Grava a Capa de Solicitação Importação (SW0)
+                    DbSelectArea("SW0")
+                    RecLock("SW0", .T.)
+
+                        SW0->W0_CONTR  := '2'
+                        SW0->W0_FILIAL := cFilSW0
+                        SW0->W0__CC    := cUnidReq
+                        SW0->W0_SOLIC  := SC1->C1_SOLICIT
+                        SW0->W0__NUM   := cNumSI
+                        SW0->W0__DT    := SC1->C1_EMISSAO
+                        SW0->W0__POLE  := SY3->Y3_LE
+                        SW0->W0_COMPRA := cCodComp
+                        SW0->W0_C1_NUM := SC1->C1_NUM
+                        If nPosC1Nat > 0
+                            SW0->W0_NATUREZ := SC1->C1_NATUREZ
+                        EndIf
+
+                    SW0->(MsUnLock())
+
+                EndIf
+
+                //-- Grava os Itens da Solicitação de Importação (SW1)
+                RecLock("SW1", .T.)
+
+                    SW1->W1_FILIAL  := cFilSW1
+                    SW1->W1_COD_I   := SC1->C1_PRODUTO
+                    SW1->W1_FABR    := SC1->C1_FABR
+                    SW1->W1_FORN    := SC1->C1_FORNECE
+                    SW1->W1_CLASS   := SC1->C1_CLASS
+                    SW1->W1_QTDE    := SC1->C1_QUANT
+                    SW1->W1_SALDO_Q := SC1->C1_QUANT
+                    SW1->W1_DTENTR_ := SC1->C1_DATPRF
+                    SW1->W1_CC      := SW0->W0__CC
+                    SW1->W1_SI_NUM  := SW0->W0__NUM
+                    SW1->W1_POSICAO := SC1->C1_ITEM
+                    SW1->W1_REG     := (cAliasAux)->REG //Contador de incidencia de produto na SC
+                    SW1->W1_QTSEGUM := SC1->C1_QTSEGUM
+                    SW1->W1_SEGUM   := SC1->C1_SEGUM
+                    SW1->W1_POSIT   := SC1->C1_ITEM
+                    SW1->W1_CTCUSTO := SC1->C1_CC
+
+                    //-- Tratamento de loja para fornecedor e loja para fabricante
+                    If EicLoja()
+                        SW1->W1_FORLOJ := SC1->C1_LOJA
+                        SW1->W1_FABLOJ := SC1->C1_FABRLOJ
+                    EndIf
+                    
+                    //-- Converte para a segunda unidade de medida quando estiver parametrizado em MV_UNIDCOM
+                    If lUnidcom
+                        SB1->(DbSetOrder(1))
+                        If SB1->(MsSeek(cFilSB1 + SW1->W1_COD_I))  .And. !Empty(SC1->C1_QTSEGUM)
+                            SW1->W1_QTDE    := SC1->C1_QTSEGUM
+                            SW1->W1_SALDO_Q := SC1->C1_QTSEGUM
+                            SW1->W1_QTSEGUM := SC1->C1_QUANT
+                            SW1->W1_SEGUM	:= SC1->C1_UM
+                        EndIf
+                    EndIf
+
+                SW1->(MsUnLock())
+                
+                //-- Grava referencia da S.I. na SC
+                DbSelectArea("SC1")
+                RecLock("SC1", .F.)
+                    SC1->C1_NUM_SI  := cNumSI
+                    SC1->C1_COTACAO := "IMPORX"
+                SC1->(MsUnLock())
+
+            End Transaction
+            
+            //-- Ponto de Entrada para processamentos ao fim da gravação de cada primeiro item da SI
+            If lFirst
+                If lMT112GRV
+                    ExecBlock("MT112GRV", .F., .F.)
+                EndIf
+            EndIf
+
+            //-- Ponto de Entrada para processamentos ao fim da gravação de cada item da SI
+            If lMT112IT
+                ExecBlock("MT112IT", .F., .F.)
+            EndIf
+            
+            //-- Controle de Numeração Automática
+            While (GetSX8Len() > nSaveSX8)
+                ConfirmSX8()
+            EndDo
+            
+            //-- Limpa marca do campo após seu processamento
+            SC1->(DbGoTo((cAliasAux)->SC1RECNO))
+            RecLock("SC1", .F.)
+                SC1->C1_OK := Space(Len(C1_OK))
+            SC1->(MsUnlock())
+            
+            (cAliasAux)->(DbSkip())
+        
+        EndDo
+    Else
+        Help(,, "A112NOMK",, STR0019, 1, 0) //-- "Nenhum registro válido foi selecionado para o processamento!"
+    EndIf
+
+    (cAliasAux)->(DbCloseArea())
+
+    RestArea(aArea)
+
+    If lNaoGerou
+        Help(,, "A112NGEROU",, STR0016, 1, 0) //"Houveram SIs que nao foram geradas por haver SCs com Unidade Requisitante e/ou Codigo do Comprador em branco, campos obrigatorios no SIGAEIC, altere as SC ou informe os codigos a serem preenchidos na geracao das SIs na lista de parametros."
+    EndIf
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112GSC3
+Processa a geração de Solicitações de Importação para itens de
+Contrato de Parceria (SC3)
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112GSC3()
+
+    Local aArea     := GetArea()
+    
+    Local cUnidReq  := mv_par04
+    Local cCodComp  := mv_par05
+    Local cNumCtr   := ""
+    Local cNumSI    := ""
+    Local cMVSimb   := ""
+    Local cFilSB1   := xFilial("SB1")
+    Local cFilSW0   := xFilial("SW0")
+    Local cFilSW1   := xFilial("SW1")
+    Local cFilSY3   := xFilial("SY3")
+    Local cAliasAux := GetNextAlias()
+    Local cEmptResid:= Space(TamSX3("C1_RESIDUO")[1])
+    
+    Local lUnidCom  := SuperGetMv("MV_UNIDCOM", .F., 2) == 2 //A Segunda unidade de medida e a unidade de compra internacional
+    Local lOk       := .F.
+    Local lFirst    := .T.
+    
+    Local nSaveSX8  := GetSX8Len()
+    Local nTotReg   := 0
+	
+	//Restaura o filtro definido na abertura do MarkBrowse
+	oMark112:SetFilterDefault(cFilter)
+
+    //-- Query para montar alias temporario de processamento
+    BeginSQL Alias cAliasAux
+        SELECT  C3_OK,
+                C3_FILIAL,
+                C3_NUM,
+                C3_ITEM,
+                C3_PRODUTO,
+                C3_QUANT,
+                C3_QTSEGUM,
+                C3_PRECO,
+                C3_FORNECE,
+                C3_LOJA,
+                ROW_NUMBER() OVER (PARTITION BY C3_NUM, C3_PRODUTO ORDER BY C3_NUM, C3_ITEM) AS REG,
+                C3_CONTATO,
+                C3_MOEDA,
+                C3_EMISSAO,
+                C3_DATPRF,
+                C3_UM,
+                C3_SEGUM,
+                C3_CC,
+                SC3.R_E_C_N_O_ SC3RECNO
+        FROM    %Table:SC3% SC3
+        WHERE   SC3.C3_FILIAL    = %xFilial:SC3%
+                AND C3_OK        = %Exp:cMarca%
+                AND C3_RESIDUO   = %Exp:cEmptResid%
+                AND SC3.%NotDel% 
+        ORDER 
+        BY      C3_NUM, C3_ITEM
+    EndSQL
+
+    Count To nTotReg
+    (cAliasAux)->(DbGoTop())
+    ProcRegua(nTotReg)
+        
+    If nTotReg > 0 
+        While !(cAliasAux)->(Eof())
+
+            IncProc()
+
+            //-- Verifica se é um novo Contrato
+            lFirst	:= .F.
+            If cNumCtr <> (cAliasAux)->C3_NUM
+                cNumCtr := (cAliasAux)->C3_NUM
+                lFirst := .T.
+            EndIf
+            
+            //-- Posiciona na SC3 correspondente para avaliação do registro
+            SC3->(DbGoTo((cAliasAux)->SC3RECNO))
+
+            //-- Avalia se deve processar o registro
+            If SC3->C3_OK != cMarca .Or. !A112AvalCt(cFilSW1, SC3->C3_NUM + SC3->C3_ITEM) .Or. SC3->C3_RESIDUO == "S"
+                (cAliasAux)->(DbSkip())
+                Loop
+            EndIf
+            
+            Begin Transaction
+                
+                If lFirst
+
+                    //-- Controle de Numeração Automática da Capa da Solicitação de Importação
+                    DbSelectArea("SW0")
+                    cNumSI := GetSx8Num("SW0", "W0__NUM")
+                    
+                    //-- Avalia numeração
+                    While !lOk
+                        If MsSeek(cFilSW0 + cUnidReq + cNumSI)
+                            While (GetSX8Len() > nSaveSX8)
+                                ConfirmSX8()
+                            EndDo
+                            cNumSI := GetSx8Num("SW0", "W0__NUM")
+                        Else
+                            lOk := .T.
+                        EndIf
+                    EndDo
+                        
+                    //-- Posiciona SY3 [Unidade Requisitante (C Custo)] para obter o Local Entrega (Y3_LE)
+                    DbSelectArea("SY3")
+                    DbSetOrder(1)
+                    MsSeek(cFilSY3 + cUnidReq)
+
+                    //-- Grava a Capa de Solicitação Importação (SW0)
+                    DbSelectArea("SW0")
+                    RecLock("SW0", .T.)
+                        SW0->W0_FILIAL := cFilSW0
+                        SW0->W0__CC    := cUnidReq
+                        SW0->W0_SOLIC  := (cAliasAux)->C3_CONTATO
+                        SW0->W0__NUM   := cNumSI
+                        SW0->W0__DT    := SToD((cAliasAux)->C3_EMISSAO)
+                        SW0->W0__POLE  := SY3->Y3_LE
+                        SW0->W0_COMPRA := cCodComp
+                        SW0->W0_CONTR  := "1"
+                        cMVSimb        := "MV_SIMB" + cValToChar((cAliasAux)->C3_MOEDA)
+                        SW0->W0_MOEDA  := Left(SuperGetMV(cMVSimb, .F., "US$"), 3)		
+                    SW0->(MsUnLock())
+
+                EndIf
+                
+                //-- Grava os Itens da Solicitação de Importação (SW1)
+                DbSelectArea("SW1")
+                RecLock("SW1", .T.)
+
+                    SW1->W1_FILIAL  := cFilSW1
+                    SW1->W1_COD_I   := (cAliasAux)->C3_PRODUTO
+                    SW1->W1_FORN    := (cAliasAux)->C3_FORNECE
+                    SW1->W1_QTDE    := (cAliasAux)->C3_QUANT
+                    SW1->W1_SALDO_Q := (cAliasAux)->C3_QUANT
+                    SW1->W1_DTENTR_ := SToD((cAliasAux)->C3_DATPRF)
+                    SW1->W1_CC      := SW0->W0__CC
+                    SW1->W1_SI_NUM  := SW0->W0__NUM
+                    SW1->W1_POSICAO := (cAliasAux)->C3_ITEM
+                    SW1->W1_REG     := (cAliasAux)->REG
+                    SW1->W1_QTSEGUM := (cAliasAux)->C3_QTSEGUM           
+                    SW1->W1_SEGUM   := (cAliasAux)->C3_SEGUM
+                    SW1->W1_PRECO   := (cAliasAux)->C3_PRECO
+                    SW1->W1_C3_NUM  := (cAliasAux)->C3_NUM
+                    SW1->W1_POSIT   := (cAliasAux)->C3_ITEM
+                    SW1->W1_CTCUSTO := (cAliasAux)->C3_CC
+
+                    If ValType((cAliasAux)->C3_UM) == "C"
+                        SW1->W1_UM := (cAliasAux)->C3_UM
+                    EndIf
+                        
+                    //-- Tratamento de loja para fornecedor
+                    If EicLoja()
+                        SW1->W1_FORLOJ := (cAliasAux)->C3_LOJA
+                    EndIf
+                    
+                    //-- Converte para a segunda unidade de medida quando estiver parametrizado em MV_UNIDCOM
+                    If lUnidcom
+                        SB1->(DbSetOrder(1))
+                        If SB1->(MsSeek(cFilSB1 + SW1->W1_COD_I)) .And. !Empty((cAliasAux)->C3_QTSEGUM)
+                            SW1->W1_QTDE    := (cAliasAux)->C3_QTSEGUM
+                            SW1->W1_SALDO_Q := (cAliasAux)->C3_QTSEGUM
+                            SW1->W1_QTSEGUM := (cAliasAux)->C3_QUANT
+                            If ValType((cAliasAux)->C3_UM) == "C"
+                                SW1->W1_UM    := (cAliasAux)->C3_SEGUM
+                                SW1->W1_SEGUM := (cAliasAux)->C3_UM
+                            Else
+                                SW1->W1_UM := (cAliasAux)->C3_SEGUM
+                            EndIf    
+                        EndIf
+                    EndIf
+            
+                SW1->(MSUnLock())
+
+            End Transaction
+
+            //-- Limpa marca do campo após seu processamento
+            SC3->(DbGoTo((cAliasAux)->SC3RECNO))
+            RecLock("SC3", .F.)
+                SC3->C3_OK := Space(Len(C3_OK))
+            SC3->(MsUnlock())
+            
+            //-- Controle de Numeração Automática
+            While (GetSX8Len() > nSaveSX8)
+                ConfirmSX8()
+            EndDo
+
+            (cAliasAux)->(DbSkip())
+
+        EndDo
+    Else
+        Help(,, "A112NOMK",, STR0019, 1, 0) //-- "Nenhum registro foi selecionado para geração!"
+    EndIf
+
+    (cAliasAux)->(DbCloseArea())
+
+    RestArea(aArea)
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A112AvalCt
+Avalia se registro pode ser processado pelas rotinas de marcação/
+desmarcação ou geração de SI e também avalia sua legenda
+@author leonardo.magalhaes
+@since 22/08/2019
+@version P12
+/*/
+//-------------------------------------------------------------------
+Function A112AvalCt(cFilSW1, cKeyItCtr)
+
+    Local lRet     := .F.
+    Local aArea    := GetArea()
+    Local aAreaSW1 := SW1->(GetArea())
+    
+    Default cFilSW1   := xFilial("SW1")
+    Default cKeyItCtr := SC3->C3_NUM + SC3->C3_ITEM
+
+    SW1->(DbSetOrder(5)) //W1_FILIAL + W1_C3_NUM + W1_POSICAO + W1_SEQ
+    If !SW1->(MsSeek(cFilSW1 + cKeyItCtr + Str(0,2,0)))
+        lRet := .T.
+    EndIf
+
+    SW1->(RestArea(aAreaSW1))
+    RestArea(aArea)
+        
+Return lRet

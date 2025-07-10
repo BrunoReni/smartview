@@ -1,0 +1,298 @@
+#INCLUDE "MATA171.CH"
+#INCLUDE "PROTHEUS.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATA171  ³ Autor ³ Ernani Forastieri     ³ Data ³ 21/03/05 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera solicitacoes ao Almoxarfado no ponto de pedido no SB2 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ lOpcAuto   = T se for rotina automatica (sem tela)         ³±±
+±±³          ³ aParametros= Array com os parametros do SX1                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Gen‚rico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function MATA171(lOpcAuto, aParametros)
+Local nOpca         := 0
+Local aSays         :={}
+Local aButtons      := {}
+Local xParametro    := ""
+Local nCntFor       := 0
+Local nTamSX1		:= Len(SX1->X1_GRUPO)
+DEFAULT lOpcAuto    := .F.
+DEFAULT aParametros := {}
+
+PRIVATE cCadastro := OemToAnsi(STR0001)	//"Solicita‡„o por Ponto de Pedido"
+
+Pergunte("MTA171",.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros        ³
+//³ mv_par01     // Produto de                  ³
+//³ mv_par02     // Produto ate                 ³
+//³ mv_par03     // Grupo de                    ³
+//³ mv_par04     // Grupo ate                   ³
+//³ mv_par05     // Tipo de                     ³
+//³ mv_par06     // Tipo ate                    ³
+//³ mv_par07     // Local de                    ³
+//³ mv_par08     // Local ate                   ³
+//³ mv_par09     // Considera Necess Bruta 1 sim³  Pto Pedido
+//³ mv_par10     // Saldo Neg Considera    1 sim³  Lot.Economico
+//³ mv_par11     // Cons.Qtd. De 3os.? Sim / Nao³
+//³ mv_par12     // Cons.Qtd. Em 3os.? Sim / Nao³
+//³ mv_par13     // Ao atingir Estoque Maximo ? ³  1=Qtde. Original; 2=Ajusta Est. Max
+//³ mv_par14     // Qtd PV nao liberado         ³  1=Subtrai ; 2=Ignora
+//³ mv_par15     // Armazem da SA               ³  
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nOpca :=0
+If !lOpcAuto
+	AADD(aSays,OemToAnsi( STR0002 ) )
+	AADD(aSays,OemToAnsi( STR0003 ) )
+	AADD(aSays,OemToAnsi( STR0004 ) )
+	AADD(aSays,OemToAnsi( STR0005 ) )
+	
+	AADD(aButtons, { 5,.T.,{||Pergunte("MTA171") } } )
+	AADD(aButtons, { 1,.T.,{|o| nOpca:= 1, o:oWnd:End() } } )
+	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+	
+	FormBatch( cCadastro, aSays, aButtons,,240,425 )
+	
+	If nOpcA == 1
+		Processa({|lEnd| A171Point()})
+	EndIf
+	
+Else
+	//carrega os parametros passados pela rotina automatica
+	For nCntFor := 1 to Len(aParametros)
+		xParametro := 'mv_par'+StrZero(nCntFor,2)
+		&xParametro:= aParametros[nCntFor]
+	Next
+	A171Point()
+EndIf
+
+Return
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A171Point³ Autor ³ Claudinei M. Benzi    ³ Data ³ 07/07/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Gera as solicitacoes de compra                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA171                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function A171POINT
+Local cNumSA
+Local nSaldo:=0, nNeces:=0
+Local nTamUser,aTamSX3:={}
+Local nEstSeg   := 0
+Local nSaveSX8  := GetSX8Len()
+Local lMT171SB1 := (ExistBlock("MT171SB1"))
+Local lQuery    := .F.
+Local lValidSB1 := .T.
+Local cAliasSB1  := "SB1"
+Local nSaldoMax := 0
+Local cQuery    := ""
+
+aTamSX3:=TamSX3("CP_SOLICIT")
+nTamUser:=IIF(aTamSX3[1]<=15,aTamSX3[1],15)
+ProcRegua(SB1->(RecCount())*5)
+
+dbSelectArea("SB1")
+
+cAliasSB1:= "TRBSB"
+lQuery := .T.
+cQuery := "SELECT SB1.*, SB1.R_E_C_N_O_ SB1RECNO FROM " + RetSqlName("SB1")+" SB1 "
+cQuery += "WHERE SB1.B1_FILIAL ='"+xFilial("SB1")+"' AND "
+cQuery += "SB1.B1_COD >='" +Mv_Par01+"' AND SB1.B1_COD <='" +Mv_Par02+"' AND "
+cQuery += "SB1.B1_GRUPO>='"+Mv_Par03+"' AND SB1.B1_GRUPO<='"+Mv_Par04+"' AND "
+cQuery += "SB1.B1_TIPO>='" +Mv_Par05+"' AND SB1.B1_TIPO<='" +Mv_Par06+"' AND "
+cQuery += "SB1.B1_CONTRAT<>'S' AND B1_TIPO<>'BN' AND "
+cQuery += "SB1.B1_COD NOT LIKE 'MOD%' AND SB1.D_E_L_E_T_<>'*'"
+cQuery += "ORDER BY "+SqlOrder(SB1->(IndexKey()))
+cQuery := ChangeQuery(cQuery)
+dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),cAliasSB1)
+dbGoTop()
+
+SG1->(dbSetOrder(1))
+
+While !(cAliasSB1)->(Eof()) .And. (cAliasSB1)->(B1_FILIAL+B1_COD) <= xFilial("SB1")+Mv_Par02
+	IncProc()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Filtra se produto possui estrutura                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SG1->(dbSeek(xFilial("SG1")+(cAliasSB1)->B1_COD))
+		dbSkip()
+		Loop
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Ponto de entrada para validar um produto do SB1.          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lMT171SB1
+		lValidSB1 := ExecBlock("MT171SB1",.F.,.F.,{cAliasSB1})
+	EndIf
+	If lValidSB1
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Calcula o saldo atual de todos os almoxarifados ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea("SB2")
+		dbSetOrder(1)
+		dbSeek(xFilial("SB2")+(cAliasSB1)->B1_COD)
+		While !Eof () .And. xFilial("SB2")+(cAliasSB1)->B1_COD == SB2->B2_FILIAL+SB2->B2_COD
+			nSaldo    := (SaldoSB2(NIL,NIL,If(Empty(mv_par11),dDataBase,mv_par11),mv_par11==1,mv_par12==1)+B2_SALPEDI+B2_QACLASS)
+			nEstSeg   := CalcEstSeg( RetFldProd(SB2->B2_COD,"B1_ESTFOR",cAliasSB1) )
+			nSaldo    -= nEstSeg			
+			If mv_par14 == 1
+				nSaldo -= SB2->B2_QPEDVEN
+			EndIf
+			nSaldoMax := RetFldProd((cAliasSB1)->B1_COD,"B1_EMAX")                     
+			If (Round(nSaldo,4) # 0) .Or. (mv_par09 == 1)
+				Do Case
+					Case ( RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN") != 0 .And. MV_PAR09 == 1 )
+						If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+							nSaldo -= RetFldProd((cAliasSB1)->B1_COD,"B1_LE")
+						EndIf
+						nNeces := If((nSaldo < 0),Abs(nSaldo)+RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN"),(RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN")-nSaldo))
+					Case ( RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN") != 0 .And. MV_PAR09 == 2 )
+						If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+							nSaldo -= RetFldProd((cAliasSB1)->B1_COD,"B1_LE")
+						EndIf
+						nNeces := If((nSaldo < 0),Abs(nSaldo),(RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN")-nSaldo))
+					Case ( RetFldProd((cAliasSB1)->B1_COD,"B1_LE") != 0 .And. (nSaldo < 0  .or. mv_par09 == 2) )
+						If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+							nNeces := Abs(nSaldo)+RetFldProd((cAliasSB1)->B1_COD,"B1_LE")
+						Else
+							nNeces := If( Abs(nSaldo)< RetFldProd((cAliasSB1)->B1_COD,"B1_LE"),RetFldProd((cAliasSB1)->B1_COD,"B1_LE"),if(nSaldo<0,Abs(nSaldo),0))
+						EndIf
+					OtherWise
+						nNeces := IF(MV_PAR09 == 1,IIf(nSaldo<0,Abs(nSaldo),0),0)						
+				EndCase
+			Else
+				If RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN") != 0
+					nNeces := RetFldProd((cAliasSB1)->B1_COD,"B1_EMIN")
+				Else
+					nNeces := 0
+				Endif
+			EndIf
+			If nSaldoMax # 0 .And. mv_par13 == 2
+				nNeces := Min(nSaldoMax - nSaldo,nNeces)
+			Endif
+			If nNeces > 0
+				Begin Transaction
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Gera solicitacao ao Almoxarifado            ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				cNumSA := GetNumSCP(.T.)
+				RecLock("SCP",.T.)
+				SCP->CP_FILIAL  := xFilial("SCP")
+				SCP->CP_NUM     := cNumSA
+				SCP->CP_ITEM    := StrZero(1,Len(SC1->C1_ITEM))
+				SCP->CP_PRODUTO := SB2->B2_COD
+				SCP->CP_UM      := (cAliasSB1)->B1_UM
+				SCP->CP_QUANT   := nNeces
+				SCP->CP_SEGUM   := (cAliasSB1)->B1_SEGUM
+				SCP->CP_QTSEGUM := ConvUm(SB2->B2_COD,nNeces,0,2)
+				SCP->CP_DATPRF  := dDataBase
+				SCP->CP_LOCAL   := IF(!Empty(mv_par15),mv_par15,RetFldProd((cAliasSB1)->B1_COD,"B1_LOCPAD",cAliasSB1))
+				SCP->CP_OBS     := cCadastro
+				SCP->CP_CC      := (cAliasSB1)->B1_CC
+				SCP->CP_CONTA   := (cAliasSB1)->B1_CONTA
+				SCP->CP_EMISSAO := dDataBase
+				SCP->CP_DESCRI  := (cAliasSB1)->B1_DESC
+				SCP->CP_SOLICIT := Substr(cUsuario,7,nTamUser)
+				SCP->CP_ITEMCTA := (cAliasSB1)->B1_ITEMCC
+				SCP->CP_CLVL    := (cAliasSB1)->B1_CLVL
+				// Grava como saldo em bloqueio para na eventualidade de excluir a SA
+				// Manualmente ela nao refaca o saldo de modo errado, pois é usada a
+				// diferenca entre CP_QUANT e CP_SALBLQ, que vai resultar em 0
+				SCP->CP_SALBLQ  := nNeces
+				While ( GetSX8Len() > nSaveSX8 )
+					ConfirmSX8()
+				EndDo
+				End Transaction
+			EndIf
+			dbSelectArea("SB2")
+			dbSkip()
+		EndDo
+	EndIf
+	dbSelectArea(cAliasSB1)
+	dbSkip()
+EndDo
+If lQuery
+	dbSelectArea(cAliasSB1)
+	dbCloseArea()
+EndIf
+Return NIL
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ GetNumSCP³ Autor ³ Ernani Forastieri     ³ Data ³ 07/07/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Gera numero para SA                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA171                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function GetNumSCP(lConfirma)
+Static lNewIniSCP
+Local aArea    := GetArea()
+Local aAreaSCP := SCP->(GetArea())
+Local aAreaSX3 := ""
+Local cNumSA   := ""
+
+lConfirma := If(lConfirma==Nil,.F.,lConfirma)
+
+// Verifica se inicializador padrao foi mudado
+If lNewIniSCP == NIL
+	aAreaSX3:=SX3->(GetArea())
+	dbSelectArea("SX3")
+	dbSetOrder(2)
+	If dbSeek("CP_NUM")
+		lNewIniSCP:=!("GETNUMSCP" $ UPPER(X3_RELACAO))
+	EndIf
+	RestArea(aAreaSX3)
+EndIF
+
+// Executa novo inicializador padrao
+If lNewIniSCP
+	cNumSA:=CriaVar("CP_NUM")
+	If Empty(cNumSA)
+		lNewIniSCP:=.F.
+	EndIf
+EndIf
+
+// Executa funcao default
+If !lNewIniSCP
+	cNumSA:=GetSxENum("SCP","CP_NUM")
+	lConfirma := If(lConfirma==Nil,.F.,lConfirma)
+EndIf
+dbSelectArea("SCP")
+dbSetOrder(1)
+While SCP->(dbSeek(xFilial("SCP")+cNumSA))
+	If ( __lSx8 )
+		ConfirmSX8()
+	EndIf
+	cNumSA := GetSxENum("SCP","CP_NUM")
+EndDo
+If ( lConfirma )
+	If ( __lSx8 )
+		ConfirmSX8()
+	EndIf
+EndIf
+RestArea(aAreaSCP)
+RestArea(aArea)
+Return(cNumSA)

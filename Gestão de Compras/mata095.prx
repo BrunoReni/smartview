@@ -1,0 +1,680 @@
+#Include 'Protheus.ch'
+#Include 'FWMVCDef.ch'
+#INCLUDE "MATA095.CH"
+ 
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MATA095()
+Cadastro de Aprovadores
+@author Andrews Egas
+@since 27/05/2014
+@version 1.0
+@return NIL
+/*/
+//-------------------------------------------------------------------
+Function MATA095()
+
+Local oBrowse := Nil
+
+Private aRotina := MenuDef()
+PRIVATE cCadastro := STR0013 //-- "Cadastro de Aprovadores"
+
+oBrowse := FWMBrowse():New()
+oBrowse:SetAlias("SAK")
+oBrowse:SetDescription(STR0013) //-- "Cadastro de Aprovadores"
+oBrowse:DisableDetails()
+oBrowse:Activate()
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} MenuDef()
+Definicao do Menu
+@author Andrews Egas
+@since 28/05/2013
+@version 1.0
+@return aRotina (vetor com botoes da EnchoiceBar)
+/*/
+//-------------------------------------------------------------------
+Static Function MenuDef()
+
+Local aRotina	:= { 	{STR0008,"PesqBrw"			, 0 , 1, 0, NIL},;	//"Pesquisar"
+						{ STR0009,"VIEWDEF.MATA095"	, 0 , 2, 0, NIL},;  	//"Visualizar"
+						{ STR0010,"VIEWDEF.MATA095"	, 0 , 3, 0, NIL},;	//"Incluir"
+						{ STR0011,"VIEWDEF.MATA095"	, 0 , 4, 0, NIL},;	//"Alterar"
+						{ STR0012,"VIEWDEF.MATA095"	, 0 , 5, 0, NIL},;	//"Excluir"
+						{ STR0020,"A095Consulta"		, 0 , 2, 0, NIL} }	//"Consulta Saldos"	
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de entrada utilizado para inserir novas opcoes no array aRotina  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("MTA095MNU")
+    aRotina := ExecBlock("MTA095MNU",.F.,.F.,{aRotina})
+EndIf
+
+Return aRotina
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} ModelDef
+Definição do modelo de Dados
+@author Andrews Egas
+@since 27/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Static Function ModelDef()
+Local oModel
+Local oStrSAK		:= FWFormStruct(1,'SAK') 
+Local oStrSCR		:= FWFormStruct(1,'SCR')
+
+oModel := MPFormModel():New('MATA095',/*PreModel*/, { |oModel| A095TudoOk( oModel ) } /*PosModel*/, /*Comit */ ,/*Cancel*/)
+
+oStrSAK:AddField( ;                                                  
+                  AllTrim('Saldo da Data') , 		;// [01] C Titulo do campo
+                  AllTrim('') , 					;// [02] C ToolTip do campo
+                  'SAK_DTSALD' , 					;// [03] C identificador (ID) do Field
+                  'N' , 								;// [04] C Tipo do campo
+                  14 , 								;// [05] N Tamanho do campo
+                  2 , 								;// [06] N Decimal do campo
+                  NIL , 								;// [07] B Code-block de validação do campo
+                  NIL , 								;// [08] B Code-block de validação When do campo
+                  NIL , 								;// [09] A Lista de valores permitido do campo
+                  NIL , 								;// [10] L Indica se o campo tem preenchimento obrigatório
+                  {|| A095CarIni('SAK_DTSALD')}, ;// [11] B Code-block de inicializacao do campo
+                  NIL , 								;// [12] L Indica se trata de um campo chave
+                  NIL , 								;// [13] L Indica se o campo pode receber valor em uma operação de update.
+                  .T.								; 
+              	)
+
+oStrSAK:AddField( ;                                                  
+                  AllTrim('Moeda') , 				;// [01] C Titulo do campo
+                  AllTrim('') , 					;// [02] C ToolTip do campo
+                  'SAK_MOEDA' , 					;// [03] C identificador (ID) do Field
+                  'C' , 								;// [04] C Tipo do campo
+                  12 , 								;// [05] N Tamanho do campo
+                  0 , 								;// [06] N Decimal do campo
+                  NIL , 								;// [07] B Code-block de validação do campo
+                  NIL , 								;// [08] B Code-block de validação When do campo
+                  NIL , 								;// [09] A Lista de valores permitido do campo
+                  NIL , 								;// [10] L Indica se o campo tem preenchimento obrigatório
+                  {|| A095CarIni('SAK_MOEDA')},	;// [11] B Code-block de inicializacao do campo
+                  NIL , 								;// [12] L Indica se trata de um campo chave
+                  NIL , 								;// [13] L Indica se o campo pode receber valor em uma operação de update.
+                  .T. 								;
+					)
+                        
+oStrSAK:AddField( ;                                                  
+                  AllTrim('Data Ref') , 			;// [01] C Titulo do campo
+                  AllTrim('') , 					;// [02] C ToolTip do campo
+                  'SAK_DTREF' , 					;// [03] C identificador (ID) do Field
+                  'D' , 								;// [04] C Tipo do campo
+                  12 ,  								;// [05] N Tamanho do campo
+                  0 ,  								;// [06] N Decimal do campo
+                  {|| A095Saldo() } ,  			;// [07] B Code-block de validação do campo
+                  NIL ,  							;// [08] B Code-block de validação When do campo
+                  NIL ,  							;// [09] A Lista de valores permitido do campo
+                  NIL ,   							;// [10] L Indica se o campo tem preenchimento obrigatório
+                  {|| dDataBase} ,   				;// [11] B Code-block de inicializacao do campo
+                  NIL ,   							;// [12] L Indica se trata de um campo chave
+                  NIL ,   							;// [13] L Indica se o campo pode receber valor em uma operação de update.
+                  .T. 								;
+                  )                                                   
+
+oModel:addFields('SAKMASTER',,oStrSAK)
+oModel:addGrid('SCRDETAIL','SAKMASTER',oStrSCR)
+
+oModel:SetRelation('SCRDETAIL', { {'CR_FILIAL','xFilial("SCR")'}, { 'CR_LIBAPRO', 'AK_COD' }, { 'CR_DATALIB', 'SAK_DTREF' }} , SCR->(IndexKey(2)))
+oModel:GetModel( 'SCRDETAIL' ):SetOptional(.T.)
+oModel:GetModel( 'SCRDETAIL' ):SetOnlyView()
+
+Return oModel
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} ViewDef
+Definição do interface
+@author Andrews Egas
+@since 27/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Static Function ViewDef()
+Local oView
+Local oModel 		:= ModelDef() 
+Local lConsSaldo 	:= IsInCallStack("A095Consulta")
+Local oStrSAK		:= FWFormStruct(2, 'SAK')
+Local oStrSCR		:= FWFormStruct(2, 'SCR')
+ 
+oView := FWFormView():New()
+oView:SetModel(oModel)
+
+oStrSAK:AddGroup( "GRPSAK" , STR0044 , "" , 2 )//"Aprovador "
+
+If lConsSaldo
+	oStrSAK:AddField(	;
+					"SAK_DTSALD",					;// [01]  C   Nome do Campo
+					"01",							;// [02]  C   Ordem
+					STR0032, 						;// [03]  C   Titulo do campo
+					STR0032,						;// [04]  C   Descricao do campo
+					{STR0032,""},					;// [05]  A   Array com Help
+					"N",							;// [06]  C   Tipo do campo
+					PesqPict("SAK","AK_LIMITE"),;// [07]  C   Picture
+					NIL	,							;// [08]  B   Bloco de Picture Var
+					NIL	,							;// [09]  C   Consulta F3
+					.F.	,							;// [10]  L   Indica se o campo é alteravel
+					NIL	,							;// [11]  C   Pasta do campo
+					NIL	,							;// [12]  C   Agrupamento do campo
+					NIL	,							;// [13]  A   Lista de valores permitido do campo (Combo)
+					NIL	,							;// [14]  N   Tamanho maximo da maior opção do combo
+					NIL,							;// [15]  C   Inicializador de Browse
+					.F.,							;// [16]  L   Indica se o campo é virtual
+					NIL	,							;// [17]  C   Picture Variavel
+					NIL								;// [18]  L   Indica pulo de linha após o campo
+				)		
+	
+	oStrSAK:AddField(	;
+					"SAK_MOEDA",					;// [01]  C   Nome do Campo
+					"01",							;// [02]  C   Ordem
+					STR0033,						;// [03]  C   Titulo do campo
+					STR0033,						;// [04]  C   Descricao do campo
+					{STR0033,""},					;// [05]  A   Array com Help
+					"C"	,							;// [06]  C   Tipo do campo
+					"",								;// [07]  C   Picture
+					NIL	,							;// [08]  B   Bloco de Picture Var
+					NIL	,							;// [09]  C   Consulta F3
+					.F.	,							;// [10]  L   Indica se o campo é alteravel
+					NIL,							;// [11]  C   Pasta do campo
+					NIL,							;// [12]  C   Agrupamento do campo
+					NIL	,							;// [13]  A   Lista de valores permitido do campo (Combo)
+					NIL	,							;// [14]  N   Tamanho maximo da maior opção do combo
+					NIL	,							;// [15]  C   Inicializador de Browse
+					.F.	,							;// [16]  L   Indica se o campo é virtual
+					NIL	,							;// [17]  C   Picture Variavel
+					NIL								;// [18]  L   Indica pulo de linha após o campo																
+				)		
+
+	oStrSAK:AddField(	;
+					"SAK_DTREF",					;// [01]  C   Nome do Campo
+					"01",							;// [02]  C   Ordem
+					STR0034,						;// [03]  C   Titulo do campo
+					STR0034,						;// [04]  C   Descricao do campo
+					{STR0034,""},					;// [05]  A   Array com Help
+					"D",							;// [06]  C   Tipo do campo
+					"",								;// [07]  C   Picture
+					NIL	,							;// [08]  B   Bloco de Picture Var
+					NIL	,							;// [09]  C   Consulta F3
+					.T.,							;// [10]  L   Indica se o campo é alteravel
+					NIL,							;// [11]  C   Pasta do campo
+					NIL,							;// [12]  C   Agrupamento do campo
+					NIL	,							;// [13]  A   Lista de valores permitido do campo (Combo)
+					NIL,							;// [14]  N   Tamanho maximo da maior opção do combo
+					NIL,							;// [15]  C   Inicializador de Browse
+					.F.	,							;// [16]  L   Indica se o campo é virtual
+					NIL	,							;// [17]  C   Picture Variavel
+					NIL								;// [18]  L   Indica pulo de linha após o campo															
+				)
+	
+	oStrSAK:AddGroup( "GRPSAKTRB"		, STR0060	 , "" , 2 )//"Consulta de Saldo - Aprovador"
+	
+	//CAMPOS PERTENCENTES AOS GRUPOS
+	oStrSAK:SetProperty( "SAK_DTSALD"	 , MVC_VIEW_GROUP_NUMBER, "GRPSAKTRB" )
+	oStrSAK:SetProperty( "SAK_MOEDA"	 , MVC_VIEW_GROUP_NUMBER, "GRPSAKTRB" )
+	oStrSAK:SetProperty( "SAK_DTREF" 	 , MVC_VIEW_GROUP_NUMBER, "GRPSAKTRB" )
+	
+	// - PODE ALTERAR .T. ou .F.
+	oStrSCR:SetProperty		( "*" 			 , MVC_VIEW_CANCHANGE   ,.F.  )
+	oStrSAK:SetProperty		( "*" 			 , MVC_VIEW_CANCHANGE   ,.F.  )
+	oStrSAK:SetProperty		( "SAK_DTREF"	 , MVC_VIEW_CANCHANGE   ,.T.  )
+	
+EndIf
+
+oStrSAK:SetProperty( "AK_COD"     , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_LOGIN"   , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_USER"    , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_NOME"	  , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_APROSUP" , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_MOEDA"   , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_LIMITE"  , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_TIPO" 	  , MVC_VIEW_GROUP_NUMBER, "GRPSAK" )
+oStrSAK:SetProperty( "AK_LIMITE"  , MVC_VIEW_TITULO      , RetTitle("DHL_LIMITE") )
+oStrSAK:SetProperty( "AK_TIPO"    , MVC_VIEW_TITULO      , RetTitle("DHL_TIPO") )
+
+oView:AddField('SAK_VIEW' , oStrSAK,'SAKMASTER' )
+
+If INCLUI .Or. (ALTERA .And. !lConsSaldo) //lInclui 
+	oView:CreateHorizontalBox( 'BOXFORM1',100)
+Else
+	oView:AddGrid('FORMSCR' 	, oStrSCR,'SCRDETAIL')
+	
+	oView:CreateHorizontalBox( 'BOXFORM1',50)
+	oView:CreateHorizontalBox( 'BOXFORM2',50)
+	
+	oView:CreateFolder( 'RODAPE', 'BOXFORM2')
+	oView:AddSheet('RODAPE','ABASCR',STR0063) //Documentos
+	oView:CreateHorizontalBox( 'BOXFORM5', 100, /*owner*/, /*lUsePixel*/, 'RODAPE', 'ABASCR')
+	oView:SetOwnerView('FORMSCR','BOXFORM5')
+	
+EndIf
+
+oView:SetOwnerView('SAK_VIEW','BOXFORM1')
+
+Return oView
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095TudoOk
+pós valid do modelo
+@author Andrews Egas
+@since 28/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Function A095TudoOk(oModel)
+Local dDataAlt		:= dDataBase
+Local aArea			:= GetArea()
+Local aAreaSAL		:= SAL->(GetArea())
+Local nRecSAK		:= SAK->(RecNo())
+Local l095Altera	:= oModel:GetOperation() == MODEL_OPERATION_UPDATE
+Local l095Exclui	:= oModel:GetOperation() == MODEL_OPERATION_DELETE
+Local l095Inclui 	:= oModel:GetOperation() == MODEL_OPERATION_INSERT
+Local lContinua		:= .T.
+Local lAltTipo		:= .F.
+Local nDifAlt		:= 0
+Local nCodApr		:= SAK->AK_COD
+Local nLimite     	:= SAK->AK_LIMITE
+Local lDifAlt		:= .F.	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se ja foi utilizado nas estruturas de Aprov.³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If l095Exclui .And. lContinua
+	dbSelectArea("SAL")
+	dbSeek(xFilial())
+	While !Eof() .And. xFilial()==AL_FILIAL
+		If SAL->AL_APROV==SAK->AK_COD
+			Help(" ",1,STR0022,,STR0023,1,1) //"Atencao!"###"Este aprovador ja foi utilizado em um Grupo de Aprovacao e nao podera ser excluido. Para excluir o Aprovador, o mesmo nao devera ser utilizado em nenhum Grupo de Aprovacao."
+			lContinua := .F.
+			Exit
+		EndIf
+		dbSkip()
+	EndDo
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se ja Foi utilizado como Superior de outro aprovador³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If l095Exclui .And. lContinua
+	dbSelectArea("SAK")
+	dbSeek(xFilial())
+	While !Eof() .And. xFilial()==AK_FILIAL
+		If SAK->AK_APROSUP == nCodApr
+			Help(" ",1,STR0022,,STR0059,1,1) //"Atencao!"###"Este aprovador ja foi utilizado em um Grupo de Aprovacao e nao podera ser excluido. Para excluir o Aprovador, o mesmo nao devera ser utilizado em nenhum Grupo de Aprovacao."
+			lContinua := .F.
+			Exit
+		EndIf
+		dbSkip()
+	EndDo
+EndIf
+
+dbSelectArea("SAK")
+TcSrvMap("SAK")
+dbGoto(nRecSAK)
+
+If lContinua
+	If l095Altera
+		dDataAlt:= MaAlcDtRef(FwFldGet("AK_COD"),dDataBase,FwFldGet("AK_TIPO"))
+		nDifAlt	:= M->AK_LIMITE - nLimite		
+		lAltTipo:= FwFldGet("AK_TIPO") != SAK->AK_TIPO
+		lDifAlt	:= ((Abs(nDifAlt) > 0) .Or. (FwFldGet("AK_MOEDA") != SAK->AK_MOEDA))
+		lContinua := A095ChgLimite(@dDataAlt,nRecSAK,lAltTipo, lDifAlt)
+		If !lContinua  
+			Help(" ",1,"MATA095",,STR0061,1,1,,,,,,{STR0062})
+		EndIf
+	EndIf
+EndIf
+
+If lContinua .And. (l095Inclui .Or. l095Altera) 
+	AtuSalApro(SAK->AK_COD,dDataAlt,lAltTipo,lDifAlt,nDifAlt)
+EndIf
+
+RestArea(aAreaSAL)
+RestArea(aArea)
+Return lContinua
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095Consulta
+Consulta saldo do aprovador
+@author Andrews Egas
+@since 28/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+Function A095Consulta(cOrig)
+
+Local cUser
+Local cAprov		:= SAK->AK_COD
+DEFAULT cOrig 	:= ""
+
+If cOrig == "MTA097"
+	cUser  := RetCodUsr()
+	SAK->(dbSetOrder(1))
+	SAK->(dbSeek(xFilial("SAK")+SCR->CR_APROV))
+	cAprov := SAK->AK_COD
+	If cAprov == Nil .Or. Empty(cAprov)
+		Return .F.
+	EndIf
+EndIf
+FWExecView(STR0060, "MATA095", 4,/*oDlg*/ , {||.T.},/*bOk*/ ,/*nPercReducao*/ ,/*aEnableButtons*/ , {||.T.}/*bCancel*/ )
+
+Return .T.
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095CarIni
+Realiza Carga Inicial dos parametro informado.
+@author Israel Escorizza
+@since 02/12/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+Function A095CarIni(cParam)
+Local aArea			:= GetArea()
+Local cAprov			:= SAK->AK_COD
+Local aAreaSAL		:= SAL->(GetArea())
+Local xRet				:= .F.
+
+If !Empty(cAprov)
+	aRetSld := MaSalAlc(cAprov,dDataBase,.F.)
+	
+	If cParam == 'SAK_DTSALD'
+		xRet := aRetSld[1]
+	ElseIf cParam == 'SAK_MOEDA' .And. aRetSld[2] > 0
+		xRet := GetMv("MV_MOEDA"+AllTrim(Str(aRetSld[2],2)))
+	EndIf
+EndIf
+	
+RestArea(aArea)
+
+Return xRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095Saldo
+Atualiza os campos da view quando consultado o saldo
+@author Andrews Egas
+@since 28/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Function A095Saldo()
+Local oModel 		:= FwModelActive()
+Local oStruSAK 	:= oModel:GetModel('SAKMASTER'):getStruct()
+Local oView 		:= FwViewActive()
+Local aRetSld
+Local nSaldoadmin
+Local cMoeda
+Local cAprov		:= SAK->AK_COD
+Local dData      	:= dDataBase
+
+dData := oModel:GETMODEL('SAKMASTER'):GetValue('SAK_DTREF')
+
+oModel:DeActivate()
+oModel:nOperation := 4
+oStruSAK:SetProperty( 'SAK_DTREF' , MODEL_FIELD_INIT, {||dData} )                                 
+
+oModel:Activate()
+
+oView:Refresh("FORMSCR")
+
+If !Empty(FwFldGet("SAK_DTREF"))
+
+	aRetSld := MaSalAlc(cAprov,dData,.F.)
+	nSaldo	:= aRetSld[1]
+	cMoeda	:= GetMv("MV_MOEDA"+AllTrim(Str(aRetSld[2],2)))
+	
+	FwFldPut("SAK_DTSALD",nSaldo)
+	FwFldPut("SAK_MOEDA",cMoeda)
+	
+Else
+	FwFldPut("SAK_DTSALD",0)
+	FwFldPut("SAK_MOEDA","")
+
+EndIf
+
+Return .T.
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095SuPDif
+Valida se usuário está ativo e se aprovador é igual a superior
+@author Andrews Egas
+@since 28/06/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Function A095SuPDif()
+Local lRet := .T.
+Local aAreaSAK := SAK->(GetArea())
+Local cCodUser := FwFldGet("AK_USER")
+Local oModel 	:= FwModelActive()
+
+//primeiro, verifica se usuario está ativo
+If (!Empty(cCodUser))
+	If FWSFAllUsers({cCodUser},{"USR_MSBLQL"})[1,3]=='1' //MSBLQL
+		lRet := .F.
+		oModel:SetErrorMessage( "SAKMASTER", "AK_USER", "SAKMASTER", "AK_USER", "AT95ValLog", 'Usuario '+cCodUser+' Bloqueado','Selecione um usuário ativo no cadastro de usuários',cCodUser)
+	EndIf	
+EndIf	
+If lRet .And. !Empty(FwFldGet("AK_APROSUP"))
+	dbSelectArea("SAK")
+	dbSetOrder(1)
+	If dbSeek(xFilial()+FwFldGet("AK_APROSUP"))
+		If (SAK->(AK_USER) == FwFldGet("AK_USER"))
+			Help(" ",1,"STR0058")
+			//Aviso(STR0022,STR0058,{"OK"}) //"Atencao!"##"O Codigo do superior não pode ser o mesmo do Aprovador."
+			lRet := .F.
+		EndIf
+	EndIf
+	
+EndIf
+
+RestArea(aAreaSAK)
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A095ChgLimite³ Autor ³ Edson Maricate     ³ Data ³ 30.09.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica se o limite foi alterado                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³MATA095                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function A095ChgLimite(dDataAlt,nRecSAK,lAltTipo,lDifAlt)
+
+Local aArea	:= GetArea()
+Local nOpc	:= 2
+
+SAK->(dbGoto(nRecSAK))
+
+If lAltTipo
+		nOpc := Aviso(STR0035,STR0036+DTOC(dDataAlt)+STR0037,{STR0038,STR0039}) //"Atencao!"###"O tipo de limite do aprovador foi alterado. Confirmando esta operacao o controle de saldos com data posterior a "###"  serao eliminados e nao poderao ser recuperados. Confirma alteracao ?"###"Ca&ncelar"###"&Confirma"
+ElseIf lDifAlt
+		nOpc := Aviso(STR0022,STR0040 +DTOC(dDataAlt)+STR0041,{STR0038,STR0039}) //"Atencao!"###"O limite do aprovador foi alterado. Confirmando esta operacao o sistema ira recalcular o saldo ( Diario/Semanal/Mensal ) do aprovador a partir da data : "###" . Confirma alteracao ?"###"Ca&ncelar"###"&Confirma"
+EndIf
+
+RestArea(aArea)
+Return (nOpc==2)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³AtuSalApro³ Autor ³ Aline Correa do Vale  ³ Data ³ 03.08.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Atualiza o limite do Aprovador                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ AtuSalApro(cAprov, dDatAlt, lAltTp, nValDif)               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Aprovador                                ³±±
+±±³          ³ ExpD1 = Data da Alteracao                                  ³±±
+±±³          ³ ExpL1 = Alterou o tipo de limite? (diario/mensal/quinz.)   ³±±
+±±³          ³ ExpN1 = Valor da diferenca de sld. anterior e posterior    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ SigaCom, Generico                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function AtuSalApro(cAprov,dDatAlt,lAltTp,lValDif,nValDif)
+
+Local aArea:= GetArea()
+
+dbSelectArea("SCS")
+dbSetOrder(2)
+If (lAltTp .Or. lValDif) .And. SCS->(dbSeek(xFilial()+cAprov+DtoS(dDatAlt)))
+	If cAprov + DTOS(dDatAlt) != SCS->CS_APROV+DTOS(SCS->CS_DATA) .Or. Eof()
+		dbSkip(-1)
+	EndIf
+	While !Eof() .And. xFilial()+cAprov==SCS->CS_FILIAL+SCS->CS_APROV
+		If CS_DATA >= dDatAlt
+			If lAltTp
+				RecLock("SCS",.F.,.T.)
+				dbDelete()
+				MsUnlock()
+			Else
+				RecLock("SCS",.F.)
+				SCS->CS_SALDO := If(CS_SALDO+nValDif<0,0,CS_SALDO+nValDif)
+				SCS->CS_MOEDA := FwFldGet("AK_MOEDA")
+				MsUnlock()
+			EndIf
+		EndIf
+		dbSkip()
+	EndDo
+EndIf
+
+dbSetOrder(1)
+RestArea(aArea)
+Return  
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095ChkVal
+Validacao dos valores minimos e maximos
+@author Andrews Egas
+@since 29/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Function A095ChkVal(nTipo)
+
+Local lRet	:= .T.
+
+If ( !Empty(FwFldGet("AK_LIMMIN")) .And. !Empty(FwFldGet("AK_LIMMAX")) .And. (FwFldGet("AK_LIMMIN") > FwFldGet("AK_LIMMAX")) ) 
+	Help(" ",1,STR0022,,STR0057,1,1)     
+	lRet := .F.
+Endif
+
+If nTipo == 2
+	If !Empty( FwFldGet("AK_LIMMIN") ) .And. Empty( FwFldGet("AK_LIMMAX") ) 
+		Help(" ",1,STR0022,,STR0057,1,1)     
+		//Aviso(STR0022,STR0057,{"OK"}) //"Atencao!"##"O valor máximo não pode ser menor que o valor mínimo."     
+		lRet := .F.
+	Endif
+Endif
+
+Return(lRet)
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} 095ChgRel
+Cria Array para preencher o SetRelation do Modelo
+@author Andrews Egas
+@since 29/05/2014
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+
+Function a095ChgRel(cTipo)
+Local aRet
+Local lConsSaldo := IsInCallStack("A095Consulta")
+
+If lConsSaldo
+	aRet := { {'CR_FILIAL','xFilial("SCR")'}, { 'CR_TIPO', "'" + cTipo + "'" }, { 'CR_LIBAPRO', 'AK_COD' }, { 'CR_DATALIB', 'SAK_DTREF' }}
+Else
+	aRet := { {'CR_FILIAL','xFilial("SCR")'}, { 'CR_TIPO', "'" + cTipo + "'" }, { 'CR_LIBAPRO', 'AK_COD' }}
+EndIf
+
+Return(aRet)
+
+
+/*/{Protheus.doc} PolValLog
+Função que verifica se o login existe no sistema.
+@author author
+@since 24/08/2015
+@version version
+@example
+/*/
+Function AT95ValLog(cLogin,cCodUser)
+Local nx		:= 0
+Local cLoginA	:= ""
+Local cCodUserA	:= ""
+Local aAllusers
+Local aRet		:=  {}
+
+DEFAULT cLogin	:= ""
+DEFAULT cCodUser:= ""
+
+If !Empty(cCodUser)
+	aAllusers := FWSFLoadUser(cCodUser)
+ElseIf !Empty(cLogin)
+	aAllusers := FWSFLoadUser(cLogin)
+EndIf
+
+cLoginA		:= AllTrim(cLogin)
+cCodUserA	:= AllTrim(cCodUser)
+
+/* Retorno FWSFLoadUser
+	[n][1]: Id da tabela de usuários
+	[n][2]: Id do usuário
+	[n][3]: Login do usuário
+	[n][4]: Nome do usuário
+	[n][5]: E-mail do usuário
+*/
+
+If !Empty(cLoginA)
+	If !Empty(aAllusers)
+		AADD(aRet, aAllusers[1] )
+		AADD(aRet, aAllusers[2] )
+		AADD(aRet, aAllusers[3] )
+		AADD(aRet, aAllusers[4] )
+		AADD(aRet, aAllusers[5] ) 
+	EndIf
+EndIf
+
+If !Empty(cCodUserA)
+	If !Empty(aAllusers)
+		AADD(aRet, aAllusers[1] )
+		AADD(aRet, aAllusers[2] )
+		AADD(aRet, aAllusers[3] )
+		AADD(aRet, aAllusers[4] )
+		AADD(aRet, aAllusers[5] ) 
+	EndIf
+EndIf
+
+Return aRet 
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A095VldLog()
+Valida login
+@author Flavio Lopes Rasta
+@since 04/09/2015
+@version 12
+/*/
+//-------------------------------------------------------------------
+
+Function A095VldLog(cLogin)
+Return !Empty(AT95ValLog(cLogin))

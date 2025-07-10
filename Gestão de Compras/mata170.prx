@@ -1,0 +1,751 @@
+#INCLUDE "MATA170.CH"
+#INCLUDE "PROTHEUS.CH" 
+/* 
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATA170  ³ Autor ³ Claudinei M. Benzi    ³ Data ³ 07/07/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera solicita‡”es de compras baseado no ponto de pedido    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ lOpcAuto   = T se for rotina automatica (sem tela)         ³±±
+±±³          ³ aParametros= Array com os parametros do SX1                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Gen‚rico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+/*/
+Function MATA170(lOpcAuto,aParametros, aFilAuto)
+
+	Local aSays         := {}
+	Local aButtons      := {}
+	Local xParametro    := ""
+	Local nOpca         := 0
+	Local nCntFor       := 0
+
+	DEFAULT lOpcAuto    := .F.
+	DEFAULT aParametros := {}
+	Default aFilAuto	:= {}
+
+	PRIVATE cCadastro := OemToAnsi(STR0001)	//"Reposição por Ponto de Pedido"
+
+// Validacao para impedir acesso de usuarios que nao possuam acesso de "Incluir Solic. Compras" no Configurador
+	If !VerSenha(113) // 113 - "Incluir Solic. Compras"
+		Help(" ",1,"SEMPERM") 
+		Return
+	Endif
+
+	Pergunte("MTA170",.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros        ³
+//³ mv_par01     // Produto de                  ³
+//³ mv_par02     // Produto ate                 ³
+//³ mv_par03     // Grupo de                    ³
+//³ mv_par04     // Grupo ate                   ³
+//³ mv_par05     // Tipo de                     ³
+//³ mv_par06     // Tipo ate                    ³
+//³ mv_par07     // Local de                    ³
+//³ mv_par08     // Local ate                   ³
+//³ mv_par09     // Considera Necess Bruta 1 sim³  Pto Pedido
+//³ mv_par10     // Saldo Neg Considera    1 sim³  Lot.Economico
+//³ mv_par11     // Data limite p/ empenhos     ³
+//³ mv_par12     // Cons.Qtd. De 3os.? Sim / Nao³
+//³ mv_par13     // Cons.Qtd. Em 3os.? Sim / Nao³
+//³ mv_par14     // Ao atingir Estoque Maximo ? ³  1=Qtde. Original; 2=Ajusta Est. Max
+//³ mv_par15     // Quebra SC por Lote Econmico?³  
+//³ mv_par16 Qtd.PV nao Liberado?" Subtr/Ignora ³
+//³ mv_par17     // Considera Saldo Armazem de  ³
+//³ mv_par18     // Considera Saldo Armazem ate ³  
+//³ mv_par19     // Seleciona Filiais? (Sim/Nao)³
+//³ mv_par20     // Gera SC por produto(Sim/Nao)³
+//³ mv_par21     // Considera Est. Seguranca ?  ³ (Sim / Nao)
+//³ mv_par22     // Prioriza geração de         ³ (1-Sol.Compra/2-Ped.Compra)
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	nOpca :=0
+	If !lOpcAuto
+		If IsBlind()
+			BatchProcess(OemtoAnsi(STR0001),OemToAnsi(STR0002)+OemToAnsi(STR0003),,{ || Processa({|lEnd| A170Point(lOpcAuto)	},STR0001,STR0008,.F.)})
+		Else
+			AADD(aSays,OemToAnsi( STR0002 ) )
+			AADD(aSays,OemToAnsi( STR0003 ) )
+			AADD(aSays,OemToAnsi( STR0004 ) )
+			AADD(aSays,OemToAnsi( STR0005 ) )
+			AADD(aSays,OemToAnsi( STR0006 ) )
+			AADD(aSays,OemToAnsi( STR0007 ) )
+		
+			AADD(aButtons, { 5,.T.,{||Pergunte("MTA170") } } )
+			AADD(aButtons, { 1,.T.,{|o| nOpca:= 1, o:oWnd:End() } } )
+			AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+			FormBatch( cCadastro, aSays, aButtons,,240,425 )
+			If nOpcA == 1
+				Processa({|lEnd| A170Point(lOpcAuto)})
+			EndIf
+		Endif
+	Else
+		//carrega os parametros passados pela rotina automatica
+		For nCntFor := 1 to Len(aParametros)
+			xParametro := 'mv_par'+StrZero(nCntFor,2)
+			&xParametro:= aParametros[nCntFor]
+		Next
+		A170Point(lOpcAuto, aFilAuto)
+	EndIf
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A170Point³ Autor ³ Claudinei M. Benzi    ³ Data ³ 07/07/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Gera as solicitacoes de compra                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA170                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function A170POINT(lOpcAuto, aFilAuto)
+
+	Local aQtdes    := {}
+	Local aTamSX3   := {}
+	Local aFornepad := {}
+	
+	Local cFornece  := Criavar("C1_FORNECE")
+	Local cLoja     := Criavar("C1_LOJA")
+	Local cArqTrb   := "SB1"
+	Local cNumSolic := ""
+	Local cTamTab   := ""
+	Local cDoc		  := ""
+	Local cRotina	  := "MATA170"
+	Local cAliasM170:= ""
+	
+	Local nPrazo    := 0
+	Local nQuant    := 0
+	Local nSaldo    := 0
+	Local nNeces    := 0
+	Local nTamUser  := 0
+	Local nEstSeg   := 0
+	Local nAuxQuant := 0
+	Local nSavSaldo := 0
+	Local nSaldoMax := 0
+	Local nX        := 0
+	Local ny        := 0
+	Local nZ		:= 0
+	Local nCnt		:= 0
+	Local nQtd		:= 1
+	Local nSaldAux  := 0
+	Local nSc		:= 0
+	Local nSaveSX8  := GetSX8Len()
+
+	Local lMS170FOR := (ExistBlock("MS170FOR"))
+	Local lMS170QTD := (ExistBlock("MS170QTD"))
+	Local lMS170QPP := (ExistBlock("MS170QPP"))
+	Local lMT170SC1 := (ExistBlock("MT170SC1"))
+	Local lMT170FIM := (ExistBlock("MT170FIM"))
+	Local lMT170SB1 := (ExistBlock("MT170SB1"))
+	Local lMT170Sld := (ExistBlock("MT170SLD"))
+	Local lMT170SG1 := (ExistBlock("MT170SG1"))
+	Local lValidSB1 := .T.
+	Local lValidSG1 := .F.
+	Local lNumSC    := .T.
+	Local lQuery    := .F.
+	Local lEnvMail  := .T.
+	Local lSb1TES   := SuperGetMv("MV_SB1TES",.F.,.F.)
+	Local lFoundAKC := .F.
+	Local lArqSBZ   := AllTrim(SuperGetMV("MV_ARQPROD",.F.,"SB1")) == "SBZ"
+	Local cQuery    := ""
+	Local cQueryPE  := ""
+	Local cQuery2   := ""
+	Local cPriProd	:= ""
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Variaveis utilizadas para processamento por Filiais             |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	Local aFilsCalc := {}
+	Local nForFilial:= 0
+	Local cFilBack  := cFilAnt
+
+	// Variaveis para geração de Documentos (COMGERADOC)
+	Local aFornecedor	:= {}
+	Local nPrc			:= 0
+	Local aDocs		  	:= {}
+	Local aResultados	:= {}
+	Local aDatasNec	  	:= {}
+	Local cTpDoc		:= If(mv_par22==1,"1","2")
+	Local cTpDocBk		:= cTpDoc
+	Local lMT170QRY		:= Existblock('MT170QRY')
+	Local cCondPag	  	:= ""
+	Local aCampos       := {}
+	Local aDocsAux		:= {}
+	Default aFilAuto	:= {}
+
+	If lMT170FIM
+		Private aSolic := {}
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ MatFilCalc - Funcao para a escolha de Filiais                   |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lOpcAuto .Or. IsBlind()
+		If Empty(aFilAuto)
+			aFilsCalc := {{.T., cFilAnt}}			
+		Else
+			aFilsCalc := aFilAuto
+		EndIf
+	Else
+		aFilsCalc := MatFilCalc((mv_par19 == 1))
+	EndIf
+
+	For nForFilial := 1 To Len( aFilsCalc )
+		If aFilsCalc[ nForFilial, 1 ]
+			// Altera filial corrente
+			cFilAnt := aFilsCalc[ nForFilial, 2 ]
+		
+			aTamSX3:=TamSX3("C1_SOLICIT")
+			nTamUser:=IIF(aTamSX3[1]<=15,aTamSX3[1],15)
+		
+			dbSelectArea("SB1")
+	
+			//Caso realize alteracao nesta query verificar necesside de
+       		//alteracao na  a query2
+       	
+       		cArqTrb:= "TRBSB1"
+			
+			If Select(cArqTrb) > 0
+				(cArqTrb)->(DbCloseArea())
+			Endif
+			
+			lQuery := .T.
+			
+			cQuery := "SELECT SB1.*,SB1.R_E_C_N_O_ SB1RECNO FROM " + RetSqlName("SB1")+" SB1 "
+			
+			If lArqSBZ
+				cQuery += " LEFT JOIN "  + RetSqlName("SBZ")+" SBZ ON SBZ.BZ_FILIAL = '"+xFilial("SBZ")+"'  AND	"
+				cQuery += " SB1.B1_COD = SBZ.BZ_COD AND  SBZ.D_E_L_E_T_ = ' ' "
+			EndIf
+			
+			cQuery += " WHERE SB1.B1_FILIAL ='"+xFilial("SB1")+"' AND "
+			cQuery += " SB1.B1_COD >='"  +Mv_Par01+"' AND SB1.B1_COD <='"  +Mv_Par02+"' AND "
+			cQuery += " SB1.B1_GRUPO>='" +Mv_Par03+"' AND SB1.B1_GRUPO<='" +Mv_Par04+"' AND "
+			cQuery += " SB1.B1_TIPO>='"  +Mv_Par05+"' AND SB1.B1_TIPO<='"  +Mv_Par06+"' AND "
+			
+			If !lArqSBZ
+				cQuery += " SB1.B1_LOCPAD>='"+Mv_Par07+"' AND SB1.B1_LOCPAD<='"+Mv_Par08+"' AND "
+			Else
+				cQuery += " ((SB1.B1_LOCPAD >='" +mv_Par07+"' AND SB1.B1_LOCPAD <= '"+mv_Par08+"' ) OR "
+				cQuery += " (SBZ.BZ_LOCPAD >='" +mv_Par07+"' AND SBZ.BZ_LOCPAD <= '"+mv_Par08+"' )) AND "
+			EndIf
+			
+			cQuery += " SB1.B1_CONTRAT<>'S' AND B1_TIPO<>'BN' AND "
+			cQuery += " SB1.B1_COD NOT LIKE 'MOD%' AND  "
+			cQuery += " SB1.B1_CCCUSTO = ' ' AND  "
+			cQuery += " SB1.D_E_L_E_T_ = ' ' " 
+		
+			//Ponto de entrada para manipulacao da Query
+			//Parametros: PARAMIXB[1] = Query que seria utilizada pelo sistema
+			//Retorno: Se o retorno for uma String, sera utilizada como Query pelo sistema na selecão dos produtos na tabela SB1
+			//Atencao! A query retornada nao deve conter a clausula "ORDER BY". Ela sempre sera adicionada a string logo apos a chamada do ponto
+			//Obs: Este ponto de entrada soh funciona em ambientes TOP. Para ambientes em CODEBASE pode-se utilizar o ponto de entrada MT170SB1
+			
+			If lMT170QRY
+				cQueryPE := Execblock('MT170QRY', .F., .F., {cQuery})
+				cQuery   := If(ValType(cQueryPE)=='C', cQueryPE, cQuery)
+			Endif
+		
+			cQuery += " ORDER BY "+SqlOrder(SB1->(IndexKey()))
+		
+			cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),cArqTrb)
+			
+			(cArqTrb)->(dbGoTop())
+			
+			//Query para calculo de tempo de processamento do ProcRegua
+       		cTamTab:= "TRBCOU"
+       
+			If Select(cTamTab) > 0
+				(cTamTab)->(DbCloseArea())
+			Endif
+      	
+			cQuery2 :="SELECT COUNT(*) CONTADOR "
+			cQuery2 += SubStr(cQuery, AT("FROM",cQuery),At("ORDER BY",cQuery)- AT("FROM",cQuery))
+			
+			cQuery2 := ChangeQuery(cQuery2)
+			
+			dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery2),cTamTab)
+			
+			(cTamTab)->(dbGoTop())
+			
+			ProcRegua((cTamTab)->CONTADOR)
+			
+			SG1->(dbSetOrder(1))
+			
+			aDiasNec	:= {}
+			aDocs		:= {}
+			
+			dbSelectArea(cArqTrb)
+			
+			While (cArqTrb)->(!Eof()) .And. (cArqTrb)->B1_FILIAL+(cArqTrb)->B1_COD <= xFilial("SB1")+Mv_Par02
+				IncProc()
+					
+				//Filtra se produto possui estrutura
+				If SG1->(dbSeek(xFilial("SG1")+(cArqTrb)->B1_COD))
+					//Ponto de entrada para considerar o produto mesmo que tenha estrutura
+					If lMT170SG1
+						lValidSG1 := ExecBlock("MT170SG1",.F.,.F.,{(cArqTrb)->B1_COD})
+						If ValType(lValidSG1) != "L"
+							lValidSG1 := .F.
+						EndIf
+					EndIf
+					
+					If !lValidSG1
+						(cArqTrb)->(dbSkip())
+						Loop
+					EndIf
+				EndIf
+			
+				//Filtra se produto e sub-produto e deve ser alimentado via producao
+				If IsNegEstr((cArqTrb)->B1_COD)[1]
+					(cArqTrb)->(dbSkip())
+					Loop
+				EndIf
+			
+				//Produto Bloqueado - Ignora
+				If (cArqTrb)->B1_MSBLQL == "1"
+					(cArqTrb)->(dbSkip())
+					Loop
+				EndIf
+
+				//Ponto de entrada para validar um produto do SB1
+				If lMT170SB1
+					lValidSB1 := ExecBlock("MT170SB1",.F.,.F.,{cArqTrb})
+				EndIf
+				
+				If lValidSB1
+					//Calcula o saldo atual de todos os almoxarifados
+					dbSelectArea("SB2")
+					SB2->(dbSeek( xFilial("SB2")+(cArqTrb)->B1_COD,.T.))
+					
+					While SB2->(!Eof()) .And. SB2->B2_FILIAL+SB2->B2_COD == xFilial("SB2")+(cArqTrb)->B1_COD
+						If SB2->B2_LOCAL < mv_par17 .Or. SB2->B2_LOCAL > mv_par18
+							SB2->(dbSkip())
+							Loop
+						EndIf
+						
+						nSaldo += (SaldoSB2(NIL,NIL,If(Empty(mv_par11),dDataBase,mv_par11),mv_par12==1,mv_par13==1)+SB2->B2_SALPEDI+SB2->B2_QACLASS)
+						
+						If mv_par16 == 1
+							nSaldo -= SB2->B2_QPEDVEN
+						EndIf
+						
+						If lMT170Sld
+							nSaldAux := ExecBlock("MT170SLD",.F.,.F.,{nSaldo,SB2->B2_COD,SB2->B2_LOCAL})
+							If ValType(nSaldAux) == 'N'
+								nSaldo := nSaldAux
+							EndIf
+						Endif
+						
+						SB2->(dbSkip())
+					EndDo
+
+					nSaldoMax := RetFldProd((cArqTrb)->B1_COD, "B1_EMAX", cArqTrb)					
+					nSavSaldo := nSaldo
+					
+					If mv_par21 == 1
+						nEstSeg   := CalcEstSeg(RetFldProd((cArqTrb)->B1_COD,"B1_ESTFOR",cArqTrb),cArqTrb )
+						nSaldo -= nEstSeg
+					EndIf
+
+					If (Round(nSaldo,4) # 0) .Or. (mv_par09 == 1)
+						
+						Do Case
+						Case ( RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb) != 0 .And. MV_PAR09 == 1 )
+							If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+								nSaldo -= RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb)
+							EndIf
+							
+							nNeces := If((nSaldo < 0),Abs(nSaldo)+RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb),;
+								(If(QtdComp(nSaldo)==QtdComp(RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)),1,0);
+								+RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)-nSaldo))
+							
+							//-- Soma 1 na quantidade da necessidade.
+							//-- Ex: Ponto Pedido = 10 e Estoque = 9, ao inves de gerar 2 SCs de 1 pc ira gera 1 SC de 2 pcs  (para sair do ponto de pedido)
+							If nSaldo < QtdComp(RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)) //-- Se o Saldo for menor que o Ponto do Pedido
+								nNeces += 1
+							EndIf
+							
+						Case ( RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb) != 0 .And. MV_PAR09 == 2 )
+							If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+								nSaldo -= RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb)
+							EndIf
+							
+							nNeces := If((nSaldo < 0),Abs(nSaldo),;
+								(If(QtdComp(nSaldo) ==  QtdComp(  RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)  ),1,0);
+								+RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)-nSavSaldo))
+							
+							//-- Soma 1 na quantidade da necessidade.
+							//-- Ex: Ponto Pedido = 10 e Estoque = 9, ao inves de gerar 2 SCs de 1 pc ira gera 1 SC de 2 pcs  (para sair do ponto de pedido)
+							If nSaldo < QtdComp(RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)) //-- Se o Saldo for menor que o Ponto do Pedido
+								nNeces += 1
+							EndIf
+							
+						Case ( RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb) != 0 .And. (nSaldo < 0  .or. mv_par09 == 2) )
+							If ( MV_PAR10 == 2 .And. nSaldo < 0 )
+								nNeces := Abs(nSaldo)+RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb)
+							Else
+								nNeces := If( Abs(nSaldo)<RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb),RetFldProd((cArqTrb)->B1_COD,"B1_LE",cArqTrb),if(nSaldo<0,Abs(nSaldo),0))
+							EndIf
+						OtherWise
+							nNeces := IF(MV_PAR09 == 1,IIf(nSaldo<0,Abs(nSaldo)+1,0),0)
+						EndCase
+					Else
+						If RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb) != 0
+							nNeces := RetFldProd((cArqTrb)->B1_COD,"B1_EMIN",cArqTrb)
+							nNeces += 1
+						Else
+							nNeces := 0
+						Endif
+					EndIf
+					
+					//Subtrai -1 caso a variável nNeces não seja um número inteiro
+					If nNeces - int(nNeces) != 0
+						nNeces -= 1
+					EndIf
+					
+					If nSaldoMax # 0 .And. mv_par14 == 2
+						nNeces   := Min(nSaldoMax - nSaldo,nNeces)
+					Endif
+					
+					If nNeces > 0
+						//Verifica se produto tem estrutura
+						aQtdes := CalcLote((cArqTrb)->B1_COD,nNeces,"C")
+					
+						//Soma a quantidade total a ser gerada
+						nQuant:=0
+						For nx:=1 to Len(aQtdes)
+							nQuant+=aQtdes[nx]
+						Next nx
+					
+						//Ponto de Entrada MS170QPP - Altera quantidades apenas em PP
+						If lMS170QPP
+							nAuxQuant := Execblock("MS170QPP",.f.,.f.,{nQuant})
+							If ValType(nAuxQuant) == "N"
+								nQuant := nAuxQuant
+							EndIf
+						EndiF
+					
+						//Ajusta o array para nao efetuar quebra
+						If mv_par15 ==2
+							aQtdes:={nQuant}
+						EndIf
+					Else
+						aQtdes:={}
+					EndIf
+
+					//Ponto de Entrada MS170QTD
+					If lMS170QTD
+						nAuxQuant := Execblock("MS170QTD",.F.,.F.,nQuant)
+						If ValType(nAuxQuant) == "N"
+							nQuant := nAuxQuant
+							//-- Ajuste efetuado para compatibilizar a quantidade retorna pelo P.E
+							aQtdes := {nQuant}
+						EndIf
+					EndIf
+			
+					If nQuant > 0
+						//C1_ESTOQUE - campo para controlar o B2_SALPEDI
+						If lSb1TES
+							SB1->(dbSetOrder(1))
+							If SB1->(MsSeek(xFilial("SB1")+(cArqTrb)->B1_COD))
+								If !Empty(SB1->B1_TE)
+									SF4->(dbSetOrder(1))
+									If SF4->(MsSeek(xFilial("SF4")+SB1->B1_TE))
+										 Aadd(aCampos, {"ESTOQUE",SF4->F4_ESTOQUE}) 
+									EndIf
+								EndIf
+							EndIf
+						EndIf
+
+						While ( GetSX8Len() > nSaveSX8 )
+							ConfirmSX8()
+						EndDo
+					
+						For nY := 1 to Len(aQtdes)
+							cTpDoc := cTpDocBk //Atualiza próximo item para conteúdo padrão do MV_PAR
+						
+							//Efetua checagem do estoque maximo
+							If nSaldoMax # 0 .And. mv_par14 == 2 .And. ((QtdComp(nSaldo)+QtdComp(aQtdes[ny])) > QtdComp(nSaldoMax))
+								aQtdes[ny]:=Max(0,QtdComp(nSaldoMax)-QtdComp(nSaldo))
+							EndIf
+							
+							Begin Transaction
+								//Pega o prazo de entrega do material
+								nPrazo := CalcPrazo((cArqTrb)->B1_COD,aQtdes[nY])
+											
+								aFornecedor:= COMPESQFOR((cArqTrb)->B1_COD) //-- Retorna codigo e loja do fornecedor
+								//PDE para grava‡Æo de fornecedor na solicita‡Æo de compra
+								If lMS170FOR
+									aFornepad := Execblock("MS170FOR",.f.,.f.)
+									If ValType(aFornepad) == "A"
+										cFornece := aFornepad[1]
+										cLoja    := aFornepad[2]
+										aFornecedor[1] := aFornepad[1]
+										aFornecedor[2] := aFornepad[2]
+									EndIf
+								EndiF
+							
+								//Altera para geração de SC quando não possui relacionamento Produto x Fornecedor
+								IF Empty(aFornecedor[1]) .AND. cTpDoc == "2"
+									cTpDoc := "1"
+								EndIf
+														
+								cAliasM170 := GetNextAlias()
+						
+								nPrc:= COMPESQPRECO((cArqTrb)->B1_COD,xFilial("SC1"),aFornecedor[1],aFornecedor[2])
+								
+								BeginSQL Alias cAliasM170
+									SELECT MAX(DHN_DOCORI)DHN_DOCORI
+									FROM %Table:DHN% DHN
+									WHERE DHN_FILIAL =  %xFilial:DHN% AND
+									DHN_ROTINA = %Exp:cRotina% AND
+									%NotDel%
+								EndSQL
+								
+								cDoc:= Soma1((cAliasM170)->DHN_DOCORI)
+								
+								(cAliasM170)->(DbCloseArea())
+								
+								Aadd(aCampos, {"DATPRF",SomaPrazo(dDataBase, nPrazo),"PRODUTO",(cArqTrb)->B1_COD})
+								Aadd(aCampos, {"OBS", STR0011,"PRODUTO",(cArqTrb)->B1_COD})																			
+														
+								If mv_par20 == 1 // Gera um documento para cada produto
+									
+									aDocs		:= {}
+									
+									cCondPag := Posicione("SA2",1,xFilial("SA2")+aFornecedor[1]+aFornecedor[2],"A2_COND")
+									
+									Aadd(aDocs,{(cArqTrb)->B1_COD,aQtdes[nY],cFilAnt,cFilAnt,cTpDoc,aFornecedor[1],aFornecedor[2],cCondPag,nPrc,{},cDoc,"",aCampos})
+									
+									If !Empty(aDocs)
+										aResultados:= ComGeraDoc(aDocs,.T.,.F.,.F.,.F.,nPrazo,cRotina  )
+									EndIf
+									
+									If lMt170SC1
+										For nX:=1 To Len(aResultados)
+											For nZ:=1 To Len(aResultados[nX])
+												SC1->(dbSetOrder(1))
+												If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+													ExecBlock("MT170SC1",.f.,.f.)
+												Endif
+											Next nZ
+										Next nX
+									EndIf
+								
+									// Lancamento PCO para documentos de SC gerados
+									For nX:=1 To Len(aResultados)
+										For nZ:=1 To Len(aResultados[nX])
+											If aResultados[nX,nZ,3] == "1" // Tipo SC
+												SC1->(dbSetOrder(1))
+												If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+													PcoIniLan("000051")
+													PcoDetLan('000051','04','MATA110')
+													//Finaliza a gravacao dos lancamentos do SIGAPCO
+													lFoundAKC := PcoExistLc('000051','01',"1")
+											
+													If lFoundAKC
+														PcoFinLan("000051")
+														PcoFreeBlq("000051")
+													Endif
+												Endif
+											Endif
+										Next nZ
+									Next nX
+								Else
+									cCondPag := Posicione("SA2",1,xFilial("SA2")+aFornecedor[1]+aFornecedor[2],"A2_COND")
+									Aadd(aDocs,{(cArqTrb)->B1_COD,aQtdes[nY],cFilAnt,cFilAnt,cTpDoc,aFornecedor[1],aFornecedor[2],cCondPag,nPrc,{},cDoc,"",aCampos})
+									Aadd(aDatasNec,SomaPrazo(dDataBase, nPrazo))
+								Endif
+							End Transaction
+			
+							//Ajusta variavel do saldo item a item para checar est. maximo
+							nSaldo+=aQtdes[nY]
+						Next nY
+					EndIf
+				EndIf
+				nSaldo := 0
+				nQuant := 0
+				nNeces := 0
+				
+				(cArqTrb)->(dbSkip())
+			EndDo
+			
+			If mv_par20 == 2 // Fazer chamada geração de documentos aglutinados
+				If !Empty(aDocs)
+					if mv_par15 == 2
+						aResultados:= ComGeraDoc(aDocs,.T.,.F.,.F.,.F.,ComDtNeces(aDatasNec),cRotina,/*08*/,2)
+						If lMt170SC1
+							For nX:=1 To Len(aResultados)
+								For nZ:=1 To Len(aResultados[nX]) 
+									SC1->(dbSetOrder(1))
+									If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+										ExecBlock("MT170SC1",.f.,.f.)
+									Endif
+								Next nZ
+							Next nX
+						EndIf
+		
+						// Lancamento PCO para documentos de SC gerados
+						For nX:=1 To Len(aResultados)
+							For nZ:=1 To Len(aResultados[nX])
+								If aResultados[nX,nZ,3] == "1" // Tipo SC
+									SC1->(dbSetOrder(1))
+									If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+										PcoIniLan("000051")
+										PcoDetLan('000051','04','MATA110')
+										//Finaliza a gravacao dos lancamentos do SIGAPCO
+										lFoundAKC := PcoExistLc('000051','01',"1")
+													
+										If lFoundAKC
+											PcoFinLan("000051")
+											PcoFreeBlq("000051")
+										Endif
+									Endif
+								Endif
+							Next nZ
+						Next nX
+					else // fz o controle para aglutinar os documentos, porem respeitando a opcao do lote economico.
+					  for nCnt := 1 TO LEN(aDocs)
+					  	if  len(aDocsAux) = 0 .or. cPriProd = aDocs[nCnt][1] .or. nQtd > len(aDocsAux)  // len(aDocsAux) = 0 .or. cProd <> aDocs[nCnt][1] .or. (nQtd > len(aDocsAux) .and. cProd == aDocs[nCnt][1]
+					  		if len(aDocsAux) = 0 
+					  			cPriProd := aDocs[nCnt][1]
+					  		endif
+					  		aadd(aDocsAux,{aDocs[nCnt]})
+					  		cProd := aDocs[nCnt][1]
+					  		nQtd := 1
+					  		nSc ++
+					  	else
+					  		aadd(aDocsAux[nQtd], aDocs[nCnt] )
+					  		cProd := aDocs[nCnt][1]
+					  		nQtd ++
+					  		lMuda := .F.
+					  	endif
+					  NEXT 	nCnt
+					  	For nCnt := 1 TO LEN(aDocsAux)
+							For nX := 1 to len(aDocsAux[nCnt])
+								aDocsAux[nCnt][nx][11] := cdoc
+							next nX
+						cDoc:= Soma1(cDoc)
+						Next nCnt
+						
+					For nCnt := 1 TO LEN(aDocsAux)
+								aResultados:= ComGeraDoc(aDocsAux[nCnt],.T.,.F.,.F.,.F.,ComDtNeces(aDatasNec),cRotina,/*08*/,2)
+							If lMt170SC1
+								For nX:=1 To Len(aResultados)
+									For nZ:=1 To Len(aResultados[nX]) 
+										SC1->(dbSetOrder(1))
+										If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+											ExecBlock("MT170SC1",.f.,.f.)
+										Endif
+									Next nZ
+								Next nX
+							EndIf
+							// Lancamento PCO para documentos de SC gerados
+							For nX:=1 To Len(aResultados)
+								For nZ:=1 To Len(aResultados[nX])
+									If aResultados[nX,nZ,3] == "1" // Tipo SC
+										SC1->(dbSetOrder(1))
+										If SC1->(MsSeek(xFilial("SC1")+aResultados[nX,nZ,2]))
+											PcoIniLan("000051")
+											PcoDetLan('000051','04','MATA110')
+											//Finaliza a gravacao dos lancamentos do SIGAPCO
+											lFoundAKC := PcoExistLc('000051','01',"1")
+														
+											If lFoundAKC
+												PcoFinLan("000051")
+												PcoFreeBlq("000051")
+											Endif
+										Endif
+									Endif
+								Next nZ
+							Next nX
+					Next nCnt
+			  endif					
+			EndIf
+		EndIf
+			If lQuery
+				(cArqTrb)->(dbCloseArea())
+			EndIf
+			
+			If lMt170FIM
+				ExecBlock( "MT170FIM", .F., .F., { aSolic } )
+			EndIf
+		EndIf
+	Next nFilLoop
+
+	// Restaura filial original apos processamento
+	cFilAnt := cFilBack
+
+Return
+
+	/*--------------------------------------------------------------*/
+/*{Protheus.doc} MT170GOPSO
+Alimenta array aSolic vindo do COMGERADOC, para o PE MT170FIM
+
+@author  Ricardo Prandi
+@version P12
+@since   31/08/2017
+--------------------------------------------------------------/*/
+
+Function MT170GOPSO(cProdSC,cNumSC)
+
+	AAdd(aSolic,{cProdSC,cNumSC})
+
+Return Nil
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} SchedDef
+Usado para compatibilizar com o Novo Schedule.
+
+@param
+@author  Leonardo Quintania
+@version P12
+@since   10/12/2015
+@return  Nil
+@obs
+@sample
+/*/
+//-------------------------------------------------------------------
+Static Function SchedDef()
+	Local aOrd   := {}
+	Local aParam := {}
+
+// Variaveis utilizadas para parametros        
+// mv_par01     // Produto de                  
+// mv_par02     // Produto ate                 
+// mv_par03     // Grupo de                    
+// mv_par04     // Grupo ate                   
+// mv_par05     // Tipo de                     
+// mv_par06     // Tipo ate                    
+// mv_par07     // Local de                    
+// mv_par08     // Local ate                   
+// mv_par09     // Considera Necess Bruta 1 sim  Pto Pedido
+// mv_par10     // Saldo Neg Considera    1 sim  Lot.Economico
+// mv_par11     // Data limite p/ empenhos     
+// mv_par12     // Cons.Qtd. De 3os.? Sim / Nao
+// mv_par13     // Cons.Qtd. Em 3os.? Sim / Nao
+// mv_par14     // Ao atingir Estoque Maximo ?   1=Qtde. Original; 2=Ajusta Est. Max
+// mv_par15     // Quebra SC por Lote Econmico?  
+// mv_par16 Qtd.PV nao Liberado?" Subtr/Ignora 
+// mv_par17     // Considera Saldo Armazem de  
+// mv_par18     // Considera Saldo Armazem ate   
+// mv_par19     // Seleciona Filiais? (Sim/Nao)
+// mv_par20     // Gera Documento por produto(Sim/Nao)
+// mv_par21     // Considera Est. Seguranca ?   (Sim / Nao)
+// mv_par22     // Prioriza geração de   (1-Sol.Compra/2-Ped.Compra)
+
+	aParam := { "P"	, ;	// Tipo R para relatorio P para processo
+	"MTA170"		, ;	// Pergunte do relatorio, caso nao use passar ParamDef
+	""			, ;	// Alias
+	aOrd			, ;	// Array de ordens
+	}
+
+Return aParam

@@ -1,0 +1,1497 @@
+#INCLUDE "COMA010.ch"
+#INCLUDE "PROTHEUS.CH"
+#DEFINE MAXGETDAD 99999
+#DEFINE MAXSAVERESULT 999
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ COMA010  ³ Autor ³ Eduardo Riera         ³ Data ³ 30/09/2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de Manutencao da Tabela de Preco                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ COMA010(ExpN1,ExpA1,ExpA2)                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpN1 = opcional - Numero da opcao selecionada               ³±±
+±±³          ³ ExpA1 = opcional - array cabec.p/ uso na rotina autom.       ³±±
+±±³          ³ ExpA1 = opcional - array itens p/ uso na rotina autom.       ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function COMA010(nOpcAuto,xAutoCab,xAutoItens)
+
+Local aCores     := {}
+Local aRetPE	 := {}
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Array contendo as Rotinas a executar do programa      ³
+//³ ----------- Elementos contidos por dimensao ------------     ³
+//³ 1. Nome a aparecer no cabecalho                              ³
+//³ 2. Nome da Rotina associada                                  ³
+//³ 3. Usado pela rotina                                         ³
+//³ 4. Tipo de Transa‡„o a ser efetuada                          ³
+//³    1 - Pesquisa e Posiciona em um Banco de Dados             ³
+//³    2 - Simplesmente Mostra os Campos                         ³
+//³    3 - Inclui registros no Bancos de Dados                   ³
+//³    4 - Altera o registro corrente                            ³
+//³    5 - Remove o registro corrente do Banco de Dados          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE aAutoCab
+PRIVATE aAutoItens
+Private lAuto := .F.
+Private aRotina := MenuDef()
+
+cCadastro := STR0009 //"Manutencao da Tabela de Precos"
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica as cores da MBrowse                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Aadd(aCores,{"Dtos(AIA_DATATE) < Dtos(dDataBase).And. !Empty(Dtos(AIA_DATATE))","DISABLE"}) //inativa
+Aadd(aCores,{"(Dtos(AIA_DATATE) >= Dtos(dDataBase) .Or. Empty(Dtos(AIA_DATATE)))","ENABLE"})    //Ativa
+
+// Validacao para impedir acesso de usuarios que nao possuam acesso a "Tabela de preços" no Configurador
+If !versenha(32) // 32 - "Acesso a Tabela de Preços"
+	Help(" ",1,"SEMPERM")
+	Return
+Endif
+
+//Ponto de entrada para manipular as cores
+If ExistBlock("CM010COR")
+	aRetPE:= ExecBlock("CM010COR",.F.,.F.,{aCores})
+	If ( ValType(aRetPE) == "A" .And. Len(aRetPE) > 0 )
+		aCores := aClone(aRetPE)
+	EndIf
+EndIf  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Endereca para a funcao MBrowse                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("AIA")
+dbSetOrder(1)
+DbSeek(xFilial("AIA"))
+If xAutoCab <> Nil
+	aAutoCab   := xAutoCab
+	aAutoItens := xAutoItens
+	lAuto := .T.
+	DEFAULT nOpcAuto := 3
+	MBrowseAuto(nOpcAuto,Aclone(aAutoCab),"AIA")
+Else
+	mBrowse(06,01,22,75,"AIA",,,,,,aCores,,,,,,.F.,.F.)
+EndIF
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura a Integridade da Rotina                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("AIA")
+dbSetOrder(1)
+dbClearFilter()
+Return(Nil)
+
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Função    ³ MenuDef  ³ Autor ³ Fernando Amorim       ³ Data ³ 09.02.07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Definição do aRotina (Menu funcional)                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ MenuDef()                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ COMA010                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function MenuDef()     
+Local aCM010MNU := {}
+Local aRotina := {	{ STR0001	,"AxPesqui"		,0,1,0,.F.},; //"Pesquisar"
+	{ STR0002	,"Com010Tab"	,0,2,,.T.},;  //"Visualizar"
+	{ STR0003	,"Com010Tab"	,0,3,,.T.},;  //"Incluir"
+	{ STR0004	,"Com010Tab"	,0,4,,.T.},;  //"Alterar"
+	{ STR0005	,"Com010Tab"	,0,5,,.T.},;  //"Excluir"
+	{ STR0006	,"Com010Tab"	,0,3,,.T.},;  //"Copiar"
+	{ STR0007	,"Com010Rej"	,0,5,,.T.},;  //"Reajuste"
+	{ STR0008	,"Com010Leg"	,0,2,,.T.} }  //"Legenda"
+
+If ExistBlock("CM010MNU")
+	If ValType( aCM010MNU:= ExecBlock("CM010MNU",.F.,.F.,{aRotina}) ) == "A"
+   		aRotina  := aClone(aCM010MNU)
+	EndIf    
+EndIf
+	
+Return(aRotina)
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Com010Tab ³ Autor ³ Eduardo Riera         ³ Data ³ 30/09/2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Manutencao da Tabela de Preco                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³Com010Tab()                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do Arquivo                                       ³±±
+±±³          ³ExpN1: Numero do Registro                                     ³±±
+±±³          ³ExpN2: Opcao do aRotina                                       ³±±
+±±³          ³ExpL1: Comanda visualiz.:se por outra rotina atraves do produto±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Tab(cAlias,nReg,nOpc,lConsulta)
+
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aInfo     := {}
+Local aButtons  := { {"PESQUISA",{|| GdSeek(oGetDad,OemtoAnsi(STR0019),,,.T.) }, OemtoAnsi(STR0019), OemtoAnsi(STR0020) } } //"Busca Produto"
+Local aStruAIB  := {}
+
+Local nStyle    := 0
+Local nOpcA     := 0
+Local nSaveSx8  := GetSx8Len()
+
+Local cCadastro := STR0009 //"Manutencao da Tabela de Precos"
+Local cQuery    := ""
+Local cQuery1   := ""
+Local cSeek     := ""
+Local cWhile    := ""
+Local cAliasAIB := "AIB"
+Local lInclui	:= .F.
+Local lCopia    := nOpc==6
+Local lAltera   := .F.            // Somente a Alteracao pode ser feita atraves do F12 por produto
+Local lContinua := .T.
+Local lQuery    := .F.
+
+Local oDlg
+Local oGetD
+Local aUsButtons:={}
+Local lValMemo := .F.
+
+Private aTELA[0][0]
+Private aGETS[0]
+Private oGetDad    
+Private aHeader := {}
+Private aCols   := {}
+
+
+DEFAULT nOpc      := 2
+DEFAULT INCLUI    := .F.
+DEFAULT ALTERA    := .F.
+DEFAULT lConsulta := .F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Se outro programa estiver consultando a tabela de precos a visualizacao podera ser feita atraves do produto³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lConsulta 
+	lInclui := INCLUI
+	INCLUI  := .F.
+	lAltera := ALTERA
+	ALTERA  := .F.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica a Operacao                                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Do Case
+Case INCLUI .Or. lCopia
+	nStyle := GD_INSERT+GD_UPDATE+GD_DELETE
+Case ALTERA
+	nStyle := GD_INSERT+GD_UPDATE+GD_DELETE
+OtherWise
+	nStyle := 0
+EndCase
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se a tabela AIA esta Eof() quando chamada pela consulta SXB    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+lContinua := If( nOpc == 2 .And. AIA->(Eof()), .F. , .T.)
+
+If lContinua
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Inicializa as variaveis da Enchoice                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If INCLUI .Or. lCopia
+		RegToMemory( "AIA", .T., .F. )
+	EndIf
+
+	If !INCLUI .Or. lCopia		
+
+		If lCopia .Or. nOpc == 2 .Or. SoftLock("AIA")
+
+			If !lCopia
+				RegToMemory( "AIA", .F., .F. )
+			EndIf
+
+			dbSelectArea("AIB")
+			dbSetOrder(1)
+			
+			lValMemo := ReTMemoAIB()
+			
+			If !lValMemo
+				aStruAIB := AIB->(dbStruct())
+
+				cAliasAIB := "TAB"
+				lQuery    := .T.
+				cQuery := "SELECT AIB.*,SB1.B1_DESC FROM "	
+				cQuery += RetSqlName("AIB")+ " AIB ,"+RetSqlName("SB1")+" SB1 "
+				cQuery += "WHERE "
+				cQuery += "AIB.AIB_FILIAL = '"+xFilial("AIB")+"' AND "
+				cQuery += "AIB.AIB_CODFOR = '"+AIA->AIA_CODFOR+"' AND "
+				cQuery += "AIB.AIB_LOJFOR = '"+AIA->AIA_LOJFOR+"' AND "
+				cQuery += "AIB.AIB_CODTAB = '"+AIA->AIA_CODTAB+"' AND "
+				cQuery += "AIB.D_E_L_E_T_ = ' ' AND "
+				cQuery += "SB1.B1_FILIAL  = '"+xFilial("SB1")+"' AND "
+				cQuery += "SB1.B1_COD     = AIB.AIB_CODPRO AND "
+				cQuery += "SB1.D_E_L_E_T_ <> '*' "
+				
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Ponto de Entrada: CM010FIL - Aplicado somente a ambiente TOP ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If ExistBlock("CM010FIL")
+					cQuery1 := ExecBlock("CM010FIL",.F.,.F.,{nOpc})
+					If ValType(cQuery1) == "C"
+						cQuery += cQuery1
+					EndIf
+				EndIf	
+				
+				cQuery += " ORDER BY "+SqlOrder(AIB->(IndexKey()))
+				
+				cQuery := ChangeQuery(cQuery)
+
+				TAB->(dbCloseArea())
+		  	 Else
+				cWhile:="AIB_FILIAL+AIB_CODFOR+AIB_LOJFOR+AIB_CODTAB"
+				cSeek:= (xFilial("AIB")+(AIA->(AIA_CODFOR+AIA_LOJFOR+AIA->AIA_CODTAB)))
+			EndIf
+          
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Monta aHeader e aCols utilizando a funcao FillGetDados.      ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If !INCLUI .Or. lCopia
+		
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Sintaxe da FillGetDados(nOpcX,Alias,nOrdem,cSeek,bSeekWhile,uSeekFor,aNoFields,aYesFields,lOnlyYes,cQuery,bMontCols,lEmpty,aHeaderAux,aColsAux,bAfterCols,bBeforeCols,bAfterHeader,cAliasQry |
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+				FillGetDados(nOpc,"AIB",1,cSeek,{|| &cWhile },,,,,cQuery,,,aHeader,aCols, {|aColsX| C010AfterC(aColsX,lCopia,cAliasAIB)} ,,,"TAB")
+
+				If lQuery
+					dbSelectArea(cAliasAIB)
+					dbCloseArea()
+					ChkFile("AIB",.F.)
+					dbSelectArea("AIA")
+				EndIf	
+			EndIf	
+		Else
+			lContinua := .F.
+		EndIf
+	Else
+		If Empty(aCols)
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Sintaxe da FillGetDados(nOpcX,Alias,nOrdem,cSeek,bSeekWhile,uSeekFor,aNoFields,aYesFields,lOnlyYes,cQuery,bMontCols,lEmpty,aHeaderAux,aColsAux,bAfterCols,bBeforeCols,bAfterHeader,cAliasQry |
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			FillGetDados(nOpc,"AIB",1,,,,,,,,,.T.,aHeader,aCols,,,)
+			aCols[1][aScan(aHeader,{|x| Trim(x[2])=="AIB_ITEM"})] := StrZero(1,Len(AIB->AIB_ITEM))
+		EndIf	
+	EndIf
+Else
+	If nOpc == 2
+		Help(" ",1,"REGNOIS")
+	EndIf
+EndIf
+
+If lContinua
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Avalia botoes do usuario                                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ExistBlock( "CM010BUT" )
+		If ValType( aUsButtons := ExecBlock( "CM010BUT", .F., .F. ) ) == "A"
+			AEval( aUsButtons, { |x| AAdd( aButtons, x ) } ) 	 	
+		EndIf 	
+	EndIf 	
+
+	dbSelectArea("AIA")
+	AIB->(dbGoto(0))
+	If Type("aAutoCab")=="U" .Or. aAutoCab == Nil .Or. IsInCallStack("CONPAD1")
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Faz o calculo automatico de dimensoes de objetos     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aSize := MsAdvSize()
+		AAdd( aObjects, { 100, 100, .T., .T. } )
+		AAdd( aObjects, { 200, 200, .T., .T. } )
+		aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 5, 5 }
+		aPosObj 	:= MsObjSize( aInfo, aObjects,.T.)
+
+		DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 To aSize[6],aSize[5] of oMainWnd PIXEL
+		EnChoice( "AIA", nReg, nOpc,,,,,aPosObj[1], , 3, , , , , ,.F. )	
+		oGetD := MsNewGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nStyle,"Com010LOk","Com010Tok","+AIB_ITEM",/*acpos*/,/*freeze*/,MAXGETDAD,/*fieldok*/,/*superdel*/,/*delok*/,oDlg,@aHeader,@aCols)
+		oGetDad := oGetD
+		ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{||aCols:=oGetD:Acols,nOpcA := 1,If(oGetd:TudoOk(),If(!Obrigatorio(aGets,aTela),nOpcA := 0,oDlg:End()),nOpcA := 0)},{||oDlg:End()},,aButtons )
+	Else
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ validando dados pela rotina automatica                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If EnchAuto(cAlias,aAutoCab,{|| Obrigatorio(aGets,aTela)}) .and. MsGetDAuto(aAutoItens,"Com010LOk",{||  .T. },aAutoCab,aRotina[nOpc][4])
+			nOpcA := 1
+		EndIf		
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Rotina de Gravacao da Tabela de preco                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nOpcA == 1 .And. nOpc <> 2
+		Com010Grv(nOpc-2,aHeader,aCols)
+		While (GetSx8Len() > nSaveSx8 )
+			ConfirmSx8()
+		EndDo
+		EvalTrigger()
+	Else
+		If nOpc <> 2
+			While (GetSx8Len() > nSaveSx8 )		
+				RollBackSx8()
+			EndDo
+		EndIf
+	EndIf
+EndIf
+If lConsulta
+	INCLUI  := lInclui
+	ALTERA  := lAltera
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura a entrada da Rotina                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+MsUnLockAll()
+FreeUsedCode()
+Return(nOpcA)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³C010AfterC ³ Autor ³Alexandre Inacio Lemes³Data  ³28/12/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³A funcao trata a excecao na montagem do aCols pela FillGetDa³±±
+±±³          ³dos tratando os campos que deverao ser alterados.           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpA1: aCols de Referencia para uso da funcao.              ³±±
+±±³          ³ExpA2: Array contendo as referencias de Impostos da Tabela  ³±±
+±±³          ³ExpL1: Logica indicando a opcao de Alteracao                ³±±
+±±³          ³ExpL2: Logica indicando a opcao de Exclusao                 ³±±
+±±³          ³ExpL3: Logica indicando a opcao de Copia                    ³±±
+±±³          ³ExpL4: Logica condicional para continuar o processo.        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: lContinua .T. ou .F.                            	  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function C010AfterC(aColsX,lCopia,cAliasAIB)
+
+Local nPosRecno := aScan(aHeader,{|x| Trim(x[2]) == "AIB_REC_WT"})
+Local nPosDescr := aScan(aHeader,{|x| Trim(x[2]) == "AIB_DESCRI"}) 
+Local nPosB1Desc := aScan((cAliasAIB)->(DbStruct()),{|x| Trim(x[1]) == "B1_DESC"})   
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Opcao copia nao deve carregar o Recno() da tabela para o aCols ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lCopia
+	aColsX[Len(aColsX)][nPosRecno] := 0
+	    If nPosB1Desc >0                         
+   		    aColsX[Len(aColsX)][nPosDescr] := (cAliasAIB)->B1_DESC
+   		EndIf
+EndIf
+
+Return .T.
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Com010Grv ³ Autor ³ Eduardo Riera         ³ Data ³ 30/09/2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Gravacao da Tabela de Preco                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³Com010Grv                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: Opcao da Gravacao sendo:                               ³±±
+±±³          ³       [1] Inclusao                                           ³±±
+±±³          ³       [2] Alteracao                                          ³±±
+±±³          ³       [3] Exclusao                                           ³±±
+±±³          ³ExpA1: aHeader                                                ³±±
+±±³          ³ExpA2: aCols                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Grv(nOpcao,aHeader,aCols)
+
+Local lGravou   := .F.
+Local lTravou   := .T.
+Local nX        := 0
+Local nY        := 0
+Local nCntfor   := 0
+Local bCampo 	:= {|nCPO| Field(nCPO) }
+Local cItem     := Repl("0",Len(AIB->AIB_ITEM))   
+Local nCol		:= 0
+Local cAliaAIB	:= GetNextAlias()
+Local nFor		:= ASCAN(aAutoCab,{|x| Alltrim(x[1]) == "AIA_CODFOR" })
+Local nLoj		:= ASCAN(aAutoCab,{|x| Alltrim(x[1]) == "AIA_LOJFOR" })
+Local nCtb		:= ASCAN(aAutoCab,{|x| Alltrim(x[1]) == "AIA_CODTAB" })	
+Local cFornece	:= ""
+Local cLoja		:= "" 
+Local cTabPreco	:= ""
+Local lGrv 		:= .T. 
+Local lExcl   	:= .F.
+Local nPosDel   := 0
+Local nPosLin	:= ""
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ordena o aCols pela ordem de itens³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aSort(aCols,,,{|x,y|x[1] <= y[1]})
+
+Do Case
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Atualizacao por Tabela                                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Case nOpcao <> 3
+	dbSelectArea("AIB")
+	dbSetOrder(1)
+
+	For nX := 1 To Len(aCols)
+		Begin Transaction
+
+			If nX == 1
+				dbSelectArea("AIA")
+				dbSetOrder(1)
+				If DbSeek(xFilial("AIA")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB)
+					RecLock("AIA",.F.)
+				Else
+					RecLock("AIA",.T.)
+				EndIf
+				For nCntFor := 1 TO FCount()
+					FieldPut(nCntFor,M->&(EVAL(bCampo,nCntFor)))
+				Next nCntFor
+				AIA->AIA_FILIAL := xFilial("AIA")
+				MsUnLock()
+			EndIf		
+
+			lTravou := .F.             
+			
+			nCol := ASCAN(aHeader, {|x| Alltrim(x[2]) == "AIB_ITEM" })	
+					
+			dbSelectArea("AIB")		
+			dbSetOrder(1)
+			If lAuto
+				cFornece	:= aAutoCab[nFor][2]
+			   	cLoja		:= aAutoCab[nLoj][2]
+			   	cTabPreco	:= aAutoCab[nCtb][2]
+				lGrv := .T.
+				lExcl := .F. 
+
+				If nOpcao == 2
+					cItem := aCols[nX,nCol]
+
+					For nY := 1 To Len(aAutoItens) 
+						nPosLin := aScan(aAutoItens[nY],{|x| AllTrim(x[1])=="LINPOS"})
+						nPosDel := aScan(aAutoItens[nY],{|x| AllTrim(x[1])=="AUTDELETA"})
+
+						If nPosLin > 0 .And. nPosDel > 0 .And. aAutoItens[nY,nPosLin,3] == cItem .And. aAutoItens[nY,nPosDel,2] == "S"
+							lExcl := .T.  
+						EndIf 
+					Next nY
+
+					dbSelectArea("AIB")		
+					dbSetOrder(1)
+					If DbSeek(xFilial("AIB")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB+cItem)
+						lGrv := .F.
+					Else 
+						lGrv := .T. 
+					EndIf 	 
+				EndIf 
+			   		If lGrv //Se não for alteração de um registro, realiza a inclusão. 
+					   If DbSeek(xFilial("AIB")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB)
+							cAliaAIB	:= GetNextAlias()
+							BeginSQL Alias cAliaAIB //Query para verificar qual o ultimo item gravado
+							
+								SELECT	MAX(AIB_ITEM) AS MAXIMO
+								FROM 	%Table:AIB% AIB
+								WHERE	AIB.AIB_FILIAL = %xFilial:AIB%
+								AND		AIB.AIB_CODFOR = %Exp:cFornece%
+								AND 	AIB.AIB_LOJFOR = %Exp:cLoja%
+								AND		AIB.AIB_CODTAB = %Exp:cTabPreco%
+								AND		AIB.%NotDel%
+							EndSql
+
+							If	!(cAliaAIB)->(EOF()) 
+								cItem := (cAliaAIB)->MAXIMO
+							Endif
+							(cAliaAIB)->(DbCloseArea())
+						EndIf
+
+						cItem := Soma1(cItem,Len(AIB->AIB_ITEM))
+					EndIf 
+					dbSelectArea("AIB")		
+					dbSetOrder(1)
+					RecLock("AIB",lGrv)
+					lTravou := .T.					
+			Else
+				If DbSeek(xFilial("AIB")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB+aCols[nX][nCol])
+					RecLock("AIB",.F.)
+					lTravou := .T.
+					cItem	:= aCols[nX][nCol]
+				Else
+					cItem := Soma1(cItem,Len(AIB->AIB_ITEM))
+					If DbSeek(xFilial("AIB")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB+cItem)
+						RecLock("AIB",.F.)
+						lTravou := .T.
+					EndIf
+				EndIf
+			EndIf
+
+			If !aCols[nX,Len(aCols[nX])]
+				If !lExcl 
+					If !lTravou
+						RecLock("AIB",.T.)			
+					EndIf
+					For nY := 1 to Len(aHeader)
+						If aHeader[nY][10] <> "V"
+							AIB->(FieldPut(FieldPos(aHeader[nY][2]),aCols[nX][nY]))
+						EndIf
+					Next nY
+					AIB->AIB_FILIAL := xFilial("AIB")
+					AIB->AIB_CODFOR := AIA->AIA_CODFOR
+					AIB->AIB_LOJFOR := AIA->AIA_LOJFOR
+					AIB->AIB_CODTAB := AIA->AIA_CODTAB
+					AIB->AIB_ITEM   := cItem
+					AIB->AIB_INDLOT := StrZero(AIB->AIB_QTDLOT,18,2)
+					MsUnLock()
+					lGravou := .T.
+				Else
+					AIB->(dbDelete())
+					lGravou := .T.
+				EndIf		
+			Else
+				If lTravou
+					RecLock("AIB")
+					AIB->(dbDelete())
+				EndIf
+			EndIf
+			MsUnLock()
+		End Transaction 		
+	Next nX	
+	If !lGravou
+		dbSelectArea("AIA")
+		dbSetOrder(1)
+		If DbSeek(xFilial("AIA")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB)
+			RecLock("AIA")
+			dbDelete()
+			MsUnLock()
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Exclusao por Tabela                                          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Case  nOpcao == 3
+
+	Begin Transaction
+
+		dbSelectArea("AIB")
+		dbSetOrder(1)
+		DbSeek(xFilial("AIB")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB)
+
+		While ( !Eof() .And. xFilial("AIB") == AIB->AIB_FILIAL .And.;
+				M->AIA_CODFOR == AIB->AIB_CODFOR .And.;
+				M->AIA_LOJFOR == AIB->AIB_LOJFOR .And.;		
+				M->AIA_CODTAB == AIB->AIB_CODTAB )
+
+			RecLock("AIB")
+			dbDelete()
+			MsUnLock()
+
+			dbSelectArea("AIB")
+			dbSkip()
+		EndDo
+
+		AIB->(FkCommit())
+
+		dbSelectArea("AIA")
+		dbSetOrder(1)
+		If DbSeek(xFilial("AIA")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB)
+			RecLock("AIA",.F.)
+			dbDelete()
+			MsUnLock()
+		EndIf
+	End Transaction	
+EndCase
+
+If ExistBlock("MT010GRV")
+	ExecBlock("MT010GRV",.F.,.F.,{nOpcao,aHeader,aCols})
+EndIf
+
+Return(lGravou)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Com010LOk ³ Autor ³ Eduardo Riera         ³ Data ³ 30/09/2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Validacao da linha Ok                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³Com010Lok())                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                        ³±±
+±±³          ³                                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Lok()
+
+Local aArea     := GetArea()
+Local lRetorno  := .T.
+Local nPosProd  := aScan(aHeader,{|x| AllTrim(x[2])=="AIB_CODPRO"})
+Local nPosFaixa := aScan(aHeader,{|x| AllTrim(x[2])=="AIB_QTDLOT"})
+Local nPosDtVig := aScan(aHeader,{|x| AllTrim(x[2])=="AIB_DATVIG"})
+Local nUsado    := Len(aHeader)
+Local nX        := 0
+Local nY        := 0
+Local aCpoObrig	:= Com010Obrig()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica os campos obrigatorios                                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If CheckCols(n,aCols)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se nao ha valores duplicados                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRetorno .And. !aCols[n][nUsado+1]
+		For nX := 1 To Len(aCols)
+			If lRetorno .And. nX <> N .And. !aCols[nX][nUsado+1]		
+				If ( nPosProd == 0 .Or. aCols[nX][nPosProd] == aCols[N][nPosProd]) .And.;
+						aCols[nX][nPosFaixa] == aCols[N][nPosFaixa] .And.;
+						Iif(nPosDtVig<>0,aCols[nX][nPosDtVig] == aCols[N][nPosDtVig],.F.)
+					lRetorno := .F.
+					Help(" ",1,"JAGRAVADO")
+				EndIf
+			EndIf
+			If lRetorno .And. lAuto
+				For nY := 1 To Len( aCpoObrig )
+					If lRetorno .And. Empty(aCols[nX,aCpoObrig[nY,2]])
+						Help(" ",1,"OBRIGAT")
+						lRetorno := .F.
+						Exit
+					EndIf
+				Next nY
+			Endif
+		Next nX
+		If lRetorno .And. (Empty(aCols[n,nPosProd]) .Or. Empty(aCols[n,nPosFaixa])) .Or. Empty(aCols[n,nPosDtVig])
+			Help(" ",1,"OBRIGAT")
+			lRetorno := .F.
+		EndIf
+	EndIF	
+EndIf
+
+If lRetorno .And. (ExistBlock("CM010LOK"))
+	lRetorno := ExecBlock("CM010LOK",.F.,.F.,{lRetorno})
+	If ValType(lRetorno) <> "L"
+		lRetorno := .T.
+	EndIf
+EndIf
+
+RestArea(aArea)
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    Com010Obrig  ³ Autor ³Alexandre Lemes      ³ Data ³15/07/2005³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Verifica campos obrigatorios                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Function Com010Obrig()
+
+Local nI 		:= 0
+Local nPos		:= 0
+Local aAIBObrig	:= {{"AIB_CODPRO",GdFieldPos("AIB_CODPRO",aHeader)},{"AIB_QTDLOT",GdFieldPos("AIB_QTDLOT",aHeader)},{"AIB_DATVIG",GdFieldPos("AIB_DATVIG",aHeader)}}
+
+For nI := 1 To Len(aHeader)
+	nPos 	:= aScan(aAIBObrig,{|x| AllTrim(x[1]) == AllTrim(aHeader[nI][2]) })
+	
+	If nPos == 0 .And. !(AllTrim( aHeader[nI][2] ) $ "AIB_ITEM|" ) .And. X3Obrigat( aHeader[nI][2] )
+		aAdd(aAIBObrig,{AllTrim(aHeader[nI][2]),nI})
+	Endif
+Next nI
+
+Return aAIBObrig
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Com010Tok  ³ Autor ³Alexandre Lemes       ³ Data ³15/07/2005³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Validacao da Tudok                                ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Tok()
+
+Local aArea     := GetArea()
+Local lRetorno  := .T.
+
+If !Empty( M->AIA_DATDE ) .And. !Empty( M->AIA_DATATE ) .And. ( M->AIA_DATDE > M->AIA_DATATE )
+	Help(" ",1,"DATA2INVAL")
+	lRetorno := .F.
+Endif
+
+If lRetorno .And. (ExistBlock("CM010TOK"))
+	lRetorno := ExecBlock("CM010TOK",.F.,.F.,{lRetorno})
+	If ValType(lRetorno) <> "L"
+		lRetorno := .T.
+	EndIf
+EndIf
+
+RestArea(aArea)
+Return(lRetorno)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³Com010Pk  ³ Autor ³ Eduardo Riera         ³ Data ³ 03/10/2003 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Validacao da chave primaria                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³Com010PK()                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                        ³±±
+±±³          ³                                                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Pk()
+
+Local aArea    := GetArea()
+Local lRetorno := .T.
+Local cReadVar := ReadVar()
+Local cChave   := ""
+Local cConteudo:= &(ReadVar())
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Trava a chave informada para não ser utilizada por outro usuario        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(cConteudo) .And. !Empty(M->AIA_CODFOR) .And. !Empty(M->AIA_LOJFOR) .And. !Empty(M->AIA_CODTAB)
+	Leave1Code( "AIA"+xFilial("AIA")+M->AIA_CODFOR+M->AIA_LOJFOR+M->AIA_CODTAB )
+	Do Case
+	Case "AIA_CODFOR"$cReadVar
+		cChave += cConteudo+M->AIA_LOJFOR+M->AIA_CODTAB
+	Case "AIA_LOJFOR"$cReadVar
+		cChave += M->AIA_CODFOR+cConteudo+M->AIA_CODTAB
+	Case "AIA_CODTAB"$cReadVar
+		cChave += M->AIA_CODFOR+M->AIA_LOJFOR+cConteudo
+	EndCase	
+	If !MayIUseCode("AIA"+xFilial("AIA")+cChave)
+		Help(" ",1,"JAGRAVADO")
+		lRetorno := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica se a chave esta duplicada                                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("AIA")
+	dbSetOrder(1)
+	If DbSeek(xFilial("AIA")+cChave)
+		Help(" ",1,"JAGRAVADO")
+		lRetorno := .F.	
+	EndIf
+EndIf
+RestArea(aArea)
+Return(lRetorno)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Com010Rej  ³ Autor ³Eduardo Riera          ³ Data ³02.10.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Reajuste das tabelas de precos                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias do Arquivo                                     ³±±
+±±³          ³ExpN1: Numero do Registro                                   ³±±
+±±³          ³ExpN2: Opcao do aRotina                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Rej(cAlias,nReg,nOpc)
+
+Local aArea := GetArea()
+Local nOpcA := 0        
+Local lRet  := .T.   
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ponto de Entrada para execução do Reajuste da Tabela de Preços ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("CM010RJS")
+	lRet := Execblock("CM010RJS",.F.,.F.)
+	If ValType(lRet) <> "L"
+		lRet := .T.
+	EndIf
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define variaveis de parametrizacao de lancamentos    ³
+//³                                                      ³
+//³ MV_PAR01 Produto inicial?                            ³
+//³ MV_PAR02 Produto final  ?                            ³
+//³ MV_PAR03 Grupo inicial  ?                            ³
+//³ MV_PAR04 Grupo final    ?                            ³
+//³ MV_PAR05 Tipo inicial   ?                            ³
+//³ MV_PAR06 Tipo final     ?                            ³
+//³ MV_PAR07 Tabela inicial ?                            ³
+//³ MV_PAR08 Tabela final   ?                            ³
+//³ MV_PAR09 Fornecedor     ?                            ³
+//³ MV_PAR10 Loja           ?                            ³
+//³ MV_PAR11 Fator          ?                            ³
+//³ MV_PAR12 Numero decimais?                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  
+If lRet
+	Pergunte("COM010",.F.)
+	FormBatch(STR0010,{STR0011,STR0012},; //"Reajuste da Tabela de precos"###"Esta rotina efetuara o reajuste das tabelas de preco, conforme os parametros "###"solicitados."
+		{{5,.T.,{|o| Pergunte("COM010",.T.) }},;
+		{1,.T.,{|o| nOpcA:=1,o:oWnd:End()}  },;
+		{2,.T.,{|o| o:oWnd:End() }}})
+	If ( nOpcA == 1 )
+		Processa({|| Com010Proc()})
+	EndIf
+EndIf
+	
+RestArea(aArea)
+Return(.F.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Com010Proc ³ Autor ³Eduardo Riera          ³ Data ³03.05.02 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Processamento da tabela de preco                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Proc()
+
+Local aArea     := GetArea()
+Local cQuery    := ""
+Local cArqInd   := ""
+Local cCursor   := "AIB"
+Local cUltProc  := ""
+Local lQuery    := .F.
+Local lContinua := .F.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define variaveis de parametrizacao de lancamentos    ³
+//³                                                      ³
+//³ MV_PAR01 Produto inicial?                            ³
+//³ MV_PAR02 Produto final  ?                            ³
+//³ MV_PAR03 Grupo inicial  ?                            ³
+//³ MV_PAR04 Grupo final    ?                            ³
+//³ MV_PAR05 Tipo inicial   ?                            ³
+//³ MV_PAR06 Tipo final     ?                            ³
+//³ MV_PAR07 Tabela inicial ?                            ³
+//³ MV_PAR08 Tabela final   ?                            ³
+//³ MV_PAR09 Fornecedor     ?                            ³
+//³ MV_PAR10 Loja           ?                            ³
+//³ MV_PAR11 Fator          ?                            ³
+//³ MV_PAR12 Numero decimais?                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Processa a atualizacao da tabela de preco             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("AIB")
+dbSetOrder(1)
+
+		cCursor:= "Com010Rej"
+		lQuery := .T.
+		cQuery := "SELECT * "
+		cQuery += "FROM "+RetSqlName("AIB")+" AIB,"
+		cQuery += RetSqlName("SB1")+" SB1 "
+		cQuery += "WHERE AIB.AIB_FILIAL='"+xFilial("AIB")+"' AND "
+		cQuery += "AIB.AIB_CODPRO>='"+MV_PAR01+"' AND "
+		cQuery += "AIB.AIB_CODPRO<='"+MV_PAR02+"' AND "
+		cQuery += "AIB.AIB_CODTAB>='"+MV_PAR07+"' AND "
+		cQuery += "AIB.AIB_CODTAB<='"+MV_PAR08+"' AND "
+		cQuery += "AIB.AIB_CODFOR='"+MV_PAR09+"' AND "
+		cQuery += "AIB.AIB_LOJFOR='"+MV_PAR10+"' AND "
+		cQuery += "AIB.D_E_L_E_T_=' ' AND "
+		cQuery += "SB1.B1_COD=AIB.AIB_CODPRO AND "
+		cQuery += "SB1.B1_FILIAL='"+xFilial("SB1")+"' AND "
+		cQuery += "SB1.B1_GRUPO>='"+MV_PAR03+"' AND "
+		cQuery += "SB1.B1_GRUPO<='"+MV_PAR04+"' AND "
+		cQuery += "SB1.B1_TIPO>='"+MV_PAR05+"' AND "
+		cQuery += "SB1.B1_TIPO<='"+MV_PAR06+"' AND "
+		cQuery += "SB1.D_E_L_E_T_=' ' "
+//		cQuery += "ORDER BY "+SqlOrder(AIB->(IndexKey()))
+       cQuery += "ORDER BY AIB.AIB_FILIAL,AIB.AIB_CODFOR,AIB.AIB_LOJFOR,AIB.AIB_CODTAB"
+		cQuery := ChangeQuery(cQuery)
+
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cCursor,.T.,.T.)
+
+ProcRegua(AIB->(LastRec()))
+
+dbSelectArea(cCursor)
+While ( !Eof() )
+	lContinua := .F.
+	If !lQuery
+		dbSelectArea("SB1")
+		dbSetOrder(1)
+		If DbSeek(xFilial("SB1")+(cCursor)->AIB_CODPRO)
+			If 	SB1->B1_GRUPO >= MV_PAR03 .And. ;
+					SB1->B1_GRUPO <= MV_PAR04 .And. ;
+					SB1->B1_TIPO >= MV_PAR05 .And. ;
+					SB1->B1_TIPO <= MV_PAR06
+
+				lContinua := .T.
+
+			EndIf
+		EndIf		
+	Else
+		lContinua := .T.
+	EndIf
+	If lContinua
+		If (cCursor)->AIB_CODFOR+(cCursor)->AIB_LOJFOR+(cCursor)->AIB_CODTAB+(cCursor)->AIB_CODPRO==cUltProc
+			lContinua := .F.
+		EndIf
+	EndIf
+	If lContinua
+		MaRejTabCom((cCursor)->AIB_CODFOR,(cCursor)->AIB_LOJFOR,(cCursor)->AIB_CODTAB,(cCursor)->AIB_CODPRO,MV_PAR11,MV_PAR12)
+	EndIf	
+	cUltProc := (cCursor)->AIB_CODFOR+(cCursor)->AIB_LOJFOR+(cCursor)->AIB_CODTAB+(cCursor)->AIB_CODPRO
+	dbSelectArea(cCursor)
+	dbSkip()
+	IncProc(STR0013+" : "+cUltProc) //"Reajustando"
+EndDo
+If lQuery
+	dbSelectarea(cCursor)
+	dbCloseArea()
+	dbSelectArea("AIB")
+Else
+	dbSelectArea("AIB")
+	RetIndex("AIB")
+	Ferase(cArqInd+OrdBagExt())
+EndIf
+RestArea(aArea)
+Return(.T.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³MaRejTabCom³ Autor ³ Eduardo Riera         ³ Data ³03.10.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de reajuste da tabela de preco                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpN1: Numerico (Preco de Compra)                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Fornecedor                                           ³±±
+±±³          ³ExpC2: Loja                                                 ³±±
+±±³          ³ExpC3: Tabela de Preco                                      ³±±
+±±³          ³ExpC4: Codigo do Produto                                    ³±±
+±±³          ³ExpN1: Fator                                                ³±±
+±±³          ³ExpN2: Decimais a serem consideradas                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaRejTabCom(cCodFor,cLoja,cCodTab,cCodPro,nFator,nDecimais)
+
+Local aArea    := GetArea()
+Local aAreaAIA := AIA->(GetArea())
+Local aAreaAIB := AIB->(GetArea())
+Local nBase    := 0
+Local lCM010REJ:= ExistBlock("CM010REJ")
+
+DEFAULT nDecimais := TamSx3("AIB_PRCVEN")[2]
+
+dbSelectArea("AIB")
+dbSetOrder(2)
+If DbSeek(xFilial("AIB")+cCodFor+cLoja+cCodTab+cCodPro)
+	While !Eof() .And. AIB->AIB_FILIAL == xFilial("AIB") .And.;
+			AIB->AIB_CODFOR == cCodFor .And.;
+			AIB->AIB_LOJFOR == cLoja .And.;
+			AIB->AIB_CODTAB == cCodTab .And.;
+			AIB->AIB_CODPRO == cCodPro
+
+		Begin Transaction
+
+			RecLock("AIB")
+
+			nBase   := AIB->AIB_PRCCOM
+
+			AIB->AIB_PRCCOM := If(nFator > 0, NoRound(nBase * nFator,nDecimais), nBase )
+			MsUnLock()
+
+		End Transaction 
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Ponto de entrada para atualizacao de precos           ³ 
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If lCM010REJ
+			ExecBlock("CM010REJ",.F.,.F.,{nBase, AIB->AIB_PRCCOM})
+		Endif	
+
+		dbSelectArea("AIB")
+		dbSkip()
+	EndDo
+EndIf
+RestArea(aAreaAIB)
+RestArea(aAreaAIA)
+RestArea(aArea)
+Return(.T.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³MATABPRCOM ³ Autor ³ Eduardo Riera         ³ Data ³02.10.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Funcao para trazer preco de compra de acordo com a qtde     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpN1: Numerico (Preco de Compra)                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Tabela de Preco                                      ³±±
+±±³          ³ExpC2: Codigo do Produto                                    ³±±
+±±³          ³ExpN1: Quantidade                                           ³±±
+±±³          ³ExpC3: Codigo do Fornecedor                                 ³±±
+±±³          ³ExpC4: Loja                                                 ³±±
+±±³          ³ExpN2: Moeda a ser retornada                                ³±±
+±±³          ³ExpD1: Data de Validade                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaTabPrCom(cTabPreco,cProduto,nQtde,cFornece,cLoja,nMoeda,dDataVld,nTxMoeda,nValFrete)
+
+Local aArea     := GetArea()
+Local aUltResult:= {}
+Local cQuery    := ""
+Local cAliasAIB := "AIB"
+Local nPrcCom   := 0
+Local nResult   := 0
+Local nQtdLote  := 0
+Local nMoedaTab := 1
+Local nScan     := 0
+Local nY        := 0  
+Local nCM010PCL := 0
+Local lUltResult:= .T.
+Local lQuery    := .F.
+Local lProcessa := .F.
+Local lPrcAIB   := .F.
+Local dDtVig    := CTOD("  /  /  ")
+Local lMoedaAIB := .F.
+
+DEFAULT nMoeda    := 1
+DEFAULT dDataVld  := dDataBase
+DEFAULT nTxMoeda  := Nil     
+DEFAULT nValFrete := 0  
+
+nScan := aScan(aUltResult,{|x| x[1] == cTabPreco .And.;
+	x[2] == cProduto .And.;
+	x[3] == nQtde .And.;
+	x[4] == cFornece .And.;
+	x[5] == cLoja .And.;
+	x[6] == nMoeda .And.;
+	x[7] == cFilAnt.And.;
+	x[9] == nTxMoeda })
+
+If nScan == 0
+	dbSelectarea("AIB")
+	dbSetOrder(1)
+			lQuery    := .T.
+			cAliasAIB := "QRYAIB"
+			aStruAIB  := AIB->(dbStruct())
+
+			cQuery := "SELECT * "
+			cQuery += "FROM "+RetSqlName("AIB")+ " AIB "
+			cQuery += "WHERE "
+			cQuery += "AIB_FILIAL = '"+xFilial("AIB")+"' AND "
+			cQuery += "AIB_CODFOR = '"+cFornece+"' AND "
+			cQuery += "AIB_LOJFOR = '"+cLoja+"' AND "
+			cQuery += "AIB_CODTAB = '"+cTabPreco+"' AND "
+			cQuery += "AIB_CODPRO = '"+cProduto+"' AND "
+			cQuery += "AIB_QTDLOT >= "+Str(nQtde,18,8)+" AND "
+			cQuery += "AIB.D_E_L_E_T_ = ' ' "
+			cQuery += "ORDER BY AIB_QTDLOT, "+SqlOrder(AIB->(IndexKey()))
+
+			cQuery := ChangeQuery(cQuery)
+
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasAIB,.T.,.T.)
+
+			For nY := 1 To Len(aStruAIB)
+				If aStruAIB[nY][2]<>"C"
+					TcSetField(cAliasAIB,aStruAIB[nY][1],aStruAIB[nY][2],aStruAIB[nY][3],aStruAIB[nY][4])
+				EndIf
+			Next nY
+			If (cAliasAIB)->(!Eof())
+				lProcessa := .T.
+			EndIf
+	If lProcessa	
+		If nQtde == 0 .And. Empty(cFornece)
+			nPrcCom   := (cAliasAIB)->AIB_PRCCOM
+			nMoedaTab := (cAliasAIB)->AIB_MOEDA			
+			nValFrete := (cAliasAIB)->AIB_FRETE
+			lPrcAIB   := .T.
+		Else
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Busco o preco e analiso a qtde de acordo com a faixa³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea(cAliasAIB)
+			While (cAliasAIB)->(!Eof()) .And. (cAliasAIB)->AIB_FILIAL == xFilial("AIB") .And.;
+					(cAliasAIB)->AIB_CODFOR == cFornece  .And.;
+					(cAliasAIB)->AIB_LOJFOR == cLoja     .And.;								
+					(cAliasAIB)->AIB_CODTAB == cTabPreco .And.;
+					(cAliasAIB)->AIB_CODPRO ==  cProduto
+					
+				If (cAliasAIB)->AIB_MOEDA == nMoeda
+					lMoedaAIB := .T.
+				Endif
+				(cAliasAIB)->(DbSkip())
+			Enddo
+			
+			(cAliasAIB)->(DbGotop())
+			While (cAliasAIB)->(!Eof()) .And. (cAliasAIB)->AIB_FILIAL == xFilial("AIB") .And.;
+					(cAliasAIB)->AIB_CODFOR == cFornece  .And.;
+					(cAliasAIB)->AIB_LOJFOR == cLoja     .And.;								
+					(cAliasAIB)->AIB_CODTAB == cTabPreco .And.;
+					(cAliasAIB)->AIB_CODPRO ==  cProduto
+				If nQtde <= (cAliasAIB)->AIB_QTDLOT .And. Iif(lMoedaAIB,nMoeda == (cAliasAIB)->AIB_MOEDA,.T.)									
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³Verifica a vigencia do item                                   ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ				
+					nQtdLote := (cAliasAIB)->AIB_QTDLOT
+
+					While (cAliasAIB)->(!Eof()) .And. (cAliasAIB)->AIB_FILIAL == xFilial("AIB") .And.;
+							(cAliasAIB)->AIB_CODFOR == cFornece  .And.;
+							(cAliasAIB)->AIB_LOJFOR == cLoja     .And.;								
+							(cAliasAIB)->AIB_CODTAB == cTabPreco .And.;
+							(cAliasAIB)->AIB_CODPRO ==  cProduto .And.;
+							(cAliasAIB)->AIB_QTDLOT == nQtdLote .And.;
+							(cAliasAIB)->AIB_DATVIG <= dDataVld
+
+						If nQtde <= (cAliasAIB)->AIB_QTDLOT .And. (Empty(dDtVig) .Or. (cAliasAIB)->AIB_DATVIG > dDtVig) .And. Iif(lMoedaAIB,nMoeda == (cAliasAIB)->AIB_MOEDA,.T.)
+
+							nPrcCom   := (cAliasAIB)->AIB_PRCCOM
+							nMoedaTab := (cAliasAIB)->AIB_MOEDA  
+							nValFrete := (cAliasAIB)->AIB_FRETE  
+							dDtVig    := (cAliasAIB)->AIB_DATVIG
+
+							lPrcAIB   := .T.
+						EndIf
+
+						dbSelectArea(cAliasAIB)
+						dbSkip()
+					EndDo				
+					If lPrcAIB
+						Exit
+					EndIf						
+				EndIf
+				dbSelectArea(cAliasAIB)
+				dbSkip()
+			EndDo			
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Guarda os ultimos resultados                                            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nResult  := xMoeda(nPrcCom,nMoedaTab,nMoeda,,TamSx3("D1_VUNIT")[2],,nTxMoeda)	
+	nValFrete:= xMoeda(nValFrete,nMoedaTab,nMoeda,,TamSx3("D1_VUNIT")[2],,nTxMoeda)
+	If lUltResult
+		aadd(aUltResult,{cTabPreco,cProduto,nQtde,cFornece,cLoja,nMoeda,cFilAnt,nResult,nTxMoeda,nValFrete})
+		If Len(aUltResult) > MAXSAVERESULT
+			aUltResult := aDel(aUltResult,1)
+			aUltResult := aSize(aUltResult,MAXSAVERESULT)
+		EndIf
+	EndIf
+Else
+	nResult := aUltResult[nScan][8] 
+	If Len(aUltResult[nScan])>9 
+		nValFrete := aUltResult[nScan][10]
+	EndIf
+EndIf  
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Ponto de Entrada: CM010PCL  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   
+If ExistBlock("CM010PCL")
+	nCM010PCL:=ExecBlock("CM010PCL",.T.,.T.,{cFornece,cLoja,cTabPreco,cProduto,cAliasAIB,nResult})
+	If ValType(nCM010PCL)=="N" 
+		nResult:=nCM010PCL
+	EndIf
+EndIF
+
+If lQuery
+	dbSelectArea(cAliasAIB)
+	dbCloseArea()
+	dbSelectArea("AIB")
+EndIf
+RestArea(aArea)
+Return(nResult)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³MaVldTabCom³ Autor ³Eduardo Riera          ³ Data ³02.10.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Validacao da tabela de precos de Compras                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Tabela valida                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Fornecedor                                           ³±±
+±±³          ³ExpC2: Loja                                                 ³±±
+±±³          ³ExpC3: Tabela de Preco                                      ³±±
+±±³          ³ExpC4: Condicao de Pagamento                                ³±±
+±±³          ³ExpN5: Help                                                 ³±±
+±±³          ³ExpD6: Data de Validade da tabela de preco                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MaVldTabCom(cCodFor,cLojaFor,cCodTab,cCondPag,cHelp,dDataVld)
+
+Local aArea   := GetArea()
+Local AIArea  := AIA->(GetArea())
+Local lValido := .T.
+
+DEFAULT dDataVld := dDataBase
+
+DbSelectArea("AIA")
+AIA->(DbSetOrder(1))
+
+If !Empty(cCodTab)
+    //-- Verifica a vigencia da tabela de precos
+	lValido := ExistCpo("AIA", cCodFor + cLojaFor + cCodTab, 1)
+EndIf	
+
+If lValido
+	If AIA->(DbSeek(xFilial("AIA")+cCodFor+cLojaFor+cCodTab))
+	    If dDataVld < AIA->AIA_DATDE .Or. dDataVld > IIF(!Empty(AIA->AIA_DATATE),AIA->AIA_DATATE,dDataVld )
+	        If Empty(cHelp)
+	            Aviso(STR0016,STR0017,{STR0018})//"A data de emissao do pedido nao encontra-se dentro da data de validade desta tabela de precos, altere a data de validade da tabela ou escolha outra"
+	        Else
+	            cHelp := "COMTABPRC"
+	        EndIf
+	        lValido := .F.
+	    Else
+	        If !Empty(cCondPag) .And. !Empty(AIA->AIA_CONDPG) .And. cCondPag <> AIA->AIA_CONDPG
+	            If Empty(cHelp)
+	                Help(" ",1,"COMTABPRC")
+	            Else
+	                cHelp := "COMTABPRC"
+	            EndIf
+	            lValido := .F.
+	        EndIf
+	    EndIf
+	Endif
+EndIf
+
+RestArea(AIArea)
+RestArea(aArea)
+
+Return lValido
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Com010Leg  ³ Autor ³Henry Fila             ³ Data ³02.10.03 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Legenda das tabelas                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Leg()
+
+Local aRetPE  := {}
+Local aLegenda := { { "BR_VERMELHO",STR0014 },;  //"Inativa"
+					{ "BR_VERDE",STR0015	}}	  //"Ativa"
+//Ponto de entrada para manipular a legenda
+If ExistBlock("CM010LEG")
+	aRetPE:= ExecBlock("CM010LEG",.F.,.F.,{aLegenda})
+	If ( ValType(aRetPE) == "A" .And. Len(aRetPE) > 0 )
+		aLegenda := aClone(aRetPE)
+	EndIf
+EndIf
+
+BrwLegenda( cCadastro, STR0021, aLegenda  ) //"Status"
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Com010Data ³ Autor ³Nereu Humberto Junior  ³ Data ³20.08.07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Validacao das data iniciais e finais da tabela de precos    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³.T. ou .F.                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Data()
+
+Local lRet := .T.
+
+If !Empty( M->AIA_DATDE ) .And. !Empty( M->AIA_DATATE ) .And. ( M->AIA_DATDE > M->AIA_DATATE )
+	Help(" ",1,"DATA2INVAL")
+	lRet := .F.
+Endif
+
+Return(lRet)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ Com010Sxb  ³ Autor ³ Nereu Humberto Junior³ Data ³ 06.09.2007 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Funcao generica para filtro tipo 6 via SXB                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function Com010Sxb()
+
+Local lRet := .T.
+Local cFunName := UPPER(AllTrim(FunName()))
+
+If cFunName = "MATA060"
+	lRet := AIA->AIA_FILIAL==xFilial("AIA") .AND. AIA->AIA_CODFOR == M->A5_FORNECE .AND. AIA->AIA_LOJFOR == M->A5_LOJA
+ElseIf cFunName = "MATA065"
+	lRet := AIA_FILIAL==xFilial("AIA") .AND. AIA_CODFOR == M->AD_FORNECE .AND. AIA_LOJFOR == M->AD_LOJA
+ElseIf cFunName = "MATA121" .Or. cFunName = "MATA122"
+	lRet := AIA_FILIAL==xFilial("AIA") .AND. AIA_CODFOR == cA120Forn .AND. AIA_LOJFOR == cA120Loj
+ElseIf cFunName = "MATA150"
+	lRet := AIA_FILIAL==xFilial("AIA") .AND. AIA_CODFOR == cA150Forn .AND. AIA_LOJFOR == cA150Loj
+Endif
+
+Return(lRet)      
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ ReTMemoAIB ³ Autor ³ Suprimentos          ³ Data ³ 13/08/2018 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Verifica se existe um MEMO de Usuario na tabela AIB           ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ReTMemoAIB()
+
+Local aStru := FWFormStruct(3,"AIB")[1]
+Local nX
+Local lRet	:= .F.
+
+// Retorno da FWFormStruct = 3
+//[01][03] ExpC:idField
+//[01][04] ExpC:Tipo
+//[01][14] ExpL:Campo virtual?
+
+For nX := 1 To Len(aStru)
+	If aStru[nX][4] == "M" .And. !(aStru[nX][14])
+		lRet := .T.
+	EndIf
+Next nX
+
+Return lRet

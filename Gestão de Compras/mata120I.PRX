@@ -1,0 +1,335 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "MATA120I.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ ExpXML_PCºAutor  ³Rodrigo Toledo Silvaº Data ³  19/07/12   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Mensagem de envio do PC para TOTVS Colaboracao. 			  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºParametros³ cNumPed: Numero do pedido de compra			  	  		  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ TOTVS Colaboracao                                  		  º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function ExpXML_PC(cNumPed)
+Local aAreaSC7   := SC7->(GetArea())
+Local aAreaSA2   := SA2->(GetArea())
+Local aAreaSM0   := SM0->(GetArea())
+Local cXml	     := ""
+Local cItem      := StrZero(0,TamSX3("C7_ITEM")[1])
+Local nValMerc	 := 0
+Local nValTotal	 := 0
+Local nValIPI	 := 0
+Local nValDesc	 := 0
+Local nValDesp   := 0
+Local cUnidMed	 := ""
+Local lRet		 := .F.	
+Local cIdERP	 := ""
+Local nMaxMemo 	 := 1000000 // Numero maximo de caracteres possiveis em um campo MEMO. O XML sera gravado na tabela CKOCOL em um campo MEMO. Maximo de bytes em um campo MEMO = 1.048.576
+Local nSC7Moeda  := IF (SC7->C7_MOEDA == 0,1,SC7->C7_MOEDA)
+Local cMemomega	 := ""
+Local nMemomega	 := 0
+
+//Avalia tamanho campo MEMO
+cMemomega := GetSrvProfString("TOPMemoMega", "0")
+nMemomega := Val(cMemomega)
+nMemomega := nMemomega * 1000000
+
+nMaxMemo := Max(nMemomega,nMaxMemo)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Cabecalho do pedido de compra |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cXml += '<BusinessContent>'
+cXml += '<CompanyId>'+cEmpAnt+'</CompanyId>'
+cXml += '<BranchId>'+xFilial("SC7")+'</BranchId>'
+cXml += '<funcmsgorder>9</funcmsgorder>'
+cXml += '<OrderPurpose>1</OrderPurpose>'
+cXml += '<ordertypecode>001</ordertypecode>'
+cXml += '<OrderId>'+SC7->C7_NUM+'</OrderId>'
+cXml += '<RegisterHour>'+Time()+'</RegisterHour>'
+cXml += '<RegisterDate>'+STRZERO(Year(SC7->C7_EMISSAO),4)+'-'+STRZERO(Month(SC7->C7_EMISSAO),2)+'-'+STRZERO(Day(SC7->C7_EMISSAO),2)+'</RegisterDate>'
+cXml += '<dhinidelivery>'+STRZERO(Year(SC7->C7_DATPRF),4)+'-'+STRZERO(Month(SC7->C7_DATPRF),2)+'-'+STRZERO(Day(SC7->C7_DATPRF),2)+"T00:00:00"+'</dhinidelivery>'
+cXml += '<dhfindelivery>'+STRZERO(Year(SC7->C7_DATPRF),4)+'-'+STRZERO(Month(SC7->C7_DATPRF),2)+'-'+STRZERO(Day(SC7->C7_DATPRF),2)+"T23:59:00"+'</dhfindelivery>'	
+SA2->(dbSetOrder(1))
+If SA2->(dbSeek(xFilial("SA2")+SC7->(C7_FORNECE+C7_LOJA)))
+	cXml += '<VendorGovInfo>'
+	If SA2->A2_TIPO == "J"
+    	cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="Federal" name="CNPJ">'+SA2->A2_CGC+'</Id>'
+ 	ElseIF SA2->A2_TIPO == "F"
+ 		cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="Federal" name="CPF">'+SA2->A2_CGC+'</Id>
+ 	EndIf
+ 	If !Empty(SA2->A2_INSCRM)
+    	cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="Municipal" name="InscricaoMunicipal">'+SA2->A2_INSCRM+'</Id>
+    EndIf
+    If !Empty(SA2->A2_INSCR)
+    	cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="State" name="InscricaoEstadual">'+SA2->A2_INSCR+'</Id>
+    EndIf
+	cXml += '</VendorGovInfo>'
+EndIf
+SM0->(dbSetorder(1))
+If SM0->(dbSeek(M0_CODIGO+SC7->C7_FILENT))
+	cXml += '<CustomerGovInfo>'
+	cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="Federal" name="CNPJ">'+SM0->M0_CGC+'</Id>'
+    If !Empty(SM0->M0_INSC)
+    	cXml += '<Id issueOn="0001-01-01" expiresOn="9999-12-31" scope="State" name="InscricaoEstadual">'+SM0->M0_INSC+'</Id>
+    EndIf
+	cXml += '</CustomerGovInfo>'		
+   	cXML += '<DeliveryAddress>'
+   	cXML += '<Address>'+AllTrim(SM0->M0_ENDENT)+'</Address>'
+   	cXML += '<Complement>'+AllTrim(SM0->M0_COMPENT)+'</Complement>'
+   	cXML += '<City>'
+   	cXML += '<Code>'+SM0->M0_CODMUN+'</Code>'
+   	cXML += '<Description>'+AllTrim(SM0->M0_CIDENT)+'</Description>'
+   	cXML += '</City>'
+   	cXML += '<State>'
+   	cXML += '<Code>'+SM0->M0_ESTENT+'</Code>'
+   	cXML += '<Description>'+AllTrim(SM0->M0_ESTENT)+'</Description>'
+   	cXML += '</State>'
+   	cXML += '<ZIPCode>'+SM0->M0_CEPENT+'</ZIPCode>'
+   	cXML += '</DeliveryAddress>'
+EndIf
+If SC7->C7_TPFRETE == "C"
+	cXML += '<FreightType>1</FreightType>'
+ElseIf SC7->C7_TPFRETE == "F"
+	cXML += '<FreightType>2</FreightType>'
+Else
+	cXML += '<FreightType>3</FreightType>'
+EndIf
+cXML += '<CurrencyId>'+If(SC7->C7_MOEDA < 6,AllTrim(Str(nSC7Moeda)),"6")+'</CurrencyId>'
+cXML += '<currencydesc>'+If(SC7->C7_MOEDA < 6,SuperGetMV("MV_MOEDA"+Alltrim(Str(nSC7Moeda))), "Outras")+'</currencydesc>'
+cXML += '<Status>3</Status>'
+If !Empty(SC7->C7_MSG)
+	cXML += '<comment>'+PadR(Formula(SC7->C7_MSG),60)+'</comment>'
+EndIf
+cXML += '<conditionpay>'+If(Len(Condicao(1000,SC7->C7_COND))>1,"21","3")+'</conditionpay>'
+cXML += '<descconditionpay>'+AllTrim(Posicione("SE4",1,xFilial("SE4")+SC7->C7_COND,"E4_DESCRI"))+'</descconditionpay>'
+cXML += '<Discounts>'
+cXML += '<Discount>'+AllTrim(Str(SC7->C7_DESC1/100))+'</Discount>'
+cXML += '<Discount>'+AllTrim(Str(SC7->C7_DESC2/100))+'</Discount>'
+cXML += '<Discount>'+AllTrim(Str(SC7->C7_DESC3/100))+'</Discount>'
+cXML += '</Discounts>'
+cXML += '<orderpricetype>1</orderpricetype>'
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Itens do pedido de compra |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   
+nValMerc  := 0
+nValTotal := 0
+nValIPI	  := 0
+nValDesp  := 0
+nValDesc  := 0	
+nValFre	  := 0
+nValSeg	  := 0
+cXML += '<SalesOrderItens>'
+SC7->(dbSeek(xFilial("SC7")+cNumPed))
+While !SC7->(EOF()) .And. SC7->(C7_FILIAL+C7_NUM) == xFilial("SC7")+cNumPed
+	cItem := Soma1(cItem)
+	cXML += '<Item>'
+	cXML += '<CompanyId>'+SM0->M0_CODIGO+'</CompanyId>'
+	cXML += '<BranchId>'+SC7->C7_FILIAL+'</BranchId>'
+	cXML += '<OrderId>'+SC7->C7_NUM+'</OrderId>'
+	cXML += '<OrderItem>'+cItem+'</OrderItem>'
+	cXML += '<numitemrequest>'+SC7->C7_ITEM+'</numitemrequest>'
+	cXML += '<typecodprod>BP</typecodprod>'
+	cXML += '<ItemCode>'+AllTrim(SC7->C7_PRODUTO)+'</ItemCode>'
+	cXML += '<ItemDescription>'+AllTrim(PadR(SC7->C7_DESCRI,80))+'</ItemDescription>'
+	If !Empty(SC7->C7_UM)
+		cXML += '<itemunitofmeasure>'+AllTrim(SC7->C7_UM)+'</itemunitofmeasure>'
+		cXML += '<descunitmensure>'+AllTrim(PadR(Posicione("SAH",1,xFilial("SAH")+SC7->C7_UM,"AH_DESCPO"),30))+'</descunitmensure>'
+	EndIf
+	cXML += '<numunitconsembped>000001</numunitconsembped>'
+	cXML += '<Quantity>'+AllTrim(Str(SC7->C7_QUANT))+'</Quantity>'
+	cXml += '<UnityPrice>'+AllTrim(Str(SC7->C7_PRECO,14,2))+'</UnityPrice>'
+	cXml += '<netunitaryprice>'+AllTrim(Str(SC7->((C7_TOTAL-C7_VALIPI-C7_VLDESC)/C7_QUANT),16,2))+'</netunitaryprice>'
+	cXML += '<TotalPrice>'+AllTrim(Str(SC7->C7_TOTAL,16,2))+'</TotalPrice>'
+	cXml += '<DiscountPercentage>'+AllTrim(Str(SC7->C7_DESC))+'</DiscountPercentage>'		
+	cXML += '<valnetlineitem>'+AllTrim(Str(SC7->(C7_TOTAL-C7_VALIPI-C7_VLDESC),16,2))+'</valnetlineitem>'
+	cXml += '<unitvaltradedisc>'+AllTrim(Str(SC7->(C7_PRECO*C7_DESC),16,2))+'</unitvaltradedisc>'
+	cXml += '<valipi>'+AllTrim(Str(SC7->C7_VALIPI,16,2))+'</valipi>'
+	cXml += '<industrializedproducttaxpercentage>'+AllTrim(Str((SC7->C7_IPI/100),14,2))+'</industrializedproducttaxpercentage>'
+	cXml += '<servicesandproductscirculationtaxpercentage>'+AllTrim(Str((SC7->C7_PICM/100),14,2))+'</servicesandproductscirculationtaxpercentage>'
+	cXml += '<unitvalacesscost>'+AllTrim(Str(SC7->C7_DESPESA,14,2))+'</unitvalacesscost>'
+	cXML += '<ItemDiscounts>'
+    cXML += '<ItemDiscount>'+AllTrim(Str(SC7->(C7_VLDESC/C7_TOTAL),16,2))+'</ItemDiscount>'
+    cXML += '</ItemDiscounts>'    
+	cXml += '<FreightValue>'+AllTrim(Str(SC7->C7_VALFRE,16,2))+'</FreightValue>'
+	cXml += '<InsuranceValue>'+AllTrim(Str(SC7->C7_SEGURO,16,2))+'</InsuranceValue>'
+	cXml += '<UnitWeight>'+AllTrim(Str(SC7->C7_PESO_B))+'</UnitWeight>'	
+	If !Empty(SC7->C7_OBS)
+		cXML += '<ItemMessages>'
+	    cXML += '<ItemMessage>'+AllTrim(SC7->C7_OBS)+'</ItemMessage>'
+	    cXML += '</ItemMessages>'
+    EndIf
+    //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Contrato de parceria |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SC7->C7_TIPO == 2
+		cXml += '<contractnumber>'+SC7->C7_CONTRA+'</contractnumber>'
+	EndIf
+	cXml += '<itemcodeprovider>'+Posicione("SA5",1,xFilial("SA5")+SC7->(C7_FORNECE+C7_LOJA+C7_PRODUTO),"A5_CODPRF")+'</itemcodeprovider>'
+	If !Empty(SC7->C7_CODTAB)
+		cXml += '<pricetablenumber>'+AllTrim(SC7->C7_CODTAB)+'</pricetablenumber>'
+	Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Local de entrega das mercadorias |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+  	cXml += '<CROSSDOCKING>'
+ 	cXml += '<CROSSDOCKING_ITEM>'
+	cXml += '<dhinidelivery>'+SubStr(DtoS(SC7->C7_DATPRF),1,4)+'-'+SubStr(DtoS(SC7->C7_DATPRF),5,2)+'-'+SubStr(DtoS(SC7->C7_DATPRF),7,2)+"T00:00:00"+'</dhinidelivery>'
+	cXml += '<dhfindelivery>'+SubStr(DtoS(SC7->C7_DATPRF),1,4)+'-'+SubStr(DtoS(SC7->C7_DATPRF),5,2)+'-'+SubStr(DtoS(SC7->C7_DATPRF),7,2)+"T23:59:00"+'</dhfindelivery>'
+	cXml += '<quantdelivery>'+AllTrim(Str(SC7->(C7_QUANT-C7_QUJE)))+'</quantdelivery>'	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Unidade de Medida do Item do Ped.|
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cUnidMed := A120IUnMed(AllTrim(SC7->C7_UM))
+	If !Empty(cUnidMed)
+		cXml += '<mensuunit>'+cUnidMed+'</mensuunit>'
+	EndIf
+	cXml += '<orderline>'+SC7->C7_ITEM+'</orderline>'
+ 	cXml += '</CROSSDOCKING_ITEM>'
+  	cXml += '</CROSSDOCKING>'
+	cXml += '</Item>'
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ soma o valor total da mercadoria/IPI/descontos |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nValMerc  += SC7->C7_TOTAL
+	nValTotal += SC7->(C7_TOTAL-C7_VLDESC+C7_SEGURO+C7_DESPESA+C7_VALFRE+C7_VALIPI)
+	nValIPI	  += SC7->C7_VALIPI
+	nValDesc  += SC7->C7_VLDESC
+	nValDesp  += SC7->C7_DESPESA
+	nValFre	  += SC7->C7_VALFRE
+	nValSeg	  += SC7->C7_SEGURO	
+	SC7->(dbSkip())
+End
+cXml += '</SalesOrderItens>'
+cXML += '<FreightValue>'+AllTrim(Str(nValFre,14,2))+'</FreightValue>'
+cXML += '<InsuranceValue>'+AllTrim(Str(nValSeg,14,2))+'</InsuranceValue>'
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³apresenta os totais do pedido (Vlr Mercadoria/Despesas/IPI/descontos) |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cXML += '<SUMMARY>'
+cXML += '<ordertotalnetamount>'+AllTrim(Str(nValMerc,17,2))+'</ordertotalnetamount>'
+cXML += '<valtotipimerchan>'+AllTrim(Str(nValIPI,17,2))+'</valtotipimerchan>'
+cXML += '<discountamount>'+AllTrim(Str(nValDesc,17,2))+'</discountamount>'
+cXML += '<valtotaacesscost>'+AllTrim(Str(nValDesp,17,2))+'</valtotaacesscost>'
+cXML += '<ordertotalamount>'+AllTrim(Str(nValTotal,17,2))+'</ordertotalamount>'
+cXML += '</SUMMARY>'
+cXML += '</BusinessContent>'
+
+If Len(cXML) <= nMaxMemo
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Chama a funcao COMXCOLTSS para comunicacao com TSS |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	cIdErp := xFilial("SC7")+cNumPed
+	lRet   := COMXCOLNEO(xFilial("SC7")+cNumPed,cXML,cIdErp,'005')
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Atualiza o campo TOCOLAB para que nao seja enviado como programacao de entrega |
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If lRet
+		
+		SC7->(dbSetOrder(1))
+		SC7->(dbSeek(xFilial("SC7")+cNumPed))
+		
+		While !SC7->(EOF()) .And. SC7->(C7_FILIAL+C7_NUM) == xFilial("SC7")+cNumPed
+			
+			RecLock("SC7",.F.)
+				
+				SC7->C7_TPCOLAB := "PC"
+				SC7->C7_IDTSS   := cIdErp
+				
+			SC7->(MsUnlock())
+			
+			SC7->(dbSkip())
+			
+		EndDo
+		
+	EndIf
+	
+Else
+	
+	Alert(STR0004, STR0003)
+	
+EndIf
+
+RestArea(aAreaSC7)
+RestArea(aAreaSA2)
+RestArea(aAreaSM0)
+
+Return lRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A120IUnMed³Autor  ³Rodrigo Toledo	Silva   ³ Data ³08/08/2012 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Esta rotina monta uma dialog com a descricao das cores da   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ cEXP1 - Unidade de Medida do Pedido de Compra 		   	   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno	 ³ Retorna a unidade de medida conforme o layout XML		   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Pedido - TOTVS Colaboracao                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/ 
+Function A120IUnMed(cUnMedPed)
+Local cUnMedProd := ""
+
+Do Case
+	Case cUnMedPed == "BD"
+		cUnMedProd := "BJ"  //Balde
+	Case cUnMedPed == "CX"
+		cUnMedProd := "BX"  //Caixa
+	Case cUnMedPed == "CC"
+		cUnMedProd := "CMQ"  //Centimetro Quadrado
+	Case cUnMedPed == "CM"
+		cUnMedProd := "CMT"  //Centimetro Cubico
+	Case cUnMedPed == "CT"
+		cUnMedProd := "CNT"  //Cento
+	Case cUnMedPed == "DZ"
+		cUnMedProd := "DZ"   //Duzia
+	Case cUnMedPed == "GL"
+		cUnMedProd := "GLI"  //Galao
+	Case cUnMedPed == "G"
+		cUnMedProd := "GRM"  //Grama
+	Case cUnMedPed == "JG"   
+		cUnMedProd := "JGO"  //Jogo			
+	Case cUnMedPed == "KG"
+		 cUnMedProd := "KGM" //Kilograma
+	Case cUnMedPed == "KT"
+		 cUnMedProd := "KT" //Kit	 	 
+	Case cUnMedPed == "LT"
+		 cUnMedProd := "CA" //Lata
+	Case cUnMedPed == "L"
+		 cUnMedProd := "LTR" //Litro	 
+	Case cUnMedPed == "MGM"
+		 cUnMedProd := "MGM" //Miligrama
+	Case cUnMedPed == "ML"
+		 cUnMedProd := "MLT" //Mililitro
+	Case cUnMedPed == "MM"
+		 cUnMedProd := "MMT" //Milimetro
+	Case cUnMedPed == "M2"
+		 cUnMedProd := "MTK" //Metro Quadrado
+	Case cUnMedPed == "M3"
+		 cUnMedProd := "MTQ" //Metro Quadrado	 
+	Case cUnMedPed == "MT"
+		 cUnMedProd := "MTR" //Metro	 	 
+	Case cUnMedPed == "TL"
+		 cUnMedProd := "TNE" //Tonelada
+	Case cUnMedPed == "PC"
+		 cUnMedProd := "PCE" //Peca
+	OtherWise
+		 cUnMedProd := "EA"  //Unidade
+EndCase
+
+Return cUnMedProd

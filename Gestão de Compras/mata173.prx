@@ -1,0 +1,554 @@
+#INCLUDE "MATA173.CH"
+#INCLUDE "PROTHEUS.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATA173  ³ Autor ³ Cristina Ogura        ³ Data ³ 18/03/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera Autorizacao Entrega baseado nos Contratos de Parceria ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Gen‚rico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ATENCAO: O array aRotAuto recebera o conteudo dos parametros da pergunte, 
+		 exemplo:
+aRotAuto := {	{"MV_PAR01",Space(15)			,NIL},;
+				{"MV_PAR02","ZZZZZZZZZZZZZZZ"	,NIL},;
+				{"MV_PAR03".....
+			}
+/*/
+Function MATA173(aRotAuto)
+
+Local nI       := 0 
+Local nOpca    := 0
+Local aSays	   := {}
+Local aButtons := {}
+
+PRIVATE cCadastro := OemToAnsi(STR0001)		//"Autoriza‡„o de Entrega baseado nos Contrato de Parceria"
+PRIVATE lA173Auto := ( aRotAuto <> NIL )
+
+Pergunte("MTA173",.F.)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros        ³
+//³ mv_par01     // Produto de                  ³
+//³ mv_par02     // Produto ate                 ³
+//³ mv_par03     // Grupo de                    ³
+//³ mv_par04     // Grupo ate                   ³
+//³ mv_par05     // Data de Entrega de          ³
+//³ mv_par06     // Data de Entrega ate         ³
+//³ mv_par07     // Avalia Estoques             ³
+//³ mv_par08     // Local de                    ³
+//³ mv_par09     // Local ate                   ³
+//³ mv_par10     // Considera Necess Bruta      ³
+//³ mv_par11     // Saldo Neg Considera         ³
+//³ mv_par12     // Do Contrato                 ³
+//³ mv_par13     // Ate o Contrato              ³
+//³ mv_par14     // Seleciona Filial            ³
+//³ mv_par15     // Considera Est. Seguranca ?  ³ (Sim / Nao)
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lA173Auto
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Atualiza variaveis (pergunte) conforme passagem de parametro³
+	//³do array da rotina automatica - by Erike                    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nI:= 1 To Len(aRotAuto)
+		&(aRotAuto[nI,1]) :=  aRotAuto[nI,2]
+	Next nI
+	nOpcA := 1
+Else
+	AADD(aSays,OemToAnsi(STR0002))
+	AADD(aSays,OemToAnsi(STR0003))
+
+	AADD(aButtons, { 5,.T.,{|| Pergunte("MTA173",.t.) } } )
+	AADD(aButtons, { 1,.T.,{|o| nOpca:= 1,IF(ca173OK(),o:oWnd:End(),nOpca:=0) } } )
+	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+
+	FormBatch( cCadastro, aSays, aButtons,,200,405 )
+EndIf
+
+If ExistBlock("MT173EXE")
+	If !ExecBlock("MT173EXE",.F.,.F.,{nOpcA})
+		nOpcA := 0
+	EndIf
+EndIf
+
+If nOpcA == 1
+	If lA173Auto
+		A173Point()
+	Else
+		Processa({|lEnd| A173Point()})
+	EndIf
+EndIf
+
+
+Return
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A173Point³ Autor ³ Claudinei M. Benzi    ³ Data ³ 07/07/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Gera as solicitacoes de compra                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA173                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function A173Point()
+
+Local cGrupo   := SuperGetMv("MV_PCAPROV")
+Local cNumPC   := ""
+Local cNumAE   := ""
+Local cItem    := ""
+Local cGrComPad:= ""                     
+Local cFormula := ""
+
+Local nMoeda   := 1
+Local nX       := 0
+Local nSaldAux := 0
+Local nSaldo   := 0
+Local nNeces   := 0
+Local nQuant   := 0
+Local nQtSegum := 0
+Local nTotLib  := 0
+Local nSaveSX8 := GetSX8Len()
+
+Local lAeAprov := SuperGetMV("MV_AEAPROV",.F.,.T.)  // indica se AE tem controle de alcada
+Local lFirstNiv:= .F.
+Local lRet     := .T.
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ O parametro MV_CONTVLD e usado para validar a data final do³
+//³ contrato de parceria ao gerar a Autorizacao de entrega     ³
+//³ deve ser criado com DEFAULT = 2 para nao                   ³
+//³ ativar o filtro pela data do contrato, conteudos a seguir :³
+//³ MV_CONTVLD = 1 - Filtra os contratos de parceria com data  ³
+//³ final menor que a data base do sistema                     ³
+//³ MV_CONTVLD = 2 - Desativa o filtro (DEFAULT)               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local lContVld  := ( GetNewPar( "MV_CONTVLD", "2" ) == "1" )
+Local lDtInVld  := GetNewPar( "MV_DTINVLD", .F. )
+Local lMT173QRY := ExistBlock('MT173QRY')
+Local lMT173Sld := ExistBlock('MT173SLD')
+Local lQuery    := .F.
+
+Local cCondicao := ""
+Local cAliasSC3 := "SC3"
+Local cQuery  := ""
+	
+Local aFilsCalc := {}
+Local nForFilial
+Local cFilBack := cFilAnt
+Local bCampo, nCPO
+Local nPrzCq := 0
+Local aAePed	:= {}
+Local nI		:= 0
+Local nK		:= 0
+Local aCab		:= {}
+Local aItem	:= {}
+Local aItens	:= {}
+Local aErroAuto := {}
+Local nCount := 0
+Local cLogErro	:= ""
+
+Private lMsErroAuto := .F.
+
+aFilsCalc = MatFilCalc( mv_par14 == 1 )
+
+For nForFilial := 1 To Len( aFilsCalc )
+
+	If aFilsCalc[ nForFilial, 1 ]
+	
+		cFilAnt := aFilsCalc[ nForFilial, 2 ]
+		iF !lA173Auto 
+			Pergunte("MTA173",.F.)
+		Endif
+		dbSelectArea("SC3")
+		dbSetOrder(1)
+
+		lQuery := .T.
+		cAliasSC3 := GetNextAlias()
+		cQuery    := ""
+
+		aStruSC3 := SC3->(dbStruct())
+
+		cQuery := "SELECT SC3.*, SC3.R_E_C_N_O_ SC3RECNO "
+		cQuery += "FROM "
+		cQuery += RetSqlName("SC3")+" SC3 "
+		cQuery += "WHERE "
+		cQuery += "SC3.C3_FILIAL='" + xFilial( "SC3" ) + "' AND "
+		cQuery += "SC3.C3_NUM>='"+mv_par12+"' AND SC3.C3_NUM<='"+mv_par13+"' AND "
+		cQuery += "SC3.C3_PRODUTO>='"+mv_par01+"' AND SC3.C3_PRODUTO<='"+mv_par02+"' AND "
+		cQuery += "SC3.C3_DATPRI>='"+DTOS(mv_par05)+"' AND SC3.C3_DATPRF<='"+DTOS(mv_par06)+"' AND "
+		cQuery += "SC3.C3_LOCAL>='"+mv_par08+"' AND SC3.C3_LOCAL<='"+mv_par09+"' AND "
+		cQuery += "(SC3.C3_QUANT - SC3.C3_QUJE) > 0 AND "
+		cQuery += "SC3.C3_RESIDUO='" + Space( Len( SC3->C3_RESIDUO ) ) + "' AND SC3.C3_CONAPRO <>'B' AND "
+		If lContVld
+			cQuery += "SC3.C3_DATPRF>='"+DTOS(dDataBase)+"' AND "
+		Endif
+		If lDtInVld
+			cQuery += "SC3.C3_DATPRI<='"+DTOS(dDataBase)+"' AND "
+		Endif
+		cQuery += "SC3.D_E_L_E_T_=' ' "
+		cQuery += "ORDER BY "+SqlOrder(SC3->(IndexKey()))
+
+		cQuery := ChangeQuery(cQuery)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSC3)
+
+		For nX := 1 To len(aStruSC3)
+			If aStruSC3[nX][2] <> "C"
+				TcSetField(cAliasSC3,aStruSC3[nX][1],aStruSC3[nX][2],aStruSC3[nX][3],aStruSC3[nX][4])
+			EndIf
+		Next nX
+		dbSelectArea(cAliasSC3)	
+	
+		
+		If !lA173Auto
+			ProcRegua(SC3->(RecCount())*5)
+		EndIf
+		
+		dbSelectArea(cAliasSC3)
+		dbGoTop()
+		
+		While (cAliasSC3)->(!Eof())
+			nPosPed := aScan(aAePed,{|x| x[1] == (cAliasSC3)->C3_NUM })
+			If nPosPed == 0
+				aAdd(aAePed,{(cAliasSC3)->C3_NUM,;
+								(cAliasSC3)->C3_FORNECE,;
+								(cAliasSC3)->C3_LOJA,;
+								(cAliasSC3)->C3_CONTATO,;
+								(cAliasSC3)->C3_COND,;
+								(cAliasSC3)->C3_FILENT,;
+								{{(cAliasSC3)->C3_ITEM,(cAliasSC3)->C3_PRODUTO,(cAliasSC3)->C3_PRECO, (cAliasSC3)->C3_IPI,;
+								  (cAliasSC3)->C3_REAJUST,(cAliasSC3)->C3_FRETE, (cAliasSC3)->C3_DATPRF, (cAliasSC3)->C3_LOCAL,(cAliasSC3)->C3_MSG,;
+								  (cAliasSC3)->C3_TPFRETE,(cAliasSC3)->C3_OBS, (cAliasSC3)->C3_RESIDUO, (cAliasSC3)->C3_CC,(cAliasSC3)->(SC3RECNO),;
+								  (cAliasSC3)->C3_VALFRE,(cAliasSC3)->C3_QUANT,(cAliasSC3)->C3_QUJE,(cAliasSC3)->C3_MOEDA}}})
+			Else
+				aAdd(aAePed[nPosPed,7],{(cAliasSC3)->C3_ITEM,(cAliasSC3)->C3_PRODUTO,(cAliasSC3)->C3_PRECO, (cAliasSC3)->C3_IPI,;
+								  (cAliasSC3)->C3_REAJUST,(cAliasSC3)->C3_FRETE, (cAliasSC3)->C3_DATPRF, (cAliasSC3)->C3_LOCAL,(cAliasSC3)->C3_MSG,;
+								  (cAliasSC3)->C3_TPFRETE,(cAliasSC3)->C3_OBS, (cAliasSC3)->C3_RESIDUO, (cAliasSC3)->C3_CC,(cAliasSC3)->(SC3RECNO),;
+								  (cAliasSC3)->C3_VALFRE,(cAliasSC3)->C3_QUANT,(cAliasSC3)->C3_QUJE,(cAliasSC3)->C3_MOEDA})
+			Endif
+			(cAliasSC3)->(DbSkip())
+		Enddo
+		
+		BEGIN TRANSACTION
+		
+		For nI := 1 To Len(aAePed)
+			iF !lA173Auto 
+				Pergunte("MTA173",.F.)
+			Endif
+			lMsErroAuto 	:= .F.
+			nTotLib 		:= 0
+			aItens 		:= {}
+			aCab			:= {}
+			aAtuB2 		:= {}
+			aAtuC3 		:= {}
+			
+			cNumPC := CriaVar("C7_NUM",.T.)
+			
+			While ( GetSX8Len() > nSaveSX8 )
+				ConfirmSx8()
+			EndDo
+			
+			If ( Empty(cNumPC) )
+				cNumPC := GetNumSC7(.F.)
+			EndIf
+			
+			cNumAE := aAePed[nI,1]
+			
+			aAdd(aCab,{'C7_FORNECE',aAePed[nI,2],Nil})
+			aAdd(aCab,{'C7_LOJA',aAePed[nI,3],Nil})
+			aAdd(aCab,{'C7_COND',aAePed[nI,5],Nil})
+			aAdd(aCab,{'C7_CONTATO',aAePed[nI,4],Nil})
+			aAdd(aCab,{'C7_FILENT',aAePed[nI,6],Nil})
+			aAdd(aCab,{'C7_EMISSAO',DDATABASE,Nil})
+			aAdd(aCab,{'C7_NUM',cNumPC,Nil})
+			aAdd(aCab,{'C7_MOEDA',aAePed[nI,7,1,18],Nil})
+			
+			For nK := 1 To Len(aAePed[nI,7])
+				aItem := {}
+				
+				dbSelectArea("SB1")
+				dbSetOrder(1)
+				dbSeek(xFilial("SB1") + aAePed[nI,7,nK,2])
+				
+				If lQuery
+					SC3->(dbGoto(aAePed[nI,7,nK,14]))
+				Endif
+				
+				//³ Ponto de entrada para efetuar um Filtro                   ³
+				If lMT173QRY
+					lRet := ExecBlock("MT173QRY",.F.,.F.)
+					If ValType(lRet) <> 'L'
+						lRet := .T.
+					EndIf
+					dbSelectArea(cAliasSC3)
+				EndIf
+				
+				If lRet .And. SB1->B1_GRUPO >= mv_par03 .And. SB1->B1_GRUPO <= mv_par04 .And. !(SB1->B1_CONTRAT $ "N ")
+					If !lA173Auto
+						IncProc()
+					EndIf
+					
+					//³ Calcula o saldo atual de todos os almoxarifados ³
+					dbSelectArea("SB2")
+					dbSeek( xFilial("SB2")+SB1->B1_COD , .T. )
+					
+					nSaldo := 0
+					nQuant := 0
+					
+					While !Eof() .And. B2_FILIAL+B2_COD == xFilial("SB2")+SB1->B1_COD
+						If B2_LOCAL < mv_par08 .Or. B2_LOCAL > mv_par09
+							dbSkip()
+							Loop
+						EndIf
+						nSaldo += (SaldoSB2()+B2_SALPEDI)-B2_QPEDVEN
+						If lMT173Sld
+							nSaldAux := ExecBlock("MT173SLD",.F.,.F.,{nSaldo,SB2->B2_COD,SB2->B2_LOCAL})
+							If ValType(nSaldAux) == 'N'
+								nSaldo := nSaldAux
+							EndIf
+						Endif
+						SB2->(dbSkip())
+					EndDo
+					
+					If mv_par15 == 1
+						nEstSeg := CalcEstSeg( RetFldProd(SB1->B1_COD,"B1_ESTFOR") )
+						nSaldo -= nEstSeg
+					EndIf
+					
+					If (Round(nSaldo,4) # 0) .Or. (mv_par10 == 1)
+						Do Case
+						Case ( RetFldProd(SB1->B1_COD,"B1_EMIN") != 0 .And. mv_par10 == 1 )
+							If ( MV_PAR11 == 2 .And. nSaldo < 0 )
+								nSaldo -= RetFldProd(SB1->B1_COD,"B1_LE")
+							EndIf
+							nNeces := If((nSaldo < 0),Abs(nSaldo)+RetFldProd(SB1->B1_COD,"B1_EMIN"),(RetFldProd(SB1->B1_COD,"B1_EMIN")-nSaldo))
+						Case ( RetFldProd(SB1->B1_COD,"B1_EMIN") != 0 .And. mv_par10 == 2 )
+							If ( MV_PAR11 == 2 .And. nSaldo < 0 )
+								nSaldo -= RetFldProd(SB1->B1_COD,"B1_LE")
+							EndIf
+							nNeces := If((nSaldo < 0),Abs(nSaldo),(RetFldProd(SB1->B1_COD,"B1_EMIN")-nSaldo))
+						Case ( RetFldProd(SB1->B1_COD,"B1_LE") != 0 .And. (nSaldo < 0  .or. mv_par10 == 2) )
+							If ( mv_par11 == 2 .And. nSaldo < 0 )
+								nNeces := Abs(nSaldo)+RetFldProd(SB1->B1_COD,"B1_LE")
+							Else
+								nNeces := If( Abs(nSaldo)<RetFldProd(SB1->B1_COD,"B1_LE"),RetFldProd(SB1->B1_COD,"B1_LE"),if(nSaldo<0,Abs(nSaldo),0))
+							EndIf
+						OtherWise
+							nNeces := IF(mv_par10 == 1,IIf(nSaldo<0,Abs(nSaldo),0),0)
+						EndCase
+					Else
+						If RetFldProd(SB1->B1_COD,"B1_EMIN") != 0
+							nNeces := RetFldProd(SB1->B1_COD,"B1_EMIN")
+						Else
+							nNeces := 0
+						Endif
+					EndIf
+					
+					If nNeces > 0
+						//³ Verifica se produto tem estrutura                         ³
+						nQuant:=0
+						dbSelectArea("SG1")
+						If dbSeek( xFilial("SG1")+SB1->B1_COD )
+							aQtdes := CalcLote(SB1->B1_COD,nNeces,"F")
+						Else
+							aQtdes := CalcLote(SB1->B1_COD,nNeces,"C")
+						Endif
+						For nX := 1 to Len(aQtdes)
+							nQuant += aQtdes[nX]
+						Next nX
+					EndIf
+					
+					If mv_par07 == 1
+						nQuant := If(nQuant > (aAePed[nI,7,nK,16] - aAePed[nI,7,nK,17]),aAePed[nI,7,nK,16] - aAePed[nI,7,nK,17],nQuant)
+					Else
+						nQuant := aAePed[nI,7,nK,16] - aAePed[nI,7,nK,17]
+					EndIf
+					
+					If nQuant > 0
+						cItem	:= StrZero(nK,Len(SC7->C7_ITEM))
+						
+						nQtSegum := ConvUM(SB1->B1_COD, nQuant, 0, 2)
+
+						aAdd(aItem,{'C7_FILIAL',xFilial("SC7"),Nil})
+						aAdd(aItem,{'C7_ITEM',cItem,Nil})
+						aAdd(aItem,{'C7_NUMSC',aAePed[nI,1],Nil})
+						aAdd(aItem,{'C7_ITEMSC',aAePed[nI,7,nK,1],Nil})
+						aAdd(aItem,{'C7_PRECO',aAePed[nI,7,nK,3],Nil})
+						aAdd(aItem,{'C7_QUANT',nQuant,Nil})
+						aAdd(aItem,{'C7_TOTAL',nQuant*aAePed[nI,7,nK,3],Nil})
+						aAdd(aItem,{'C7_LOCAL',aAePed[nI,7,nK,8],Nil})
+						aAdd(aItem,{'C7_IPI',aAePed[nI,7,nK,4],Nil})
+						aAdd(aItem,{'C7_REAJUST',aAePed[nI,7,nK,5],Nil})
+						aAdd(aItem,{'C7_FRETE',aAePed[nI,7,nK,6],Nil})
+						aAdd(aItem,{'C7_DATPRF',aAePed[nI,7,nK,7],Nil})
+						aAdd(aItem,{'C7_PRODUTO',aAePed[nI,7,nK,2],Nil})
+						aAdd(aItem,{'C7_MSG',aAePed[nI,7,nK,9],Nil})
+						aAdd(aItem,{'C7_TPFRETE',aAePed[nI,7,nK,10],Nil})
+						aAdd(aItem,{'C7_OBS',aAePed[nI,7,nK,11],Nil})
+						aAdd(aItem,{'C7_RESIDUO',aAePed[nI,7,nK,12],Nil})
+						aAdd(aItem,{'C7_QTDSOL',nQuant,Nil})
+						aAdd(aItem,{'C7_UM',SB1->B1_UM,Nil})
+						If !Empty(SB1->B1_SEGUM)
+							aAdd(aItem,{'C7_SEGUM',SB1->B1_SEGUM,Nil})
+						Endif
+						aAdd(aItem,{'C7_CONTA',SB1->B1_CONTA,Nil})
+						aAdd(aItem,{'C7_CC',IIF(Empty(aAePed[nI,7,nK,13]),SB1->B1_CC,aAePed[nI,7,nK,13]),Nil})
+						aAdd(aItem,{'C7_DESCRI',SB1->B1_DESC,Nil})
+						If nQtSegum > 0
+							aAdd(aItem,{'C7_QTSEGUM',nQtSegum,Nil})
+						Endif
+						aAdd(aItem,{'C7_QUJE',0,Nil})
+						aAdd(aItem,{'C7_DESC1',0,Nil})
+						aAdd(aItem,{'C7_DESC2',0,Nil})
+						aAdd(aItem,{'C7_DESC3',0,Nil})
+						aAdd(aItem,{'C7_EMISSAO',dDataBase,Nil})
+						aAdd(aItem,{'C7_EMITIDO',"S",Nil})
+						aAdd(aItem,{'C7_QTDREEM',0,Nil})
+						aAdd(aItem,{'C7_CODLIB',Space(TamSx3("C7_CODLIB")[1]),Nil})
+						aAdd(aItem,{'C7_NUMCOT',Space(TamSx3("C7_NUMCOT")[1]),Nil})
+						aAdd(aItem,{'C7_TX',Space(TamSx3("C7_TX")[1]),Nil})
+						aAdd(aItem,{'C7_CONTROL',Space(TamSx3("C7_CONTROL")[1]),Nil})
+						aAdd(aItem,{'C7_ENCER'," ",Nil})
+						aAdd(aItem,{'C7_IPIBRUT',"B",Nil})
+						aAdd(aItem,{'C7_TES',SB1->B1_TE,Nil})
+
+						cFormula:= Posicione("SB5",1,xFilial("SB5")+(cAliasSC3)->C3_PRODUTO,"B5_FPRZCQ")
+						If !Empty(cFormula)
+							nPrzCq := Formula(cFormula)
+						Else
+							nPrzCq := 0
+						EndIf
+						
+						aAdd(aItem,{'C7_DINICQ',aAePed[nI,7,nK,7] - nPrzCq,Nil})
+						aAdd(aItem,{'C7_DINITRA',ddatabase - Posicione("SA5",1,xFilial("SA5")+aAePed[nI,2]+aAePed[nI,3]+aAePed[nI,7,nK,2],"A5_TEMPTRA"),Nil})
+						aAdd(aItem,{'C7_DINICOM',ddatabase - CalcPrazo(aAePed[nI,7,nK,2],nQuant,aAePed[nI,2],aAePed[nI,3]),Nil})
+						
+						nTotLib += nQuant*aAePed[nI,7,nK,3]
+						
+						//³ Testa a existencia do campo e grava o frete rateado      ³
+						aAdd(aItem,{'C7_VALFRE',aAePed[nI,7,nK,15],Nil})
+						
+						If aAePed[nI,7,nK,18] <=0
+							nMoeda:=1
+						Else
+							nMoeda:= aAePed[nI,7,nK,18]
+						EndIf
+						
+						aAdd(aItem,{'C7_MOEDA',nMoeda,Nil})
+						aAdd(aItem,{'C7_TXMOEDA',RecMoeda(dDataBase,nMoeda),Nil})
+						aAdd(aItens,aClone(aItem))
+					Endif
+				Endif
+			Next nK
+			
+			If Len(aItens) > 0
+				MSExecAuto({|v,x,y,z| MATA120(v,x,y,z)},2,aCab,aItens,3)
+				
+				If lMsErroAuto
+					If !lA173Auto
+						DisarmTransaction()
+						MostraErro()
+					Else
+						aErroAuto := GetAutoGRLog()
+						For nCount := 1 To Len(aErroAuto)
+							cLogErro += _NoTags(aErroAuto[nCount])
+						Next nCount
+						DisarmTransaction()
+						AutoGrLog(cLogErro)
+					Endif
+				Else
+					//Executar P.E
+					If ExistBlock("MT173GRV")
+						aAreaSC7 := SC7->(GetArea())
+						
+						SC7->(DbGotop())
+						SC7->(DbSetOrder(1))
+						If SC7->(DbSeek(xFilial("SC7") + cNumPc))
+							While SC7->(!EOF()) .And. SC7->C7_NUM == cNumPc
+								If SC7->C7_NUMSC == cNumAE
+									For nK := 1 To Len(aAePed[nI,7])
+										If SC7->C7_ITEMSC == aAePed[nI,7,nK,1]
+											ExecBlock("MT173GRV",.F.,.F.)
+										EndIf
+									Next nK
+								Endif
+								SC7->(DbSkip())
+							Enddo
+						Endif
+						
+						RestArea(aAreaSC7)
+					Endif
+					
+					//³ Gera arquivo de controle de alcadas SCR para a AE se o MV_AEAPROV estiver ativo ³
+					If lAeAprov .And. (aAePed[nI,1] != cNumAE .And. !Empty(cNumAE))
+						//³ Limpa o Filtro do SCR caso ele exista                        ³
+						dbSelectArea("SCR")
+						DbClearFilter()
+						dbSelectArea("SC7")
+						aAreaSC7:= SC7->(GetArea())
+					
+						//³ Verifica o grupo de aprovacao do Comprador.                  ³
+						dbSelectArea("SY1")
+						dbSetOrder(3)
+						If dbSeek(xFilial()+RetCodUsr())
+							cGrupo		:= If(!Empty(Y1_GRAPROV),SY1->Y1_GRAPROV,cGrupo)
+							cGrComPad	:= SY1->Y1_GRUPCOM
+						EndIf
+				
+						//³ Ponto de entrada para alterar o Grupo de Aprovacao.          ³
+						If ExistBlock("MT173APV")
+							cGrupo := ExecBlock("MT173APV",.F.,.F.)
+						EndIf
+				
+						lFirstNiv := MaAlcDoc({cNumPC,"AE",nTotLib,,,cGrupo,,nMoeda,RecMoeda(dDataBase,nMoeda),dDataBase},,1)
+				
+						//³ Efetua a gravacao do campo de controle de aprovacao C7_CONAPRO  ³
+						dbSelectArea("SC7")
+						dbSetOrder(1)
+						dbSeek(xFilial()+cNumPC)
+						While !Eof() .And. C7_FILIAL+C7_NUM == xFilial("SC7")+cNumPC
+							RecLock("SC7",.F.)
+							SC7->C7_GRUPCOM	:= cGrComPad
+							SC7->C7_APROV   := cGrupo
+							If !lFirstNiv
+								SC7->C7_CONAPRO := "B"
+							Else
+								SC7->C7_CONAPRO := "L"
+							EndIf
+							MsUnlock()
+							dbSkip()
+						EndDo
+						RestArea(aAreaSC7)
+						nTotLib := 0
+						cNumAE  := " " 
+					EndIf
+				Endif
+			Endif
+		Next nI
+
+		If lQuery
+			dbSelectArea(cAliasSC3)
+			dbCloseArea()
+		Else
+			dbSelectArea("SC3")
+			RetIndex("SC3")
+			dbClearFilter()
+			Ferase(cIndex+OrdBagExt())
+		EndIf
+		
+		END TRANSACTION
+	EndIf
+	aAePed := {}
+Next nForFilial
+
+cFilAnt := cFilback
+
+Return .T.
+
+Static Function ca173Ok()
+Return (MsgYesNo(OemToAnsi(STR0004),OemToAnsi(STR0005)))		//"Gera AE baseado nos Contratos de Parceria?"###"Aten‡„o"

@@ -1,0 +1,719 @@
+#include "Mata160x.ch"
+#include "TOTVS.ch"
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160UpField³ Autor ³ Jose Lucas           ³ Data ³ 22/12/92 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gravar campos comuns entre SC7 e SC8 na geracao do Pedido, ³±±
+±±³          ³ criados pelo usuario.                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Void A160UpField( Void )                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	Last change:  CMO  28 Dec 95    9:10 am
+*/
+Function A160UpField()
+Local nx:=0,nPos:=0
+Local cVarG:="",cVarR:="",cFieldName:=""
+
+For nx := 1 to FCount()
+	If !Empty(FieldName(nx))
+		nPos := Ascan(aStruSC8,SubStr(FieldName(nx),4,7))
+		If nPos > 0
+			cVarG := "C7_"+SubStr(FieldName(nx),4,7)
+			cVarR := "SC8->C8_"+aStruSC8[nPos]
+			If cVarR != "SC8->C8_NUM" .And. cVarR != "SC8->C8_ITEM"
+				Replace &cVarG With &cVarR
+			EndIf	
+		EndIf
+	EndIf
+Next nx			
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160LinOk ³ Autor ³ Gilson do Nascimento  ³ Data ³30.06.94  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Consistencia para mudanca/inclusao de linhas de Vencedores ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpN1 = A160LinOk                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpN1 = Valor devolvido pela fun‡…o                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160LinOk(o)
+Local nx 		:= nLoj := nReg := nMotiv := nQuant := nForn := 0
+Local lRet 		:= .T.
+Local cAliasAnt:=Alias()
+Local nY
+Local nX
+nQtdTotal:=0
+
+If !aCols[n][Len(aCols[n])]
+	For ny := 1 To Len(aHeader)
+		If Trim(aHeader[ny][2]) == "CE_LOJA"
+			nLoj:= ny
+		ElseIf Trim(aHeader[ny][2]) == "CE_REGIST"
+			nReg:= ny
+		ElseIf Trim(aHeader[ny][2]) == "CE_MOTIVO"
+			nMotiv:= ny
+		ElseIf Trim(aHeader[ny][2]) == "CE_QUANT"
+			nQuant:= ny			
+		ElseIf Trim(aHeader[ny][2]) == "CE_FORNECE"
+			nForn:= ny						
+		Endif		
+	Next ny
+	// Verifica se a Quantidade nao esta zerada
+	IF !Empty(aCols[n][nForn]) .and. aCols[n][nQuant] = 0 
+		Return .F.
+	ENDIF	
+	For nx := 1 To Len(aHeader)
+		IF !lRet
+			Exit
+		Elseif Empty(aCols[n][nx])
+			If Trim(aHeader[nx][2]) == "CE_FORNECE" .And. n == Len(aCols)
+				Exit
+			EndIf
+		Elseif Trim(aHeader[nx][2]) == "CE_FORNECE"
+			If !Empty(aCols[n][nx+1])
+			
+				dbSelectArea("SC8")
+				dbSetOrder(1)
+				dbSeek(cFilial+ca160Num+aCols[n][nx]+aCols[n][nx+1])
+				If Eof()
+					Help(" ",1,"NAOVALIDO")
+					lRet:=.F.
+					Exit
+				Endif
+			Endif
+		Elseif Trim(aHeader[nx][2]) == "CE_LOJA"
+			If !Empty(aCols[n][nx])
+			
+					dbSelectArea("TRB")
+					nPosAnt:=Recno()
+					dbSeek(xFilial("SC8")+cProd) 
+					While !EOF() .And. FILIAL+PROSEEK == xFilial("SC8")+cProd
+						If aCols[n][nx-1]+aCols[n][nx]==FORNECE+LOJA
+							If Empty(aCols[n][nReg])
+								aCols[n][nMotiv]:=OemToAnsi(STR0001) 	//"ENCERRADA MANUALMENTE.        "
+								aCols[n][nReg]:=Recno()
+							Endif
+							Exit
+						Endif
+						dbSkip()
+					End
+			Endif
+		EndIf
+	Next nx
+Endif
+
+dbSelectArea(cAliasAnt)
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160TudOk ³ Autor ³ Gilson do Nascimento  ³ Data ³30.06.94  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Consistencia dos fornecedores vencedores digitados         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpN1 = A160TudOk                                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpN1 = Valor devolvido pela fun‡…o                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160TudOk(o)
+Local nx 	:=  ny := nw := nz := nt := nPos := nPosNec := nPosDat := 0
+Local nQtdExc := nQtdCheck := 0
+Local lRet	:= .T.
+Local aCheckData:={}
+Local nY
+Local nZ
+Local nW
+Local nX
+nQtdTotal:=0
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ verifica se o ultimo elemento do array e' Logico             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF ValType(aCols[1][Len(aCols[1])]) != 'L'
+	Return .T.
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ verifica se o ultimo elemento do array esta em branco        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+For ny := 1 to Len(aHeader)
+	If Trim(aHeader[ny][2]) == "dCE_DTNECES"
+		nPosNec := ny
+   ElseIf Trim(aHeader[ny][2]) == "CE_QUANT"
+		nPosQtd := ny
+	Endif
+Next ny
+
+For nz := 1 to Len(aCols)
+	IF !aCols[nz][Len(aCols[nz])]
+		nPos:=ASCAN(aCheckdata,{|x|x[1]+DTOC(x[2]) == cProd+DTOC(aCols[nz,nPosNec])})
+		if nPos == 0
+			AADD(aCheckData,{cProd,aCols[nz,nPosNec],aCols[nz,nPosQtd]})
+		else
+		  aCheckData[nPos,3]+=aCols[nz,nPosQtd]
+		endif
+	ENdif
+Next nz		   		
+
+nMaxArray := Len(aCols)
+For nx := 1 to nMaxArray
+	IF !aCols[nx][Len(aCols[nx])]
+		For ny := 1 to Len(aHeader)
+			IF !lRet
+				Exit
+		   ElseIf Trim(aHeader[ny][2]) == "CE_QUANT"
+				nQtdTotal += aCols[nx][ny]
+			Endif
+		Next ny
+	Else
+		For nw := 1 to Len(aHeader)
+			IF !lRet
+				Exit
+		   ElseIf Trim(aHeader[nw][2]) == "CE_QUANT"
+				nQtdExc += aCols[nx][nw]
+			Endif
+		Next nw	
+	Endif	
+Next nx
+
+   
+IF nQtdTotal == nQtdCot .and. nQtdTotal != 0
+	Return(lRet)
+ELSEIF (nQtdTotal+nQtdExc) # nQtdCot .and. nQtdTotal # 0
+	HELP(" ",1,"QTDDIF",,OemToAnsi(STR0002)+Str(nQtdCot,8,2),4,1)		//"Total da Cotacao: "
+	lRet:=.F.
+Endif
+
+Return(lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160MovCampos³ Autor ³ Gilson Nascimento  ³ Data ³ 04/07/94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Move os campos da cotacao para o aCols                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A160MovCampos()					                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ a,b,c = parametros padroes quando utiliza-se o Set Key     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a160MovCampos(aSugere)
+
+Local nx 		:= nPosQuant := nPosNec := 0
+Local nACols 	:= nASugere := 0
+Local nReg		:= nPOsReg :=0
+Local nX
+
+nPosNec		:= ASCAN(aHeader,{|x|x[2] == "dCE_DTNECES"})
+nPosQuant 	:= ASCAN(aHeader,{|x|x[2] = "CE_QUANT"})
+nPosReg	 	:= ASCAN(aHeader,{|x|x[2] = "CE_REGIST"})
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ verifica se o ja foi utilizada toda a quantidade para a data ³
+//³ uma data de necessidade                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nAcols:=ASCAN(aCols,{|x|x[nPosNec] == DATPRF})
+nReg:=aCols[n][nPosReg]
+
+IF nACols != 0
+	nASugere := ASCAN(aSugere, {|x|x[9] == DATPRF})
+	IF nASugere != 0
+		IF (aCols[nACols][nPosQuant] == aSugere[nASugere][6]) .and. ;
+		   (nReg != aSugere[nASugere][8]) .and. ;
+			!aCols[nAcols][Len(aCols[nACols])]
+			KeyBoard Chr(27)
+			Return .F.
+		ENDIF
+	ENDIF
+ENDIF			
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Move Conteudo do Item  Seleciondado para o Acols             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+For nX := 1 To Len(aHeader)
+	Do Case
+		Case Trim(aHeader[nX][2]) == "CE_FORNECE"
+			aCols[n][nX] := FORNECE
+		Case Trim(aHeader[nX][2]) == "CE_LOJA"
+			aCols[n][nX] := LOJA
+		Case Trim(aHeader[nX][2]) == "CE_ENTREGA"
+			aCols[n][nX] := DATPRF + PRAZO
+		Case Trim(aHeader[nX][2]) == "CE_MOTIVO"
+			aCols[n][nX] := OemToAnsi(STR0001)	//"ENCERRADA MANUALMENTE.        "
+		Case Trim(aHeader[nX][2]) == "CE_REGIST"
+			aCols[n][nX] := Recno()
+		Case 	Trim(aHeader[nX][2]) == "dCE_DTNECES"
+			aCols[n][nX] := DATPRF
+	EndCase
+Next nX
+
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160GeraSCE³ Autor ³ Gilson Nascimento    ³ Data ³ 05/07/94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gravar campos comuns no SCE.                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Void A160GeraSCE( Void )                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160GeraSCE()
+Local cAliasAnt:=Alias()
+Local nx := ny := lx := ly := nPosRec := nPosQtd := 0
+Local aVencForn:={}
+Local cVar
+Local i:=1
+Local nX
+Local lx
+Local ny
+
+If mv_par01 == 2
+	nPosRec := Ascan(aHeader, { |x| alltrim(x[2])=="CE_REGIST" })
+	If nPosRec > 0
+		For nx:=1 To Len(aCpoVenc)
+			dbSelectArea("TRB")
+			dbGoto(aCpoVenc[nx,nPosRec+1])
+			dbSelectArea("SCE")
+			RecLock("SCE",.T.)
+			Replace CE_FILIAL  With xFilial("SC8")
+			Replace CE_NUMCOT  With ca160Num
+			Replace CE_ITEMCOT With TRB->ITEMCOT
+			Replace CE_PRODUTO With aCpoVenc[nx][1]
+
+			For i:=1 To Len(aHeader)
+				Replace &(aHeader[i,2]) With aCpoVenc[nx,i+1]		
+				If Rtrim(aHeader[i,2]) == "CE_QUANT"
+					nPosQtd := i
+				Endif
+			Next
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa array de vencedores por ordem de Fornecedores ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			// Estrutura do Array: [ Fornecedor,Loja,Produto,Recno(),Qtd,Dt.Ent ]
+			AADD( aVencForn, { TRB->FORNECE, TRB->LOJA,;
+				 				    aCpoVenc[nx,1], aCpoVenc[nx,nPosRec+1],; 
+					 		 		 aCpoVenc[nx,nPosQtd+1], TRB->DATPRF } )
+								 
+		Next
+	Endif
+Else
+	For nx:=1 to Len(aVencedores)									// Produto
+		For ny:=2 to Len(aVencedores[nx])						// Forn. Vencedores
+			dbSelectArea("TRB")
+			dbGoTo(aVencedores[nx][ny][6])
+			RecLock("SCE",.T.)
+			For lx:=1 to Len(aHeader)
+				If aHeader[lx][10] # "V"
+					cVar:=Trim(aHeader[lx][2])	// simidu
+					If cVar == "CE_FORNECE"
+						Replace &cVar. With aVencedores[nx][ny][1]
+					ElseIf cVar == "CE_LOJA"
+						Replace &cVar. With aVencedores[nx][ny][2]
+					ElseIf cVar == "CE_QUANT"
+						Replace &cVar. With aVencedores[nx][ny][3]
+					ElseIf cVar == "CE_MOTIVO"
+						Replace &cVar. With aVencedores[nx][ny][4]
+					ElseIf cVar == "CE_ENTREGA"
+						Replace &cVar. With aVencedores[nx][ny][5]
+					ElseIf cVar == "CE_REGIST"
+						Replace &cVar. With aVencedores[nx][ny][6]
+					Endif
+				Endif
+			Next lx
+			Replace CE_FILIAL  With xFilial("SC8")
+			Replace CE_NUMCOT  With ca160Num
+			Replace CE_ITEMCOT With TRB->ITEMCOT
+			Replace CE_PRODUTO With aVencedores[nx][1]
+	
+			MsUnlock()
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Inicializa array de vencedores por ordem de Fornecedores ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			// Estrutura do Array: [ Fornecedor,Loja,Produto,Recno(),Qtd,Dt.Ent ]
+			AADD( aVencForn, { aVencedores[nx][ny][1], aVencedores[nx][ny][2],;
+				 				    aVencedores[nx][1]    , aVencedores[nx][ny][6],; 
+					 		 		 aVencedores[nx][ny][3], aVencedores[nx][ny][5] } )
+		Next ny
+	Next nx
+Endif
+
+dbSelectArea(cAliasAnt)
+aVencForn:=aSort( aVencForn,,, { | x , y | x[1]+x[2]+x[3]+DtoS(x[6])+str(x[4]) < y[1]+y[2]+y[3]+DtoS(y[6])+str(y[4]) } )
+
+Return(aVencForn)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160MontVe³ Autor ³ Gilson Nascimento     ³ Data ³ 29/06/94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Monta array aVencedores para as sugeridas automaticamente  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A160Venced()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160MontVen()
+Local cAliasAnt:=Alias() 
+
+aHeader:={}
+cAlias1 := "SCE"
+
+dbSelectArea("Sx2")
+dbSeek( cAlias1 )
+
+dbSelectArea("Sx3")
+dbSeek( cAlias1 )
+While !EOF() .And. (x3_arquivo == cAlias1)
+	If X3USO(x3_usado) .And. cNivel >= x3_nivel
+		AADD(aHeader,{ TRIM(X3Titulo()), x3_campo, x3_picture,;
+			       x3_tamanho, x3_decimal, x3_valid,;
+			       x3_usado, x3_tipo, x3_arquivo, x3_context } )
+	Endif
+	dbSkip()
+End
+
+dbSelectArea("SC8")
+dbSetOrder(1)
+dbSeek(cFilial+ca160Num+TRB->FORNECE+TRB->LOJA+TRB->ITEMCOT)
+
+nEl	:=A100Mscan(aVencedores,SC8->C8_PRODUTO)    
+AADD(	aVencedores, {SC8->C8_PRODUTO,{}} )
+nEl	:= Len(aVencedores)
+aVencedores[nEl][2]:={SC8->C8_FORNECE,SC8->C8_LOJA,SC8->C8_QUANT,OemToAnsi(STR0003),SC8->C8_DATPRF,TRB->(RECNO())} 		//'ENCERRADA AUTOMATICAMENTE.'
+
+dbSelectArea(cAliasAnt)
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A160Padrao³ Autor ³ Cristina Ogura        ³ Data ³ 18/10/95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Calcula os Valores Presente e a Prazo considerando o TE    ³±±
+±±³          ³ Padrao do cadastro de Produto                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A160Padrao()                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ nValor  = Valor Total da Cotacao                           ³±±
+±±³          ³ nIPI    = Percentual de IPI                                ³±±
+±±³          ³ nFrete  = Valor do Frete                                   ³±±
+±±³          ³ cTes    = Codigo de Entrada                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160Padrao(nValor,nIPI,nFrete,cTes)
+Local cAlias 	:= Alias()
+Local dtIPI		,dtICM
+Local nBaseIPI	:=nBaseICM:=nVlIPI:=nVlICM:=nDiasICM:=nDiasIPI:=nDefICM:=nDefIPI:=0
+
+dbSelectArea("SF4")
+If dbSeek( cFilial + cTes )
+	nBaseIPI := nValor
+	nBaseICM := nValor + nFrete
+	
+	If SF4->F4_IPIFRET $ "S "
+		nBaseIPI := nBaseIPI + nFrete
+	EndIf
+	
+	If SF4->F4_BASEIPI > 0						// % de Reducao de IPI
+		nBaseIPI := nBaseIPI * (SF4->F4_BASEIPI / 100)
+	EndIf
+	
+	nVlIPI := nBaseIPI * (nIPI / 100)
+	
+	If SF4->F4_INCIDE == "S"					// IPI na Base
+		nBaseICM := nBaseICM + nVlIPI
+	EndIf
+
+	If SF4->F4_BASEICM > 0						// % de Reducao de ICM
+		nBaseICM := nBaseICM * (SF4->F4_BASEICM / 100)
+	EndIf
+	
+	nVlICM := nBaseICM * ( SC8->C8_PICM / 100 )
+	
+	If SF4->F4_CREDICM == "S"					// Credito de ICMS
+		dtICM 	:= A160ICM()
+		nDiasICM := dtICM - dDataBase
+		nDefICM  := nVlICM / ( ( 1+( GetMV("MV_JUROS")/100 )) ** ( nDiasICM/30 ) )
+	EndIf
+
+	If SF4->F4_CREDIPI == "S"					// Credito de IPI
+		dtIPI 	:= A160IPI()
+		nDiasIPI := dtIPI - dDataBase
+		nDefIPI  := nVlIPI / ( ( 1+( GetMV("MV_JUROS")/100 )) ** ( nDiasIPI/30 ) )
+	EndIf	
+
+EndIf
+
+dbSelectArea(cAlias)
+
+Return {nDefICM, nDefIPI}			// Valor de ICM e IPI deflacionados
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A160IPI  ³ Autor ³ Cristina Ogura        ³ Data ³ 03.06.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica a data de pagto de IPI para deflacao              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160IPI()
+Local nDiasIPI := GetMV("MV_IPIVENC") 
+Local nDay		,dtPagto, nDiaSem
+Local nMonth	:= Month(SC8->C8_DATPRF)
+Local nYear		:= Year(SC8->C8_DATPRF)
+Local x
+
+If Day(SC8->C8_DATPRF) <= 10
+	nDay := 10
+ElseIf Day(SC8->C8_DATPRF) > 10 .And. Day(SC8->C8_DATPRF) <=20
+	nDay := 20
+ElseIf Day(SC8->C8_DATPRF) > 20 .And. Day(SC8->C8_DATPRF) <=31
+	nDay := 30
+EndIf	
+	
+dtPagto := lTrim(StrZero(nDay,2))   +"/"+ ;			// Dia
+			  lTrim(StrZero(nMonth,2)) +"/"+ ;			// Mes
+			  SubStr(lTrim(Str(nYear)),3,2)				// Ano
+
+dtPagto := CtoD(dtPagto,"ddmmyy")
+
+For x:=1 To Val(nDiasIPI)
+	dtPagto := DataValida(dtPagto+1)
+Next x
+
+Return dtPagto					// Data Pagto do IPI
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A160ICM  ³ Autor ³ Cristina Ogura        ³ Data ³ 03.06.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica a data de pagto de ICM para deflacao              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160ICM()
+Local nDiasICM := GetMV("MV_ICMVENC") 
+Local nDay, dtPagto, nDiaSem
+Local nMonth:=Month(SC8->C8_DATPRF)
+Local nYear	:=Year(SC8->C8_DATPRF)
+Local nX
+If Day(SC8->C8_DATPRF) <= 15
+	nDay := 15
+ElseIf Day(SC8->C8_DATPRF) > 15 .And. Day(SC8->C8_DATPRF) <= 31
+	nDay := 30
+EndIf	
+	
+dtPagto := lTrim(StrZero(nDay,2))   +"/"+ ;			// Dia
+			  lTrim(StrZero(nMonth,2)) +"/"+ ;			// Mes
+			  SubStr(lTrim(Str(nYear)),3,2)				// Ano
+
+dtPagto := CtoD(dtPagto,"ddmmyy")
+For nX:=1 To Val(nDiasICM)
+	dtPagto := DataValida(dtPagto+1)
+Next nX
+
+Return dtPagto					// Data Pagto do ICM
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ VALPRES  ³ Autor ³ Cristina Ogura        ³ Data ³ 03.06.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Calcula valor presente da Cotacao                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160,MATR210,MATR160                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function ValPres(cTes)
+
+Local aValores:= {}
+Local nTotDesc:= SC8->C8_VLDESC
+Local nTotal  := SC8->C8_TOTAL
+Local nValLiq :=nValIPI:=nValPres:=nValPres1:=nVlrVista:=nVlrIPIVista:=0
+Local nValxDias:=nValor:=nPMP:=0
+Local nX
+	
+dbSelectArea("SF4")
+If dbSeek ( cFilial + cTes )
+	IF SF4->F4_IPIFRET $ "S "
+		nTotal := nTotal + SC8->C8_TOTFRE
+	EndIf	
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula o Valor a prazo com IPI           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nTotDesc == 0
+	nTotDesc := CalcDesc(SC8->C8_TOTAL,SC8->C8_DESC1,SC8->C8_DESC2,SC8->C8_DESC3)
+EndIf	
+
+nValLiq 	:= nTotal - nTotDesc + SC8->C8_VALEMB
+nValIpi  := ( (nValLiq * SC8->C8_ALIIPI) / 100 )
+aValores := Condicao(SC8->C8_TOTAL+SC8->C8_VALEMB+SC8->C8_TOTFRE+nValIpi-nTotDesc,SC8->C8_COND,nValIpi )
+
+dbSelectArea("SA2")
+dbSeek( cFilial + SC8->C8_FORNECE+SC8->C8_LOJA )
+
+dbSelectArea("SC1")
+dbSetOrder(1)
+dbSeek( cFilial + SC8->C8_NUMSC + SC8->C8_ITEMSC )
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula o prazo medio ponderado           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nValxDias := 0
+nValor    := 0
+For nX := 1 To Len( aValores )
+	nvalXDias += (aValores[ nX,2 ]* (aValores[ nX,1 ]-dDataBase))
+	nValor    += aValores[ nX,2 ]
+Next
+nPMP := nValxDias/nValor
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula o Valor presente com IPI          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nValPres     := nValor / ( ( 1+( GetMV("MV_JUROS")/100 )) ** ( nPMP/30 ) )
+nVlrVista    := (SC8->C8_AVISTA * SC8->C8_QUANT)
+nVlrIpiVista := NoRound(nVlrVista * (SC8->C8_ALIIPI/100),2)
+nValPres1    := nVlrVista + nVlrIpiVista
+
+Return {nValPres,nValPres1}			// Valor Presente na Condicao e a Vista
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A160AVenc  ³ Autor ³   Marcos Simidu      ³ Data ³11/05/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Monta array p/ armazenar vencedores.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160AVenc(nPos,dData)
+Local ncw := 0
+Local nPosFor := 0
+Local nPosLoj := 0
+Local nPosReg := 0
+Local nPosNec := 0
+Local nElem := 0
+nPosFor := Ascan(aHeader, { |x| Alltrim(x[2]) == "CE_FORNECE"})
+nPosLoj := Ascan(aHeader, { |x| Alltrim(x[2]) == "CE_LOJA"})
+nPosReg := Ascan(aHeader, { |x| Alltrim(x[2]) == "CE_REGIST"})
+nPosNec := Ascan(aHeader, { |x| Alltrim(x[2]) == "dCE_DTNECES"})
+
+nElem := Ascan(aCpoVenc, { |x| x[1]+x[nPosFor+1]+x[nPosLoj+1]+DTOC(x[nPosNec+1]) == cProd+acols[nPos,nPosFor]+acols[nPos,nPosLoj]+DTOC(dData) })
+If nElem == 0
+	AADD(aCpoVenc,array(Len(aHeader)+2))
+	nElem := Len(aCpoVenc)
+Endif
+
+aCpoVenc[nElem,1] := cProd
+For ncw:=1 To Len(aHeader)
+	aCpoVenc[nElem,ncw+1] := aCols[nPos,ncw]
+Next
+
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A160TaxaFin³ Autor ³   Cristina Ogura     ³ Data ³01/07/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Calcula taxa financeira quando existir preco a vista       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA160                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A160TaxaFin(cCondicao,nPrVista,nPrPrazo)
+Local aVenctos	:={}
+Local dMaior 	:= dDataBase
+Local ntaxa		:=nx:=nMaiorDia := 0
+Local cAlias 	:= Alias()
+Local nOrder 	:= IndexOrd()
+Local nX
+
+	aVenctos := Condicao(100,cCondicao,0)
+	For nX 	:= 1 To Len(aVenctos)
+		If aVenctos[nX][1] > dDataBase
+			dMaior := aVenctos[nX][1]
+		EndIf
+	Next nX
+	nMaiorDia := dMaior - dDataBase
+	
+	nTaxa := ((((nPrPrazo/nPrVista)**(1/nMaiorDia))**30)-1)*100
+	
+	dbSelectArea(cAlias)
+	dbSetOrder(nOrder)	
+	
+Return (nTaxa)

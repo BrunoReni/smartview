@@ -1,0 +1,1547 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "FWADAPTEREAI.CH"
+#INCLUDE "MATI103A.CH" 
+#INCLUDE "COVERAGE.CH"
+
+/*
+{Protheus.doc} MATI103a(cXML,nTypeTrans,cTypeMessage)
+	Funcao de integracao com o adapter EAI para recebimento e
+	envio de informações do documento de cobertura
+	(CoverageDocument) utilizando o conceito de mensagem unica.                              
+		
+	@param	cXML      		Conteudo xml para envio/recebimento
+	@param nTypeTrans		Tipo de transacao. (Envio/Recebimento)              
+	@param	cTypeMessage  Tipo de mensagem. (Business Type, WhoIs, etc)
+		
+	@retorno aRet			Array contendo o resultado da execucao e a mensagem Xml de retorno.
+				aRet[1]	(boolean) Indica o resultado da execução da função
+				aRet[2]	(caracter) Mensagem Xml para envio                             
+	
+	@author	Marcelo C. Coutinho
+	@version	P11
+	@since		15/12/11
+*/
+
+Function MATI103a( cXML, nTypeTrans, cTypeMessage, cVersion )
+
+Local lRet     	:= .T.
+Local cXMLRet  	:= ""
+Local cVersao  	:= ""
+Local cNameMsg	:= "COVERAGEDOCUMENT"
+Local aRet     	:= {}
+Local cError 	:= ""
+Local cWarning	:= ""
+
+Private oXmlMAT103a		:= Nil
+Private nCount103a	  	:= 0
+Private lMsErroAuto    	:= .F.
+Private lAutoErrNoFile 	:= .T.
+
+//Busca versão de envio e/ou recebimento
+cVersao := StrTokArr(cVersion, ".")[1]
+
+If lRet
+	If nTypeTrans == TRANS_RECEIVE
+		oXmlMAT103a := XmlParser(cXml, "_", @cError, @cWarning)
+		
+		If cTypeMessage == EAI_MESSAGE_BUSINESS .Or. cTypeMessage == EAI_MESSAGE_RESPONSE
+			If cVersao == "1"
+				aRet := v1000(cXml, nTypeTrans, cTypeMessage)
+				lRet	:= aRet[1]
+				cXMLRet	:= aRet[2]
+			Elseif cVersao == "2"
+				aRet := v2000(cXml, nTypeTrans, cTypeMessage)
+				lRet	:= aRet[1]
+				cXMLRet	:= aRet[2]
+			Else
+				lRet 		:= .F.
+				cXMLRet	:= STR0003 //"Falha ao gerar o objeto XML"
+			Endif		
+		ElseIf cTypeMessage == EAI_MESSAGE_WHOIS
+	   		cXMLRet := '1.000|2.000'
+		Endif	
+	ElseIf nTypeTrans == TRANS_SEND
+		If cVersao == "1"
+			aRet := v1000(cXml, nTypeTrans, cTypeMessage)
+			lRet	:= aRet[1]
+			cXMLRet	:= aRet[2]
+		Elseif cVersao == "2"
+			aRet := v2000(cXml, nTypeTrans, cTypeMessage)
+			lRet	:= aRet[1]
+			cXMLRet	:= aRet[2]
+		Endif
+	EndIf
+Endif
+	
+Return { lRet, cXMLRet, cNameMsg}
+
+/*
+{Protheus.doc} v1000(cXML,nTypeTrans,cTypeMessage)
+	Versão 1.000 da CoverageDocument                              
+		
+	@param	cXML      		Conteudo xml para envio/recebimento
+	@param nTypeTrans		Tipo de transacao. (Envio/Recebimento)              
+	@param	cTypeMessage  Tipo de mensagem. (Business Type, WhoIs, etc)
+		
+	@retorno aRet			Array contendo o resultado da execucao e a mensagem Xml de retorno.
+				aRet[1]	(boolean) Indica o resultado da execução da função
+				aRet[2]	(caracter) Mensagem Xml para envio                             
+	
+	@author	Marcelo C. Coutinho
+	@version	P11
+	@since		15/12/11
+*/
+
+Static Function v1000(cXml, nTypeTrans, cTypeMessage)
+
+Local lRet     	:= .T.
+Local lIncons		:= .F.
+Local lDepEmite	:= .T.
+Local lVldSeq		:= .T.
+Local lAddItem	:= .F.
+Local lTagAddItem	:= .F.
+Local cXMLRet  	:= ""
+Local cError		:= ""
+Local cWarning 	:= ""
+Local cLogErro 	:= ""
+Local cDocPro		:= ""
+Local cSerPro   	:= ""
+Local cDocDef  	:= ""
+Local cSerDef  	:= ""
+Local cTES       	:= ""
+Local cCodFor    	:= ""
+Local cCodCli		:= ""
+Local cLoja      	:= ""
+Local cLojaCli	:= ""
+Local cProduto   	:= ""
+Local cCondPgto	:= ""
+Local cSefazNFe	:= ""
+Local cTipoDoc	:= "" 
+Local cValInt    	:= ""    
+Local cCFOP		:= "" 
+Local cLocal		:= ""
+Local cMarca		:= ""
+Local cChaveItem	:= ""
+Local cAux			:= ""
+Local cCondVer	:= RTrim(PmsMsgUVer('PAYMENTCONDITION','MATA360')) //Versão da Condição de pgto
+Local cPrdVer		:= RTrim(PmsMsgUVer('ITEM','MATA010')) //Versão do Produto
+Local cLocVer		:= RTrim(PmsMsgUVer('WAREHOUSE','AGRA045')) //Versão do Produto
+Local cFornVer	:= RTrim(PmsMsgUVer('CUSTOMERVENDOR','MATA020')) //Versão do Fornecedor
+Local cCliVer		:= RTrim(PmsMsgUVer('CUSTOMERVENDOR','MATA030')) //Versão do Cliente
+Local cInpVer		:= RTrim(PmsMsgUVer('INPUTDOCUMENT','MATA103')) //Versão do Documento de entrada
+Local cDHOper		:= SuperGetMv("MV_ITDHOPE",.F.,"3")
+Local cWMSTesCob	:= SuperGetMv("MV_WMSTCOB",.F.,"")
+Local nCount     	:= 0
+Local nOpcx		:= 0
+Local nSeqProv   	:= 0
+Local nSeqDefin  	:= 0
+Local nQuantidad 	:= 0
+Local nBaseIPI  	:= 0
+Local nTaxaIPI 	:= 0
+Local nValDesc 	:= 0
+Local nValIPI  	:= 0
+Local nBaseICMS  	:= 0
+Local nTaxaICMS	:= 0
+Local nValICMS	:= 0 
+Local nVlrUnit   	:= 0
+Local nQtdeSHD	:= 0
+Local nPItemCob  	:= SDH->(FieldPos("DH_ITEMCOB")) 
+Local aDadosVin	:= {}
+Local aDadosCob	:= {}
+Local aCab103  	:= {}
+Local aErroAuto	:= {}
+Local aCabAux		:= {} // Array auxiliar
+Local aAuxSD1		:= {}
+Local aAux			:= {}
+Local aItensDefi	:= {}
+Local dDtEmisLogix	:= Ctod("//")
+Local dDtDigiLogix	:= Ctod("//")
+
+Local lTesLogix		:= A002LOGIX() //Valida se parametro e campos TES inteligente (DHO)
+Local lExcFis			:= .F.
+Local cTesCustomer	:= ""
+Local cTpOper			:= ""
+
+If nTypeTrans == TRANS_RECEIVE
+
+	If cTypeMessage == EAI_MESSAGE_BUSINESS
+	
+		oXmlMAT103a := XmlParser(cXml, "_", @cError, @cWarning)
+
+		If oXmlMAT103a <> Nil .And. Empty(cError) .And. Empty(cWarning)
+
+		   	If Upper(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessEvent:_Event:Text) == "UPSERT"
+				nOpcx := 2
+			ElseIf Upper(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessEvent:_Event:Text) == "DELETE"
+				nOpcx := 3
+			EndIf
+			
+			If Type("oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text") != "U" .And. !Empty(oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text)
+				cMarca := oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text
+			Else
+				lRet		:= .F.
+				cXmlRet	:= STR0004 //"Informe a Marca!"
+			EndIf
+			
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentNumber:Text") == "U" .Or. ;
+					Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentSeries:Text") == "U"
+				lRet := .F.
+				cXmlRet := STR0014 //"As tags DocumentNumber e/ou DocumentSeries não foram informadas."
+			ElseIf lRet
+				cDocDef := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentNumber:Text,TamSX3("F1_DOC")[1])
+				cSerDef := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentSeries:Text,TamSX3("F1_SERIE")[1])
+				
+				// Ponto de entrada MT103DOC
+				// Utilizado para manipular o numero do documento recebido para integracao
+				If ExistBlock("MT103DOC")
+					cRetPE:= Execblock( "MT103DOC", .F., .F., {cDocDef})
+					If Valtype(cRetPE)=="C" .And. !Empty(cRetPE)
+					   cDocDef := cRetPE
+					EndIf
+				EndIf
+			EndIf
+			
+			cDocDef := Padr(cDocDef,TamSX3("F1_DOC")[1])
+
+			//-- Cliente
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text") <> "U" .And.;
+					!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text)
+				cAux := CFGA070INT(cMarca,"SA1","A1_COD",oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text)
+				
+				If !Empty(cAux)
+					cCodCli := SubStr(cAux,1 ,TamSX3("A1_COD")[1])
+					cLojaCli := SubStr(cAux,(TamSX3("A1_COD")[1]+1),TamSX3("A1_LOJA")[1])
+					
+					cTesCustomer := oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text
+				Else
+					lRet := .F.
+					cXmlRet	:= STR0009 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text) //"Cliente não encontrado no de/para!"
+				EndIf
+			EndIf
+					
+			//Condição de pagamento
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentCode:Text") <> "U"  
+				cCondPgto := PadR(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentCode:Text,TamSx3("F1_COND")[1])
+		   	EndIf
+
+		   	//Tipo de documento
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text") <> "U"  
+		   		cTipoDoc := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text,TamSx3("F1_ESPECIE")[1])
+		   	EndIf
+		   	
+		   	//Chave da Sefaz
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_SefazNFeKey:Text") <> "U"  
+		   		cSefazNFe := oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_SefazNFeKey:Text
+		   	EndIf
+		   	
+		   	//Data de emissão
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text") <> "U"
+		   	   	dDtEmisLogix	:= Ctod( 	SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 9, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 6, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 1, 4 ) )
+			Endif
+			
+			//Data digitação
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text") <> "U"
+		   	   	dDtDigiLogix	:= Ctod( 	SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 9, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 6, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 1, 4 ) )
+			Endif
+		   	
+		   	//Tranforma itens em um array
+		   	If lRet
+		   		If Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item") == "U"
+		   			lRet := .F.
+		   			cXMLRet := STR0015 //"Tag 'ListOfItems' ausente ou com estrutura incorreta." 
+		   		ElseIf Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item") != "A"
+					XmlNode2Arr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item,"_Item")
+				EndIf
+			Endif
+			
+			If lRet
+				BeginTran()
+					
+				For nCount := 1 To Len(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item)
+					lTagAddItem := .F.
+					
+					If lRet
+						nQuantidad := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_Quantity:text)
+		        		nSeqDefin := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CoverageSequence:text)
+		        		nSeqProv := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_InvoiceDocumentSequence:text)
+		        	Else
+		        		Exit
+		        	EndIf
+	        		
+	        		//Fornecedor
+	        		If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CustomerCode:Text") <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerCode:Text)
+						cAux := CFGA070INT(cMarca,"SA2","A2_COD",oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerCode:Text )
+							
+						If !Empty(cAux)
+							cCodFor := SubStr(cAux,1,TamSX3("A2_COD")[1])
+							cLoja := SubStr(cAux,(TamSX3("A2_COD")[1]+1),TamSX3("A2_LOJA")[1])
+						Else
+							lRet := .F.
+							cXmlRet	:= STR0008 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerCode:Text) //"Fornecedor não encontrado no de/para!"
+						EndIf
+					EndIf
+	 						
+					//Documento
+	  				If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DocumentNumber:Text" ) <> "U" .And.;
+	  						!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentNumber:Text)
+	  							
+	  					cDocPro := PadR(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentNumber:Text,TamSx3("F1_DOC")[1])
+						
+						// Ponto de entrada MT103DOC - Utilizado para manipular o numero do documento recebido para integracao
+						If ExistBlock("MT103DOC")
+							cRetPE:= Execblock( "MT103DOC", .F., .F., {cDocPro})
+							If Valtype(cRetPE)=="C" .And. !Empty(cRetPE)
+							   cDocPro := cRetPE
+							EndIf
+						EndIf
+	  				ElseIf lRet
+						lRet := .F.
+						cXmlRet	:= STR0005 //"Informe o numero do documento!"
+	  				EndIf
+	  						
+	  				//Serie
+	  				If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DocumentSeries:Text" ) <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentSeries:Text)
+	  					cSerPro	:= Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentSeries:Text,TamSx3("F1_SERIE")[1])
+	  				ElseIf lRet
+	  					lRet := .F.
+						cXmlRet	:= STR0006 //"Informe a serie do documento!"
+	  				EndIf
+			       
+			       //Produto
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ItemCode:Text" ) <> "U" .And.;
+		          		!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemCode:Text)
+	       			cAux := CFGA070INT(cMarca,"SB1","B1_COD",oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemCode:Text)
+						
+						If Empty(cAux)
+       					lRet := .F.
+							cXmlRet	:= STR0007 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemCode:Text) //"Produto não encontrado no de/para"
+						Else
+							cProduto := Padr(cAux,TamSx3("D1_COD")[1])
+						Endif
+		          	EndIf
+		          	
+		          	//Valor ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ICMSValue:Text") <> "U"
+						nValICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_ICMSValue:Text)
+					ElseIf lRet
+						nValICMS := 0
+					EndIf
+		          	
+		          	//CFOP
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_OperationFiscalCode:Text") <> "U"
+						CCFOP := StrTran(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_OperationFiscalCode:Text,'.','') 
+					ElseIf lRet
+						cCFOP := ""
+					EndIf
+		          			       
+			       //TES
+					If lRet
+						If Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_TypeOperation:Text" ) <> "U"
+							cTES := AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_TypeOperation:Text) 
+							
+							If cTES == "0"
+								cTES := ""
+							Else
+								If Empty(cTES)
+									If lTesLogix
+										lExcFis := M002EXFIS(cCFOP,cTesCustomer,cSerDef,nValICMS)
+										cTpOper := M002TPDHO(cCFOP,cTesCustomer,cSerDef)
+									Else
+										cTpOper := ColConDHJ(cCFOP)
+									Endif
+								
+									cTES := MaTesInt(1,cTpOper,cCodFor,cLoja,"F",cProduto,"")
+								Endif 
+							Endif
+						Else
+							If lTesLogix
+								lExcFis := M002EXFIS(cCFOP,cTesCustomer,cSerDef,nValICMS)
+								cTpOper := M002TPDHO(cCFOP,cTesCustomer,cSerDef)
+							Else
+								cTpOper := ColConDHJ(cCFOP)
+							Endif
+									
+							cTES := MaTesInt(1,cTpOper,cCodFor,cLoja,"F",cProduto,"")
+						EndIF
+						
+						cTES := Padr(cTES,TamSx3("D1_TES")[1])
+						If !Empty(cTes)
+							cCFOP := Posicione("SF4",1,xFilial("SF4") + cTES,"F4_CF")
+						Endif
+					EndIf
+					
+					//Valor Unitario
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_UnitValue:Text") <> "U"
+						nVlrUnit := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_UnitValue:Text)
+						nVlrUnit := A410Arred(nVlrUnit,"D1_VUNIT")
+					EndIf 
+					
+					//Valor de desconto
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DiscountValue:Text") <> "U"
+					  	nValDesc := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_DiscountValue:Text)
+					  	nValDesc := A410Arred(nValDesc,"D1_VALDESC")
+					ElseIf lRet
+			  			nValDesc := 0
+				 	EndIf
+				 	
+				 	//Local de estoque
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_WarehouseId:Text") <> "U"
+						cLocal := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_WarehouseId:Text,TamSx3("D1_LOCAL")[1])
+					ElseIf lRet
+						cLocal := ""
+					EndIf
+					
+					//Base IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CalculationBasisIPI:Text") <> "U"
+						nBaseIPI := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CalculationBasisIPI:Text)
+					ElseIf lRet
+						nBaseIPI := 0
+					EndIf
+					
+					//Taxa IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_IPITaxRate:Text") <> "U"
+						nTaxaIPI :=  Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_IPITaxRate:Text)
+					ElseIf lRet
+						nTaxaIPI := 0
+					EndIf
+					
+					//Valor IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_IPIValue:Text") <> "U"
+						nValIPI := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_IPIValue:Text)
+					ElseIf lRet
+						nValIPI := 0
+					EndIf
+		
+		          	//Base ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CalculationBasisICMS:Text") <> "U"
+						nBaseICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CalculationBasisICMS:Text)
+					ElseIf lRet
+						nBaseICMS := 0
+					EndIf
+					
+					//Taxa ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ICMSTaxRate:Text") <> "U"
+						nTaxaICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_ICMSTaxRate:Text)
+					ElseIf lRet
+						nTaxaICMS := 0
+					EndIf
+					
+					//Item Adicional no documento de cobertura
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_AdditionalItem:Text") <> "U"
+						lTagAddItem := .T.
+						If AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_AdditionalItem:Text) == "0"
+							lAddItem := .F.
+						Elseif AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_AdditionalItem:Text) == "1"
+							lAddItem := .T.
+						Endif
+					EndIf
+					
+					//Verifica se o parametro MV_WMSTCOB
+					If lRet .And. !lTagAddItem .And. Empty(cWMSTesCob)
+						lRet 		:= .F.
+						cXMLRet	:= STR0016 //"Configurar parametro MV_WMSTCOB com as TES de cobertura"
+					Endif
+					
+					//-- Verifica se o item ja foi digitado manualmente no sistema
+					//-- Em caso positivo, valida dados digitados com XML
+					//-- e atualiza dados do documento provisorio no item definitivo						
+					SD1->(dbSetOrder(1))
+					SF1->(dbSetOrder(1))
+					
+					If lRet .And. nOpcx == 3 .And. !SD1->(dbSeek(xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						lRet 		:= .F.
+						cXMLRet	:= "001 - Documento definitivo não encontrado."
+					Elseif lRet .And. SD1->(dbSeek(xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						cChaveItem := xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli+cProduto+If(nPItemCob>0,StrZero(nSeqDefin,TamSX3("D1_ITEM")[1]),"")
+						
+						//-- Verifica se o depositante e o emitente da nota  
+						SF1->(dbSeek(xFilial("SF1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						lDepEmite := AllTrim(SF1->F1_ORIGEM) == "MSGEAI"
+	
+						If nOpcX <> 3
+							If !lDepEmite
+								//-- Valida se o item esta na nota
+								If !SD1->(dbSeek(cChaveItem)) .Or. (nPItemCob > 0 .And. SD1->D1_COD <> cProduto)
+									lIncons := .T.
+									lRet := .F.
+									cXMLRet := STR0017 +If(nPItemCob>0,StrZero(nCount,TamSX3("D1_ITEM")[1]) +" - ","") +cProduto +"." //"Item ausente ("					
+								EndIf
+							
+							
+								While lRet .And. !SD1->(EOF()) .And. SD1->(D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD) == ;
+																			xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli+cProduto
+									lIncons := .F.
+									cXMLRet := ""
+									
+									//-- Valida quantidade
+									If QtdComp(SD1->D1_QUANT) <> QtdComp(nQuantidad)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0018 //"Quantidade"
+									EndIf				
+									//-- Valida preco unitario
+									If lRet .And. QtdComp(SD1->D1_VUNIT) <> QtdComp(nVlrUnit)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0019 //"Preço unitário"
+									EndIf
+									//-- Valida valor de desconto
+									If lRet .And. QtdComp(SD1->D1_VALDESC) <> QtdComp(nValDesc)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0020 //"Desconto"
+									EndIf
+									//-- Valida TES
+									If lRet .And. SD1->D1_TES <> cTes
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "TES"
+									EndIf	
+									//-- Valida CFOP
+									If lRet .And. !Empty(cCfop) .And. SD1->D1_CF <> cCfop
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "CFOP"
+									EndIf
+									//-- Valida Base, aliquota e valor IPI
+									If lRet .And. ((!Empty(nBaseIpi) .And. QtdComp(SD1->D1_BASEIPI) <> QtdComp(nBaseIpi)) .Or.;
+											(!Empty(nTaxaIPI) .And. QtdComp(SD1->D1_IPI) <> QtdComp(nTaxaIPI)) .Or.;
+											(!Empty(nValIPI) .And. QtdComp(SD1->D1_VALIPI) <> QtdComp(nValIPI)))
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "IPI"
+									EndIf
+									//-- Valida Base, aliquota e valor ICM
+									If lRet .And. ((!Empty(nBaseICMS) .And. QtdComp(SD1->D1_BASEICM) <> QtdComp(nBaseICMS)) .Or.;
+											(!Empty(nTaxaICMS) .And. QtdComp(SD1->D1_PICM) <> QtdComp(nTaxaICMS)) .Or.;
+											(!Empty(nValICMS) .And. QtdComp(SD1->D1_VALICM) <> QtdComp(nValICMS)))
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "ICMS"
+									EndIf
+									
+									If Empty(nPItemCob)
+										SD1->(dbSkip())
+									Else
+										Exit
+									EndIf
+								Enddo
+								
+								If lIncons
+									lRet := .F.
+									cXMLRet := STR0021 +cXMLRet +"." //"O documento definitivo foi registrado manualmente no ERP com as seguintes informações divergentes: " 
+								EndIf
+							Endif
+						Else
+							SD1->(dbSeek(cChaveItem))
+						EndIf
+						
+						//-- Guarda chave da NF digitada
+						If lRet .And. !lDepEmite
+							RecLock("SD1",.F.)
+							If nOpcX == 2 		//-- Vincula com nota provisoria
+								aAdd(aItensDefi,cChaveItem)
+								SD1->D1_NFORI		:= cDocPro
+								SD1->D1_SERIORI	:= cSerPro
+								SD1->D1_ITEMORI	:= StrZero(nSeqProv,TamSX3("D1_ITEMORI")[1])
+							ElseIf nOpcX == 3	//-- Desvincula da nota provisoria
+								SD1->D1_NFORI		:= CriaVar("D1_NFORI",.F.)
+								SD1->D1_SERIORI	:= CriaVar("D1_SERIORI",.F.)
+								SD1->D1_ITEMORI	:= CriaVar("D1_ITEMORI",.F.)
+								
+								//-- Se doumento definitivo NAO emitido pelo depositante,
+								//-- Restaura SDH pois o documento nao sera excluido
+								SDH->(dbSetOrder(1))
+								If !lDepEmite .And. SDH->(MsSeek(xFilial("SDH")+SD1->D1_NUMSEQ))
+									nQtdeSHD := SDH->DH_QUANT
+									RecLock("SDH",.F.)
+									SDH->(dbDelete())
+									SDH->(MsUnLock())
+		
+									//-- Atualiza o documento de cobertura original
+									If SDH->DH_TPMOV == "2"
+										SDH->(dbSetOrder(2))
+										If SDH->(MsSeek(xFilial("SDH")+"1"+SDH->(DH_SERIE+DH_DOC+DH_ITEM+DH_CLIENTE+DH_LOJACLI+DH_FORNECE+DH_LOJAFOR+DH_OPER)))
+											RecLock("SDH",.F.)
+											SDH->DH_SALDO += nQtdeSHD
+											SDH->(MsUnLock())
+										EndIf
+									EndIf
+								EndIf
+							EndIf
+							SD1->(MsUnLock())
+						EndIf
+					EndIf
+					
+					lVldSeq := Iif(lTagAddItem,!lAddItem,cTES $ cWMSTesCob)
+					
+					//-- Consiste dados da nota provisoria
+					If nOpcX <> 3 .And. lVldSeq
+						If Select("COBITE") > 0
+							COBITE->(dbCloseArea())
+						Endif
+						
+						BeginSQL Alias "COBITE"
+							SELECT D1_ITEM
+							FROM %Table:SD1%
+							WHERE %NotDel% AND
+								D1_DOC = %Exp:cDocPro% AND
+								D1_SERIE = %Exp:cSerPro% AND
+								D1_FORNECE = %Exp:cCodFor% AND
+								D1_LOJA = %Exp:cLoja% AND
+								D1_ITEM = %Exp:StrZero(nSeqProv,TamSX3("D1_ITEM")[1])% AND
+								D1_COD = %Exp:cProduto%
+						EndSQL
+						
+						If Empty(COBITE->D1_ITEM)
+							lRet := .F.
+							cXMLRet := STR0022 + StrZero(nSeqProv,TamSX3("DH_ITEM")[1]) + STR0023 //"Sequência " ## " não encontrada ou produto divergente."
+							Exit
+						EndIf
+						
+						COBITE->(dbCloseArea())
+					Endif
+					
+					//-- Verifica se a nota provisoria esta no sistema
+					SD1->(dbSetOrder(1))
+					If lRet .And. nOpcx == 3 .And. !SD1->(DbSeek(xFilial('SD1')+cDocPro+cSerPro+cCodFor+cLoja))
+						lRet 		:= .F.
+						cXMLRet	:= "001" + STR0024 //" - Documento provisorio não encontrado."
+					Elseif lRet .And. SD1->(DbSeek(xFilial('SD1')+cDocPro+cSerPro+cCodFor+cLoja+Iif(lVldSeq,cProduto+StrZero(nSeqProv,TamSX3("D1_ITEM")[1]),"")))
+						If !Empty(SD1->D1_TES)
+							aDadosVin := {}
+							
+							aAdd(aDadosVin,{'DH_DOC'   		, cDocDef										, Nil})
+							aAdd(aDadosVin,{'DH_SERIE' 		, cSerDef                     	 			, Nil})
+							
+							If lTesLogix .And. lExcFis
+								cTES :=  ""	
+							Endif
+							
+							aAdd(aDadosVin,{'DH_TES'   		, cTES                         				, Nil})
+							aAdd(aDadosVin,{'DH_FORNECE'	, Padr('',TamSX3("DH_FORNECE")[1])				, Nil})
+							aAdd(aDadosVin,{'DH_LOJAFOR'	, Padr('',TamSX3("DH_LOJAFOR")[1]) 				, Nil})
+							aAdd(aDadosVin,{'DH_PRODUTO'	, Padr(cProduto,TamSX3("DH_PRODUTO")[1])		, Nil})
+							aAdd(aDadosVin,{'DH_ITEM'   	, StrZero(nSeqProv,TamSX3("DH_ITEM")[1])		, Nil})
+							aAdd(aDadosVin,{'DH_IDENTNF'	, Padr(SD1->D1_NUMSEQ,TamSX3("DH_IDENTNF")[1])  , Nil})
+							aAdd(aDadosVin,{'DH_TPMOV'  	, Padr('1',TamSX3("DH_TPMOV")[1])	  			, Nil})
+							aadd(aDadosVin,{'DH_OPER'   	, Padr( cDHOper,        TamSX3("DH_OPER")[1] )	, Nil})
+							aAdd(aDadosVin,{'DH_CLIENTE'	, cCodCli										, Nil})
+							aAdd(aDadosVin,{'DH_LOJACLI'	, cLojaCli										, Nil})
+							aAdd(aDadosVin,{'DH_QUANT'  	, nQuantidad                                , Nil})
+							
+							If nPItemCob > 0
+								aAdd(aDadosVin,{'DH_ITEMCOB', StrZero(nCount,TamSX3("DH_ITEMCOB")[1]), Nil})
+							EndIf
+							
+							SDH->(dbSetOrder(2))
+							SDH->(MsSeek(xFilial('SDH')+aDadosVin[9,2]+aDadosVin[2,2]+aDadosVin[1,2]+aDadosVin[7,2]+aDadosVin[11,2]+aDadosVin[12,2]+aDadosVin[4,2]+aDadosVin[5,2]+aDadosVin[10,2]+aDadosVin[8,2]+Iif(nPItemCob>0,aDadosVin[14,2],'')))						
+							//--                          DH_TPMOV    	 DH_SERIE   	  DH_DOC       DH_ITEM  	    DH_CLIENTE   DH_LOJACLI 	  DH_FORNECE  	 DH_LOJAFOR   	DH_OPER    	  DH_IDENTNF		   DH_ITEMCOB
+							
+							If nOpcX == 3
+								If lVldSeq
+									If SDH->(Found())
+										aAdd(aDadosVin,{'DH_REC_WT',	SDH->(Recno()), Nil})
+									EndIf
+								Endif
+							ElseIf SDH->(Found()) .And. lVldSeq .And. !lDepEmite
+								//-- Valida quantidade
+								If QtdComp(SDH->DH_QUANT) <> QtdComp(nQuantidad)
+									lRet := .F.
+									cXMLRet := If(!Empty(cXMLRet),", ","") + STR0018 //"Quantidade"
+								EndIf
+								//-- Valida TES
+								If lRet .And. SDH->DH_TES <> cTes
+									lRet := .F.
+									cXMLRet := If(!Empty(cXMLRet),", ","") + "TES"
+								EndIf
+								
+								If !lRet
+									cXMLRet := STR0021 +cXMLRet +"." //"O documento definitivo foi registrado no ERP as seguintes informações divergentes: " 
+								EndIf
+							EndIf
+							
+							//-- Gera,altera ou exclui SDH
+							If lRet
+								If lVldSeq .And. ((SDH->(!Found()) .And. nOpcX == 2) .Or. (nOpcX == 3 .And. SDH->(Found())))
+									MSExecAuto({|a,b,c,d,e| NfeDocVin(a,b,c,d,e)},,,nOpcx,,aDadosVin)
+								EndIf
+								
+								If lMsErroAuto
+									aErroAuto := GetAutoGRLog()
+									aEval(aErroAuto,{|x| cLogErro += StrTran(StrTran(x,"<",""),"-","") + (" ") })
+									lRet := .F.                                   
+									cXMLRet := EncodeUTF8(cLogErro) 
+								Else
+									// Monta cabeçalho do documento de entrada
+									SF1->(dbSetOrder(1))
+				                 	If Empty(aCab103) .And. (nOpcx == 2 .Or.; 													//-- Inclusao ou
+				                 			 (lDepEmite .And. SF1->(dbSeek(xFilial("SF1")+cDocDef+cSerDef+cCodCli+cLojaCli))))	//-- Exclusao de documento emitido pelo depositante
+										aAdd(aCab103,{"F1_DOC"    , cDocDef		, Nil})
+										aAdd(aCab103,{"F1_SERIE"  , cSerDef		, Nil})
+										aAdd(aCab103,{"F1_TIPO"   , "B"			, Nil})
+										aAdd(aCab103,{"F1_FORNECE", cCodCli		, Nil})
+										aAdd(aCab103,{"F1_LOJA"   , cLojaCli	, Nil})
+										aAdd(aCab103,{"F1_EMISSAO", Iif(Empty(dDtEmisLogix),dDataBase,dDtEmisLogix), Nil})
+										If !Empty(dDtDigiLogix)
+											aAdd(aCab103,{"F1_DTDIGIT", dDtDigiLogix, Nil})
+										Endif
+										aAdd(aCab103,{"F1_FORMUL" , "N"			, Nil})
+										aAdd(aCab103,{"F1_ESPECIE", cTipoDoc	, Nil})
+										aAdd(aCab103,{"F1_COND"   , cCondPgto	, Nil})
+										aAdd(aCab103,{"F1_CHVNFE" , cSefazNFe	, Nil})
+										If SF1->(FieldPos("F1_ORIGEM")) > 0
+											aAdd(aCab103,{"F1_ORIGEM","MSGEAI"	, Nil})
+										EndIf
+									EndIf
+								EndIf
+							EndIf 
+						Else
+							lRet 	:= .F.
+							cXMLRet	:= STR0025 //"Documento provisorio não foi classificado."
+						Endif
+					EndIf
+					
+					If lRet
+						aAdd(aDadosCob,Array(CB_MAXCOL))  
+				          		   								
+						aTail(aDadosCob)[CB_DOC]		:= cDocPro
+						aTail(aDadosCob)[CB_SERIE] 		:= cSerPro
+						aTail(aDadosCob)[CB_SEQ]		:= StrZero(nSeqProv,TamSX3("D1_ITEMORI")[1] )
+						aTail(aDadosCob)[CB_VLRUNIT]	:= nVlrUnit
+						
+						If lTesLogix .And. lExcFis
+							cTes	:=  ""
+							cCFOP	:= ""
+						Endif
+						
+						aTail(aDadosCob)[CB_TES]		:= cTes
+						If !lVldSeq
+							aTail(aDadosCob)[CB_REGSDH] 	:= Nil
+						Else
+							aTail(aDadosCob)[CB_REGSDH] := SDH->(Recno())
+						EndIf
+						aTail(aDadosCob)[CB_PRODUTO]	:= cProduto      
+						aTail(aDadosCob)[CB_QUANT]  	:= nQuantidad      
+						aTail(aDadosCob)[CB_BASIPI] 	:= nBaseIpi        
+						aTail(aDadosCob)[CB_TAXIPI] 	:= nTaxaIPI        
+						aTail(aDadosCob)[CB_VALIPI] 	:= nValIPI        
+						aTail(aDadosCob)[CB_BASICM] 	:= nBaseICMS        
+						aTail(aDadosCob)[CB_TAXICM] 	:= nTaxaICMS        
+						aTail(aDadosCob)[CB_VALICM] 	:= nValICMS        
+						aTail(aDadosCob)[CB_VALDES] 	:= nValDesc       
+						aTail(aDadosCob)[CB_CFOP]   	:= cCFOP
+						aTail(aDadosCob)[CB_LOCAL]  	:= cLocal
+			         												 
+						aAdd(aCabAux,{cCodFor,cLoja,nSeqDefin,nSeqProv})
+					EndIf
+				Next nCount
+			Endif
+			
+			If lRet
+				If !Empty(aCab103)
+					MSExecAuto({|a,b,c,d,e,f,g| NfeNfeCob(a,b,c,d,e,f,g)},,, Iif(nOpcx==2,3,5),,aCab103,aDadosCob,aItensDefi)
+				EndIf
+
+				If lMsErroAuto
+					aErroAuto  := GetAutoGRLog()
+					aEval(aErroAuto,{|x| cLogErro += _NoTags(x)}) 
+					
+					// Monta XML de Erro de execução da rotina automatica.
+					lRet := .F.                                   
+					cXMLRet := EncodeUTF8(cLogErro)
+				Else
+					SD1->(dbSetOrder(1))
+					// Diferente de deleção				  
+					If nOpcx <> 3 .And. SD1->(dbSeek(xFilial("SD1") + cDocDef + cSerDef + cCodCli + cLojaCli))
+						While SD1->(!Eof()) .And. SD1->D1_DOC == cDocDef .And. SD1->D1_SERIE == cSerDef .And. SD1->D1_FORNECE == cCodCli .And. SD1->D1_LOJA == cLojaCli
+							aAdd(aAuxSD1,{SD1->(D1_FORNECE+D1_LOJA),SD1->D1_ITEM})													
+							SD1->(dbSkip())												
+					   	EndDo
+				   	
+					   	aSort(aAuxSD1,,,{|x,y| x[2] < y[2]})
+					   	
+				 		// Monta xml com status do processamento da rotina automatica OK. 
+				  		cXMLRet := "<ListOfReturnedDocuments>"
+						For nCount := 1 To Len(aDadosCob)
+							cXMLRet += 		"<ReturnedDocument>"
+							cXMLRet += 	  		"<InputDocumentNumber>"  	 	  	+aDadosCob[nCount][1]+	   		   			"</InputDocumentNumber>"
+							cXMLRet += 	  		"<InputDocumentSeries>"		 	  	+aDadosCob[nCount][2]+		   				"</InputDocumentSeries>"
+							cXMLRet += 	  		"<InputDocumentSequence>"	 	  	+cValToChar(aCabAux[nCount,4])+	   			"</InputDocumentSequence>"
+							cXMLRet +=				"<InputDocumentCustomerCode>"	  	+aCabAux[nCount][1]+aCabAux[nCount][2]+	"</InputDocumentCustomerCode>" 
+							cXMLRet += 	  		"<CoverageDocumentNumber>"	 	  	+cDocDef+										"</CoverageDocumentNumber>"
+							cXMLRet += 	  		"<CoverageDocumentSeries>"	 	  	+cSerDef+										"</CoverageDocumentSeries>"
+							cXMLRet += 	  		"<CoverageDocumentSequence>"	  	+cValToChar(aCabAux[nCount][3])+	   		"</CoverageDocumentSequence>"
+							cXMLRet += 	  		"<CoverageDocumentCustomerCode>"  	+aAuxSD1[nCount][1]+			    			"</CoverageDocumentCustomerCode>"
+							cXMLRet += 	  		"<ExternalSequence>"			 		+aAuxSD1[nCount][2]+							"</ExternalSequence>"
+							cXMLRet += 		"</ReturnedDocument>" 	
+						Next nCount
+						cXMLRet += "</ListOfReturnedDocuments>"
+					EndIf
+				EndIf
+			ElseIf lRet .And. nOpcx <> 3 .And. Empty(cXMLRet)				
+				lRet := .F.
+				cXMLRet := STR0001 //"Documento não encontrado"
+			EndIf
+			
+			If !lRet
+				DisarmTransaction()
+			EndIf
+			
+			EndTran()
+		Else
+	 		lRet := .F.
+			cXMLRet := STR0010 //"Falha ao manipular o XML"
+		EndIf
+	ElseIf cTypeMessage == EAI_MESSAGE_RESPONSE
+		cXMLRet := '<TAGX>TESTE DE RECEPCAO RESPONSE MESSAGE</TAGX>'
+	ElseIf   cTypeMessage == EAI_MESSAGE_WHOIS
+		cXMLRet := '1.000|2.000'
+	EndIf
+ElseIf nTypeTrans == TRANS_SEND
+	lRet := .F.
+	cXmlRet := "Envio não implementado!"
+EndIf
+
+Return { lRet, cXMLRet }
+
+/*
+{Protheus.doc} v2000(cXML,nTypeTrans,cTypeMessage)
+	Versão 2.000 da CoverageDocument                              
+		
+	@param	cXML      		Conteudo xml para envio/recebimento
+	@param nTypeTrans		Tipo de transacao. (Envio/Recebimento)              
+	@param	cTypeMessage  Tipo de mensagem. (Business Type, WhoIs, etc)
+		
+	@retorno aRet			Array contendo o resultado da execucao e a mensagem Xml de retorno.
+				aRet[1]	(boolean) Indica o resultado da execução da função
+				aRet[2]	(caracter) Mensagem Xml para envio                             
+	
+	@author	Rodrigo Machado Pontes
+	@version	P11
+	@since		16/06/2014
+*/
+
+Static Function v2000(cXml, nTypeTrans, cTypeMessage)
+
+Local lRet     	:= .T.
+Local lIncons		:= .F.
+Local lDepEmite	:= .T.
+Local lVldSeq		:= .T.
+Local cXMLRet  	:= ""
+Local cError		:= ""
+Local cWarning 	:= ""
+Local cLogErro 	:= ""
+Local cDocPro		:= ""
+Local cSerPro   	:= ""
+Local cDocDef  	:= ""
+Local cSerDef  	:= ""
+Local cTES       	:= ""
+Local cCodFor    	:= ""
+Local cCodCli		:= ""
+Local cLoja      	:= ""
+Local cLojaCli	:= ""
+Local cProduto   	:= ""
+Local cCondPgto	:= ""
+Local cSefazNFe	:= ""
+Local cTipoDoc	:= "" 
+Local cValInt    	:= ""    
+Local cValExt		:= ""
+Local cCFOP		:= "" 
+Local cLocal		:= ""
+Local cMarca		:= ""
+Local cChaveNF	:= ""
+Local cChaveItem	:= ""
+Local cAux			:= ""
+Local cCondVer	:= RTrim(PmsMsgUVer('PAYMENTCONDITION','MATA360')) //Versão da Condição de pgto
+Local cPrdVer		:= RTrim(PmsMsgUVer('ITEM','MATA010')) //Versão do Produto
+Local cLocVer		:= RTrim(PmsMsgUVer('WAREHOUSE','AGRA045')) //Versão do Produto
+Local cFornVer	:= RTrim(PmsMsgUVer('CUSTOMERVENDOR','MATA020')) //Versão do Fornecedor
+Local cCliVer		:= RTrim(PmsMsgUVer('CUSTOMERVENDOR','MATA030')) //Versão do Cliente
+Local cInpVer		:= RTrim(PmsMsgUVer('INPUTDOCUMENT','MATA103')) //Versão do Documento de entrada
+Local cDHOper		:= SuperGetMv("MV_ITDHOPE",.F.,"3")
+Local cWMSTesCob	:= SuperGetMv("MV_WMSTCOB",.F.,"")
+Local nCount     	:= 0
+Local nOpcx		:= 0
+Local nSeqProv   	:= 0
+Local nSeqDefin  	:= 0
+Local nQuantidad 	:= 0
+Local nBaseIPI  	:= 0
+Local nTaxaIPI 	:= 0
+Local nValDesc 	:= 0
+Local nValIPI  	:= 0
+Local nBaseICMS  	:= 0
+Local nTaxaICMS	:= 0
+Local nValICMS	:= 0 
+Local nVlrUnit   	:= 0
+Local nPItemCob  	:= SDH->(FieldPos("DH_ITEMCOB"))
+Local aDadosVin	:= {}
+Local aDadosCob   := {}
+Local aCab103  	:= {}
+Local aErroAuto	:= {}
+Local aCabAux		:= {} // Array auxiliar
+Local aAuxSD1		:= {}
+Local aAux			:= {}
+Local aItensDefi	:= {}
+Local dDtEmisLogix	:= Ctod("//")
+Local dDtDigiLogix	:= Ctod("//")
+
+If nTypeTrans == TRANS_RECEIVE
+
+	If cTypeMessage == EAI_MESSAGE_BUSINESS
+
+		oXmlMAT103a := XmlParser(cXml, "_", @cError, @cWarning)
+		If oXmlMAT103a <> Nil .And. Empty(cError) .And. Empty(cWarning)		
+			If Upper(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessEvent:_Event:Text) == "UPSERT"
+				nOpcx := 2
+			ElseIf Upper(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessEvent:_Event:Text) == "DELETE"
+				nOpcx := 3
+			EndIf
+			
+			If Type("oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text") != "U" .And. !Empty(oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text)
+				cMarca := oXmlMAT103a:_TOTVSMessage:_MessageInformation:_Product:_name:Text
+			Else
+				lRet := .F.
+				cXmlRet	:= STR0004 //"Informe a Marca!"
+			EndIf
+			
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InternalId:Text") <> "U" .And. !Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InternalId:Text)
+				cValExt := oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InternalId:Text
+			Endif
+			
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentNumber:Text") == "U" .Or. ;
+					Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentSeries:Text") == "U" .Or. ;
+					Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerVendorInternalId:Text") == "U"
+				lRet := .F.
+				cXmlRet := "Uma ou mais tags obrigatórias não foram informadas: DocumentNumber, DocumentSeries e CustomerVendorInternalId"
+			ElseIf lRet
+				cDocDef := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentNumber:Text,TamSX3("F1_DOC")[1])
+				cSerDef := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_DocumentSeries:Text,TamSX3("F1_SERIE")[1])
+				
+				// Ponto de entrada MT103DOC
+				// Utilizado para manipular o numero do documento recebido para integracao
+				If ExistBlock("MT103DOC")
+					cRetPE:= Execblock( "MT103DOC", .F., .F., {cDocDef})
+					If Valtype(cRetPE)=="C" .And. !Empty(cRetPE)
+					   cDocDef := cRetPE
+					EndIf
+				EndIf
+			EndIf
+			
+			cDocDef := Padr(cDocDef,TamSX3("F1_DOC")[1])
+
+			//-- Cliente			
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerVendorInternalId:Text") <> "U" .And.;
+					!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerVendorInternalId:Text)
+				aAux := IntCliInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerVendorInternalId:Text, cMarca, cCliVer) //MATA030
+				If !aAux[1]
+					lRet := .F.
+					cXmlRet	:= STR0009 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerVendorInternalId:Text) //"Cliente não encontrado no de/para!"
+				Else
+					cCodCli := PadR(aAux[2][3],TamSx3("A1_COD")[1])
+					cLojaCli := PadR(aAux[2][4],TamSx3("A1_LOJA")[1])
+				EndIf
+			ElseIf lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text") <> "U" .And.;
+						!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text)
+				cCodCli	:= PadR(SubStr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text,                        1 ,TamSX3("A2_COD")[1]),TamSX3("A2_COD")[1])
+				cLojaCli := PadR(SubStr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CustomerCode:Text, (TamSX3("A2_COD")[1] + 1),TamSX3("A2_LOJA")[1]),TamSX3("A2_LOJA")[1])
+			EndIf
+			
+			//Condição de pagamento
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentInternalId:Text") <> "U" .And. !Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentInternalId:Text)
+				aAux := IntConInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentInternalId:Text,cMarca,cCondVer)
+				If !aAux[1]
+					lRet := .F.
+					cXmlRet	:= STR0011 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentInternalId:Text) //"Condição de pagamento não encontrada no de/para!"
+				Else
+					cCondPgto := aAux[2][3]
+				Endif
+			ElseIf lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentCode:Text") <> "U"  
+				cCondPgto := PadR(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_PaymentCode:Text,TamSx3("F1_COND")[1])
+		   	EndIf
+
+		   	//Tipo de documento
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text") <> "U"  
+		   		cTipoDoc := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text,TamSx3("F1_ESPECIE")[1])
+		   	EndIf
+		   	
+		   	//Taxa da Moeda
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CurrencyRate:Text") <> "U"  
+		   		nTxMoeda := cValExt + "|" + cMarca + "|" + Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text,TamSx3("F1_TXMOEDA")[1])
+		   	EndIf
+		   	
+		   	//Moeda
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_CurrencyInternalId:Text") <> "U"  
+		   		cMoeda := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_TypeOfDocument:Text,TamSx3("F1_MOEDA")[1])
+		   	EndIf
+		   	
+		   	//Chave da Sefaz
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_SefazNFeKey:Text") <> "U"  
+		   		cSefazNFe := oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_SefazNFeKey:Text
+		   	EndIf
+		   	
+		   	//Data de emissão
+		   	If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text") <> "U"
+		   	   	dDtEmisLogix	:= Ctod( 	SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 9, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 6, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InvoiceDate:Text, 1, 4 ) )
+			Endif
+			
+			//Data digitação
+			If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text") <> "U"
+		   	   	dDtDigiLogix	:= Ctod( 	SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 9, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 6, 2 ) + '/' + ;
+											SubStr( oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_InputDate:Text, 1, 4 ) )
+			Endif
+		   	
+		   	//Tranforma itens em um array
+		   If lRet
+		   		If Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item") == "U"
+		   			lRet := .F.
+		   			cXMLRet := STR0015 //"Tag 'ListOfItems' ausente ou com estrutura incorreta." 
+		   		ElseIf Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item") != "A"
+					XmlNode2Arr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item,"_Item")
+				EndIf
+			Endif
+			
+			//Verifica se o parametro MV_WMSTCOB
+			If lRet .And. Empty(cWMSTesCob)
+				lRet 		:= .F.
+				cXMLRet	:= STR0016 //"Configurar parametro MV_WMSTCOB com as TES de cobertura"
+			Endif
+			
+			If lRet
+				BeginTran()
+										
+				For nCount := 1 To Len(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item)
+					If lRet
+						nQuantidad := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_Quantity:text)
+		        		nSeqDefin := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CoverageSequence:text)
+		        		nSeqProv := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_InvoiceDocumentSequence:text)
+		        	Else
+		        		Exit
+		        	EndIf
+	        		
+	        		//Fornecedor
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CustomerVendorInternalId:Text") <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CustomerVendorInternalId:Text)
+						aAux := IntForInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CustomerVendorInternalId:Text, cMarca, cFornVer) //MATA020
+						If !aAux[1]
+							lRet := .F.
+							cXmlRet	:= STR0008 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CustomerVendorInternalId:Text) //"Fornecedor não encontrado no de/para!"
+						Else
+							cCodFor := PadR(aAux[2][3],TamSx3("A2_COD")[1])
+							cLoja := PadR(aAux[2][4],TamSx3("A2_LOJA")[1])
+						EndIf
+					ElseIf lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CustomerVendorCode:Text") <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerVendorCode:Text)
+						
+						cCodFor := PadR(SubStr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerVendorCode:Text,1 ,TamSX3("A2_COD")[1]),TamSX3("A2_COD")[1])
+						cLoja := PadR(SubStr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_CustomerVendorCode:Text,(TamSX3("A2_COD")[1] + 1),TamSX3("A2_LOJA")[1]),TamSX3("A2_LOJA")[1])
+					EndIf				   
+	 						
+					//-- Documento e serie
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_InternalId:Text") <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_InternalId:Text)
+						aAux := IntInpInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_InternalId:Text,cMarca,cInpVer)
+						If !aAux[1]
+							lRet := .F.
+							cXMLRet	:= STR0012 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_InternalId:Text) //"Documento não encontrado no de/para!"
+						Else
+							cDocPro := PadR(aAux[2][3],TamSx3("F1_DOC")[1])
+							cSerPro := PadR(aAux[2][4],TamSx3("F1_SERIE")[1])
+						EndIf
+					Else
+						//Documento
+	  					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DocumentNumber:Text" ) <> "U" .And.;
+	  							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentNumber:Text)
+	  							
+	  						cDocPro := PadR(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentNumber:Text,TamSx3("F1_DOC")[1])
+							
+							// Ponto de entrada MT103DOC - Utilizado para manipular o numero do documento recebido para integracao
+							If ExistBlock("MT103DOC")
+								cRetPE:= Execblock( "MT103DOC", .F., .F., {cDocPro})
+								If Valtype(cRetPE)=="C" .And. !Empty(cRetPE)
+								   cDocPro := cRetPE
+								EndIf
+							EndIf
+							
+							cDocPro := PadR(cDocPro,TamSx3("F1_DOC")[1])
+	  					ElseIf lRet
+							lRet := .F.
+							cXmlRet	:= STR0005 //"Informe o numero do documento!"
+	  					EndIf
+	  						
+	  					//Serie
+	  					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DocumentSeries:Text" ) <> "U" .And.;
+								!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentSeries:Text)
+	  						cSerPro	:= Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_DocumentSeries:Text,TamSx3("F1_SERIE")[1])
+	  					ElseIf lRet
+	  						lRet := .F.
+							cXmlRet	:= STR0006 //"Informe a serie do documento!"
+	  					EndIf
+			       Endif
+			       
+			       //Produto
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ItemInternalId:Text" ) <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemInternalId:Text)
+	  					
+	  					aAux := IntProInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemInternalId:Text, cMarca, cPrdVer) //MATI010
+						If !aAux[1]
+							lRet := .F.
+							cXmlRet	:= STR0007 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemInternalId:Text) //"Produto não encontrada no de/para!"
+						Else
+							cProduto := PadR(aAux[2][3],TamSx3("D1_COD")[1])
+						EndIf
+	  				ElseIf lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ItemCode:Text" ) <> "U" .And.;
+		          			!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemCode:Text)
+		          		
+		          		cProduto := PadR(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_ItemCode:Text,TamSx3("D1_COD")[1])
+		          	EndIf
+			       
+			       //TES
+					If lRet
+						If Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_TypeOperation:Text" ) <> "U"
+							If AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_TypeOperation:Text) == "0"
+								cTES := ""
+							Else
+								cTES := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_TypeOperation:Text,TamSx3("D1_TES")[1])
+							Endif
+						Else
+							cTES := ""
+						EndIF
+					EndIf
+					
+					//Valor Unitario
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_UnitValue:Text") <> "U"
+						nVlrUnit := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[ncount]:_UnitValue:Text)
+						nVlrUnit := A410Arred(nVlrUnit,"D1_VUNIT")
+					EndIf 
+					
+					//Valor de desconto
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_DiscountValue:Text") <> "U"
+					  	nValDesc := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_DiscountValue:Text)
+					  	nValDesc := A410Arred(nValDesc,"D1_VALDESC")
+					ElseIf lRet
+			  			nValDesc := 0
+				 	EndIf
+				 	
+				 	//CFOP
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_OperationFiscalCode:Text") <> "U"
+						CCFOP := StrTran(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_OperationFiscalCode:Text,'.','')
+					ElseIf lRet
+						cCFOP := ""
+					EndIf
+					
+					//Local de estoque
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_WarehouseInternalId:Text") <> "U" .And.;
+							!Empty(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_WarehouseInternalId:Text)
+						aAux := IntLocInt(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_WarehouseInternalId:Text, cMarca, cLocVer) //AGRI045
+						If !aAux[1]
+							lRet := .F.
+							cXmlRet	:= STR0013 + AllTrim(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_WarehouseInternalId:Text) //"Local de estoque não encontrado no de/para!"
+						Else
+							cLocal := PadR(aAux[2][3],TamSx3("D1_LOCAL")[1])
+						EndIf
+					ElseIf lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_WarehouseId:Text") <> "U"
+						cLocal := Padr(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_WarehouseId:Text,TamSx3("D1_LOCAL")[1])
+					ElseIf lRet
+						cLocal := ""
+					EndIf
+					
+					//Base IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CalculationBasisIPI:Text") <> "U"
+						nBaseIPI := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CalculationBasisIPI:Text)
+					ElseIf lRet
+						nBaseIPI := 0
+					EndIf
+					
+					//Taxa IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_IPITaxRate:Text") <> "U"
+						nTaxaIPI :=  Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_IPITaxRate:Text)
+					ElseIf lRet
+						nTaxaIPI := 0
+					EndIf
+					
+					//Valor IPI
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_IPIValue:Text") <> "U"
+						nValIPI := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_IPIValue:Text)
+					ElseIf lRet
+						nValIPI := 0
+					EndIf
+		
+		          	//Base ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_CalculationBasisICMS:Text") <> "U"
+						nBaseICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_CalculationBasisICMS:Text)
+					ElseIf lRet
+						nBaseICMS := 0
+					EndIf
+					
+					//Taxa ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ICMSTaxRate:Text") <> "U"
+						nTaxaICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_ICMSTaxRate:Text)
+					ElseIf lRet
+						nTaxaICMS := 0
+					EndIf
+					
+					//Valor ICMS
+					If lRet .And. Type("oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item["+Str(nCount)+"]:_ICMSValue:Text") <> "U"
+						nValICMS := Val(oXmlMAT103a:_TOTVSMessage:_BusinessMessage:_BusinessContent:_ListOfItems:_Item[nCount]:_ICMSValue:Text)
+					ElseIf lRet
+						nValICMS := 0
+					EndIf
+					
+					//-- Verifica se o item ja foi digitado manualmente no sistema
+					//-- Em caso positivo, valida dados digitados com XML
+					//-- e atualiza dados do documento provisorio no item definitivo						
+					SD1->(dbSetOrder(1))
+					SF1->(dbSetOrder(1))
+
+					If lRet .And. nOpcX == 3 .And. !SD1->(dbSeek(xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						lRet 		:= .F.
+						cXMLRet	:= "001 - Documento definitivo não encontrado."
+					ElseIf lRet .And. SD1->(dbSeek(xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						cChaveItem := xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli+cProduto+If(nPItemCob>0,StrZero(nSeqDefin,TamSX3("D1_ITEM")[1]),"")
+						
+						//-- Verifica se o depositante e o emitente da nota  
+						SF1->(dbSeek(xFilial("SF1")+cDocDef+cSerDef+cCodCli+cLojaCli))
+						
+						lDepEmite := AllTrim(SF1->F1_ORIGEM) == "MSGEAI"
+					
+						If nOpcX <> 3
+							If !lDepEmite
+								//-- Valida se o item esta na nota
+								If !SD1->(dbSeek(cChaveItem)) .Or.	(nPItemCob > 0 .And. SD1->D1_COD <> cProduto)
+									lIncons := .T.
+									lRet := .F.
+									cXMLRet := STR0017 +If(nPItemCob>0,StrZero(nCount,TamSX3("D1_ITEM")[1]) +" - ","") +cProduto +"." //"Item ausente ("					
+								EndIf
+								
+								While lRet .And. !SD1->(EOF()) .And. SD1->(D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD) == ;
+																			xFilial("SD1")+cDocDef+cSerDef+cCodCli+cLojaCli+cProduto
+									lIncons := .F.
+									cXMLRet := ""
+									
+									//-- Valida quantidade
+									If QtdComp(SD1->D1_QUANT) <> QtdComp(nQuantidad)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0018 //"Quantidade"
+									EndIf				
+									//-- Valida preco unitario
+									If lRet .And. QtdComp(SD1->D1_VUNIT) <> QtdComp(nVlrUnit)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0019 //"Preço unitário"
+									EndIf
+									//-- Valida valor de desconto
+									If lRet .And. QtdComp(SD1->D1_VALDESC) <> QtdComp(nValDesc)
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + STR0020 //"Desconto"
+									EndIf
+									//-- Valida TES
+									If lRet .And. SD1->D1_TES <> cTes
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "TES"
+									EndIf	
+									//-- Valida CFOP
+									If lRet .And. !Empty(cCfop) .And. SD1->D1_CF <> cCfop
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "CFOP"
+									EndIf
+									//-- Valida Base, aliquota e valor IPI
+									If lRet .And. ((!Empty(nBaseIpi) .And. QtdComp(SD1->D1_BASEIPI) <> QtdComp(nBaseIpi)) .Or.;
+											(!Empty(nTaxaIPI) .And. QtdComp(SD1->D1_IPI) <> QtdComp(nTaxaIPI)) .Or.;
+											(!Empty(nValIPI) .And. QtdComp(SD1->D1_VALIPI) <> QtdComp(nValIPI)))
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "IPI"
+									EndIf
+									//-- Valida Base, aliquota e valor ICM
+									If lRet .And. ((!Empty(nBaseICMS) .And. QtdComp(SD1->D1_BASEICM) <> QtdComp(nBaseICMS)) .Or.;
+											(!Empty(nTaxaICMS) .And. QtdComp(SD1->D1_PICM) <> QtdComp(nTaxaICMS)) .Or.;
+											(!Empty(nValICMS) .And. QtdComp(SD1->D1_VALICM) <> QtdComp(nValICMS)))
+										lIncons := .T.
+										cXMLRet := If(!Empty(cXMLRet),", ","") + "ICMS"
+									EndIf
+									
+									If Empty(nPItemCob)
+										SD1->(dbSkip())
+									Else
+										Exit
+									EndIf
+								Enddo 
+													
+								If lIncons
+									lRet := .F.
+									cXMLRet := STR0021 +cXMLRet +"." //"O documento definitivo foi registrado manualmente no ERP com as seguintes informações divergentes: " 
+								EndIf
+							Endif
+						Else
+							SD1->(dbSeek(cChaveItem))
+						EndIf
+						
+						//-- Guarda chave da NF digitada
+						If lRet .And. !lDepEmite
+							RecLock("SD1",.F.)
+							If nOpcX == 2 		//-- Vincula com nota provisoria
+								aAdd(aItensDefi,cChaveItem)
+								SD1->D1_NFORI		:= cDocPro
+								SD1->D1_SERIORI	:= cSerPro
+								SD1->D1_ITEMORI	:= StrZero(nSeqProv,TamSX3("D1_ITEMORI")[1])
+							ElseIf nOpcX == 3	//-- Desvincula da nota provisoria
+								SD1->D1_NFORI		:= CriaVar("D1_NFORI",.F.)
+								SD1->D1_SERIORI	:= CriaVar("D1_SERIORI",.F.)
+								SD1->D1_ITEMORI	:= CriaVar("D1_ITEMORI",.F.)
+								
+								//-- Se doumento definitivo NAO emitido pelo depositante,
+								//-- Restaura SDH pois o documento nao sera excluido
+								SDH->(dbSetOrder(1))
+								If !lDepEmite .And. SDH->(MsSeek(xFilial("SDH")+SD1->D1_NUMSEQ))
+									nQtdeSHD := SDH->DH_QUANT
+									RecLock("SDH",.F.)
+									SDH->(dbDelete())
+									SDH->(MsUnLock())
+									
+									//-- Atualiza o documento de cobertura original
+									If SDH->DH_TPMOV == "2"
+										SDH->(dbSetOrder(2))
+										If SDH->(MsSeek(xFilial("SDH")+"1"+SDH->(DH_SERIE+DH_DOC+DH_ITEM+DH_CLIENTE+DH_LOJACLI+DH_FORNECE+DH_LOJAFOR+DH_OPER)))
+											RecLock("SDH",.F.)
+											SDH->DH_SALDO += nQtdeSHD
+											SDH->(MsUnLock())
+										EndIf
+									EndIf
+								EndIf
+							EndIf
+							SD1->(MsUnLock())
+						EndIf
+					EndIf
+					
+					lVldSeq := cTES $ cWMSTesCob
+					
+					//-- Consiste dados da nota provisoria
+					If lRet .And. nOpcX <> 3 .And. lVldSeq
+						If Select("COBITE") > 0
+							COBITE->(dbCloseArea())
+						Endif	
+						
+						BeginSQL Alias "COBITE"
+							SELECT D1_ITEM
+							FROM %Table:SD1%
+							WHERE %NotDel% AND
+								D1_DOC = %Exp:cDocPro% AND
+								D1_SERIE = %Exp:cSerPro% AND
+								D1_FORNECE = %Exp:cCodFor% AND
+								D1_LOJA = %Exp:cLoja% AND
+								D1_ITEM = %Exp:StrZero(nSeqProv,TamSX3("D1_ITEM")[1])% AND
+								D1_COD = %Exp:cProduto%
+						EndSQL
+						
+						If Empty(COBITE->D1_ITEM)
+							lRet := .F.
+							cXMLRet := STR0022 + StrZero(nSeqProv,TamSX3("DH_ITEM")[1]) + STR0023 //"Sequência " ## " não encontrada ou produto divergente."
+							Exit
+						EndIf
+						
+						COBITE->(dbCloseArea())
+					Endif
+					
+					//-- Verifica se a nota provisoria esta no sistema
+					SD1->(dbSetOrder(1))
+					If lRet .And. nOpcx == 3 .And. !SD1->(DbSeek(xFilial('SD1')+cDocPro+cSerPro+cCodFor+cLoja))
+						lRet 		:= .F.
+						cXMLRet	:= "001" + STR0024 //" - Documento provisorio não encontrado."
+					ElseIf lRet .And. SD1->(DbSeek(xFilial('SD1')+cDocPro+cSerPro+cCodFor+cLoja+Iif(lVldSeq,cProduto+StrZero(nSeqProv,TamSX3("D1_ITEM")[1]),"")))
+						aDadosVin := {}
+						
+						aAdd(aDadosVin,{'DH_DOC'   		, cDocDef										, Nil})
+						aAdd(aDadosVin,{'DH_SERIE' 		, cSerDef                     	 			, Nil})
+						aAdd(aDadosVin,{'DH_TES'   		, cTES                         				, Nil})
+						aAdd(aDadosVin,{'DH_FORNECE'	, Padr('',TamSX3("DH_FORNECE")[1])				, Nil})
+						aAdd(aDadosVin,{'DH_LOJAFOR'	, Padr('',TamSX3("DH_LOJAFOR")[1]) 				, Nil})
+						aAdd(aDadosVin,{'DH_PRODUTO'	, Padr(cProduto,TamSX3("DH_PRODUTO")[1])		, Nil})
+						aAdd(aDadosVin,{'DH_ITEM'   	, StrZero(nSeqProv,TamSX3("DH_ITEM")[1])		, Nil})
+						aAdd(aDadosVin,{'DH_IDENTNF'	, Padr(SD1->D1_NUMSEQ,TamSX3("DH_IDENTNF")[1])  , Nil})
+						aAdd(aDadosVin,{'DH_TPMOV'  	, Padr('1',TamSX3("DH_TPMOV")[1])	  			, Nil})
+						aadd(aDadosVin,{'DH_OPER'   	, Padr( cDHOper,        TamSX3("DH_OPER")[1] )	, Nil})
+						aAdd(aDadosVin,{'DH_CLIENTE'	, cCodCli										, Nil})
+						aAdd(aDadosVin,{'DH_LOJACLI'	, cLojaCli										, Nil})
+						aAdd(aDadosVin,{'DH_QUANT'  	, nQuantidad                                , Nil})
+						
+						If nPItemCob > 0
+							aAdd(aDadosVin,{'DH_ITEMCOB', StrZero(nCount,TamSX3("DH_ITEMCOB")[1]), Nil})
+						EndIf
+						
+						SDH->(dbSetOrder(2))
+						SDH->(MsSeek(xFilial('SDH')+aDadosVin[9,2]+aDadosVin[2,2]+aDadosVin[1,2]+aDadosVin[7,2]+aDadosVin[11,2]+aDadosVin[12,2]+aDadosVin[4,2]+aDadosVin[5,2]+aDadosVin[10,2]+aDadosVin[8,2]+Iif(nPItemCob>0,aDadosVin[14,2],'')))						
+						//--                          DH_TPMOV    	 DH_SERIE   	  DH_DOC       DH_ITEM  	    DH_CLIENTE   DH_LOJACLI 	  DH_FORNECE  	 DH_LOJAFOR   	DH_OPER    	  DH_IDENTNF		   DH_ITEMCOB
+						
+						If nOpcX == 3
+							If lVldSeq
+								If SDH->(Found())
+									aAdd(aDadosVin,{'DH_REC_WT',	SDH->(Recno()), Nil})
+								EndIf
+							Endif
+						ElseIf SDH->(Found()) .And. lVldSeq .And. !lDepEmite
+							//-- Valida quantidade
+							If QtdComp(SDH->DH_QUANT) <> QtdComp(nQuantidad)
+								lRet := .F.
+								cXMLRet := If(!Empty(cXMLRet),", ","") + STR0018 //"Quantidade"
+							EndIf
+							//-- Valida TES
+							If lRet .And. SDH->DH_TES <> cTes
+								lRet := .F.
+								cXMLRet := If(!Empty(cXMLRet),", ","") + "TES"
+							EndIf
+							
+							If !lRet
+								cXMLRet := STR0021 +cXMLRet +"." //"O documento definitivo foi registrado no ERP as seguintes informações divergentes: " 
+							EndIf
+						EndIf
+						
+						//-- Gera/altera SDH
+						If lRet
+							If lVldSeq .And. ((SDH->(!Found()) .And. nOpcX == 2) .Or. (nOpcX == 3 .And. SDH->(Found())))
+								MSExecAuto({|a,b,c,d,e| NfeDocVin(a,b,c,d,e)},,,nOpcx,,aDadosVin)
+							EndIf
+							
+							If lMsErroAuto
+								aErroAuto := GetAutoGRLog()
+								aEval(aErroAuto,{|x| cLogErro += _NoTags(x)})
+								
+								lRet := .F.                                   
+								cXMLRet := EncodeUTF8(cLogErro)
+							Else
+								// Monta cabeçalho do documento de entrada
+								SF1->(dbSetOrder(1))
+			                 	If Empty(aCab103) .And. (nOpcx == 2 .Or.; 													//-- Inclusao ou
+			                 			 (lDepEmite .And. SF1->(dbSeek(xFilial("SF1")+cDocDef+cSerDef+cCodCli+cLojaCli))))	//-- Exclusao de documento emitido pelo depositante
+									aAdd(aCab103,{"F1_DOC"    , cDocDef		, Nil})
+									aAdd(aCab103,{"F1_SERIE"  , cSerDef		, Nil})
+									aAdd(aCab103,{"F1_TIPO"   , "B"			, Nil})
+									aAdd(aCab103,{"F1_FORNECE", cCodCli		, Nil})
+									aAdd(aCab103,{"F1_LOJA"   , cLojaCli	, Nil})
+									aAdd(aCab103,{"F1_EMISSAO", Iif(Empty(dDtEmisLogix),dDataBase,dDtEmisLogix), Nil})
+									If !Empty(dDtDigiLogix)
+										aAdd(aCab103,{"F1_DTDIGIT", dDtDigiLogix, Nil})
+									Endif
+									aAdd(aCab103,{"F1_FORMUL" , "N"			, Nil})
+									aAdd(aCab103,{"F1_ESPECIE", cTipoDoc	, Nil})
+									aAdd(aCab103,{"F1_COND"   , cCondPgto	, Nil})
+									aAdd(aCab103,{"F1_CHVNFE" , cSefazNFe	, Nil})
+									If SF1->(FieldPos("F1_ORIGEM")) > 0
+										aAdd(aCab103,{"F1_ORIGEM","MSGEAI"	, Nil})
+									EndIf
+								EndIf
+							EndIf
+						EndIf
+					EndIf
+					
+					If lRet
+						aAdd(aDadosCob,Array(CB_MAXCOL))  
+				          		   								
+						aTail(aDadosCob)[CB_DOC]		:= cDocPro
+						aTail(aDadosCob)[CB_SERIE] 		:= cSerPro
+						aTail(aDadosCob)[CB_SEQ]		:= StrZero(nSeqProv,TamSX3("D1_ITEMORI")[1] )
+						aTail(aDadosCob)[CB_VLRUNIT]	:= nVlrUnit
+						aTail(aDadosCob)[CB_TES]		:= cTes
+						If !lVldSeq
+							aTail(aDadosCob)[CB_REGSDH] 	:= Nil
+						Else
+							aTail(aDadosCob)[CB_REGSDH] := SDH->(Recno())
+						EndIf
+						aTail(aDadosCob)[CB_PRODUTO]	:= cProduto      
+						aTail(aDadosCob)[CB_QUANT]  	:= nQuantidad      
+						aTail(aDadosCob)[CB_BASIPI] 	:= nBaseIpi        
+						aTail(aDadosCob)[CB_TAXIPI] 	:= nTaxaIPI        
+						aTail(aDadosCob)[CB_VALIPI] 	:= nValIPI        
+						aTail(aDadosCob)[CB_BASICM] 	:= nBaseICMS        
+						aTail(aDadosCob)[CB_TAXICM] 	:= nTaxaICMS        
+						aTail(aDadosCob)[CB_VALICM] 	:= nValICMS        
+						aTail(aDadosCob)[CB_VALDES] 	:= nValDesc       
+						aTail(aDadosCob)[CB_CFOP]   	:= cCFOP
+						aTail(aDadosCob)[CB_LOCAL]  	:= cLocal
+			         												 
+						aAdd(aCabAux,{cCodFor,cLoja,nSeqDefin,nSeqProv})
+					EndIf
+				Next nCount
+			Endif
+			
+			If lRet
+				If !Empty(aCab103)
+					MSExecAuto({|a,b,c,d,e,f,g| NfeNfeCob(a,b,c,d,e,f,g)},,, Iif(nOpcx==2,3,5),,aCab103,aDadosCob,aItensDefi)
+				EndIf
+
+				If lMsErroAuto
+					aErroAuto  := GetAutoGRLog()
+					aEval(aErroAuto,{|x| cLogErro += _NoTags(x)})  
+					
+					// Monta XML de Erro de execução da rotina automatica.
+					lRet := .F.                                   
+					cXMLRet := EncodeUTF8(cLogErro)
+				Else
+					SD1->(dbSetOrder(1))
+					// Diferente de deleção				  
+					If nOpcx <> 3 .And. SD1->(dbSeek(xFilial("SD1") + cDocDef + cSerDef + aCab103[4][2] + aCab103[5][2]))
+						While SD1->(!Eof()) .And. SD1->D1_DOC == cDocDef .And. SD1->D1_SERIE == cSerDef
+							aAdd(aAuxSD1,{SD1->(D1_FORNECE+D1_LOJA),SD1->D1_ITEM})													
+							SD1->(dbSkip())												
+					   	EndDo
+				   	
+					   	aSort(aAuxSD1,,,{|x,y| x[2] < y[2]})
+					   	
+					   	cValInt := AllTrim(cEmpAnt) + "|" + AllTrim(xFilial("SF1")) + "|" + AllTrim(cDocDef) + "|" + AllTrim(cSerDef) + "|" + AllTrim(cCodFor) + "|" + AllTrim(cLoja)
+					   	
+					   	CFGA070Mnt(cMarca,"SF1","F1_DOC",cValExt,cValInt, .F.)
+						
+						cXMLRet := "<ListOfInternalId>" 
+						cXMLRet +=    "<InternalId>"
+						cXMLRet +=       "<Name>CoverageDocument</Name>"
+						cXMLRet +=       "<Origin>" + cValExt + "</Origin>"
+						cXMLRet +=       "<Destination>" + cValInt + "</Destination>"
+						cXMLRet +=    "</InternalId>"
+						cXMLRet := "</ListOfInternalId>"
+						
+				 		// Monta xml com status do processamento da rotina automatica OK. 
+				  		cXMLRet := "<ListOfReturnedDocuments>"
+						For nCount := 1 To Len(aDadosCob)
+							cXMLRet += 		"<ReturnedDocument>"
+							cXMLRet += 	  		"<InputDocumentNumber>"  	 	  	+aDadosCob[nCount][1]+	   		   			"</InputDocumentNumber>"
+							cXMLRet += 	  		"<InputDocumentSeries>"		 	  	+aDadosCob[nCount][2]+		   				"</InputDocumentSeries>"
+							cXMLRet += 	  		"<InputDocumentSequence>"	 	  	+cValToChar(aCabAux[nCount,4])+	   			"</InputDocumentSequence>"
+							cXMLRet +=				"<InputDocumentCustomerCode>"	  	+aCabAux[nCount][1]+aCabAux[nCount][2]+	"</InputDocumentCustomerCode>" 
+							cXMLRet += 	  		"<CoverageDocumentNumber>"	 	  	+cDocDef+										"</CoverageDocumentNumber>"
+							cXMLRet += 	  		"<CoverageDocumentSeries>"	 	  	+cSerDef+										"</CoverageDocumentSeries>"
+							cXMLRet += 	  		"<CoverageDocumentSequence>"	  	+cValToChar(aCabAux[nCount][3])+	   		"</CoverageDocumentSequence>"
+							cXMLRet += 	  		"<CoverageDocumentCustomerCode>"  	+aAuxSD1[nCount][1]+			    			"</CoverageDocumentCustomerCode>"
+							cXMLRet += 	  		"<ExternalSequence>"			 		+aAuxSD1[nCount][2]+							"</ExternalSequence>"
+							cXMLRet += 		"</ReturnedDocument>" 	
+						Next nCount
+						cXMLRet += "</ListOfReturnedDocuments>"
+					Else
+						cValInt := AllTrim(cEmpAnt) + "|" + AllTrim(xFilial("SF1")) + "|" + AllTrim(cDocDef) + "|" + AllTrim(cSerDef) + "|" + AllTrim(cCodFor) + "|" + AllTrim(cLoja) + "|B"
+						
+						CFGA070Mnt(cMarca,"SF1","F1_DOC",cValExt,cValInt, .T.)	
+					EndIf
+				EndIf
+			ElseIf lRet .And. nOpcx <> 3 .And. Empty(cXMLRet)				
+				lRet := .F.
+				cXMLRet := STR0001 //"Documento não encontrado"
+			EndIf
+			
+			If !lRet
+				DisarmTransaction()
+			EndIf
+			
+			EndTran()
+		Else
+	 		lRet := .F.
+			cXMLRet := STR0010 //"Falha ao manipular o XML"
+		EndIf
+	ElseIf cTypeMessage == EAI_MESSAGE_RESPONSE
+		cXMLRet := '<TAGX>TESTE DE RECEPCAO RESPONSE MESSAGE</TAGX>'
+	ElseIf   cTypeMessage == EAI_MESSAGE_WHOIS
+		cXMLRet := '1.000|2.000|2.002'
+	EndIf
+ElseIf nTypeTrans == TRANS_SEND
+
+EndIf
+
+Return { lRet, cXMLRet }

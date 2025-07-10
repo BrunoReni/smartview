@@ -1,0 +1,614 @@
+#INCLUDE "PROTHEUS.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³FUNCAO    ³ MATA118X ³ Autor ³                       ³ Data ³            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCRICAO ³ Funcoes do programa MATA118 - Nfiscal de Desp.Importacao.    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Marcos Simidu ³29/06/98³XXXXXX³Acertos para NF com 12 bytes na exclusao- ³±±
+±±³              ³        ³      ³limpeza do campo F1_NFORI.                ³±±
+±±³Ana Claudia   ³22/12/98³XXXXXX³Inclusao de IFDEF SHELL.                  ³±±
+±±³Fernando Joly ³13/01/99³XXXXXX³Permitir a grava‡„o de Movimenta‡”es "DE6"³±±
+±±³              ³        ³      ³em Almoxarifados  diferentes do B1_LOCPAD,³±±
+±±³              ³        ³      ³na fun‡„o a118GravaD3.                    ³±±
+±±³Fernando Joly ³03.02.98³META  ³Corre‡„o na grava‡„o do SD7 (Retirado o   ³±±
+±±³              ³        ³      ³D7_UM e Incluido o D7_TIPOCQ).            ³±±
+±±³Rodrigo Sartor³09/02/99³xxxxxx³Acerto na IndRegua p/ TOPCONNECT com AS400³±±
+±±³Rodrigo Sart  ³25/02/99³META  ³Revisao Rastreabilidade                   ³±±
+±±³Cesar Valadao ³08/11/99³19336A³Correcao na gravacao do SD7 (Incluido o   ³±±
+±±³              ³        ³      ³D7_NUMLOTE e D7_LOTECTL).                 ³±±
+±±³Cesar Valadao ³22/11/99³25057A³Correcao de Duplicidade de Regs no SD3.   ³±±
+±±³              ³        ³      ³Revisao de Entradas e Saidas no CQ.       ³±±
+±±³Patricia Sal. ³01/03/00³XXXXXX³A118GravaCQ():Gravar os campos D7_PRODUTO,³±±
+±±³              ³        ³      ³D7_DOC,D7_SERIE,D7_FORNECE,D7_LOJA ao in- ³±±
+±±³              ³        ³      ³ves do D7_CHAVE.                          ³±± 
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A118VALOR³ Autor ³ Cristina Ogura         ³ Data ³ 20/03/95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Checa o valor do frete se esta zerado       	               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA118                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION A118VALOR()
+LOCAL x
+
+x:= &(ReadVar())
+
+If x <= 0
+	Help(" ",1,"A118VL")
+	lRet := .f.
+Else
+	lRet := .t.
+Endif
+
+Return (lRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A118TES  ³ Autor ³Rodrigo de A. Sartorio  ³ Data ³ 28/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Checa se a TES digitada existe ou n„o.      	               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA118                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION A118TES()
+LOCAL lRet:=.T.
+If !(SF4->(dbSeek(xFilial("SF4")+&(ReadVar()))))
+	Help(" ",1,".MTA11801.")
+	lRet:=.F.
+EndIf
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A118For  ³ Autor ³ Ary Medeiros           ³ Data ³ 01/06/95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna condicao para indexacao condicional                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA118                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118For()
+
+Local cCondicao
+
+cCondicao:='F1_FILIAL=="'+xFilial('SF1')+'".AND.'
+#IFDEF SHELL
+	cCondicao+='F1_CANCEL!="N" .AND.'
+#ENDIF
+cCondicao+='DTOS(F1_DTDIGIT)>="'+DTOS(aPar[01])+'".AND.DTOS(F1_DTDIGIT)<="'+DTOS(aPar[2])+'".AND.'
+
+If aPar[3]==1 	// Estorno
+	cCondicao+='F1_TIPO=="C".AND.F1_ORIGLAN==" D"'
+Else			// Geracao
+	cCondicao+='F1_TIPO$"'+If(aPar[6]==1,"N","BD")+'"'
+Endif
+If !Empty(aPar[4]).And.!Empty(aPar[5])
+	cCondicao+='.AND.F1_FORNECE=="'+aPar[4]+'".AND.F1_LOJA=="'+aPar[5]+'"'
+Endif
+
+Return cCondicao
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A118GrSF8 ³ Autor ³Rodrigo de A. Sartorio  ³ Data ³ 10/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Funcao que grava a NF de Conhecimento de Frete no SF8       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA118                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118GrSF8(aREFs,aPosSF1,lMaxItem)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cAlias:=Alias(),nAux01:=0,nAux02:=0,nAux03:=0
+
+// 1) Codigo do Produto
+// 2) Codigo da OP
+// 3) Array de NFs Originais no formato { Numero,Serie,Fornecdor,Loja }
+// 4) Numero da Nota Fiscal Gerada
+// 5) Serie  da Nota Fiscal Gerada
+dbSelectArea("SF8")
+dbSetOrder(1)
+
+If lMaxItem	// Mais itens que MV_NUMITEN
+	For nAux01:=1 To Len(aREFs)
+		
+		For nAux02:=1 To Len(aREFs[nAux01,3])
+			dbSelectArea("SF8")
+			If !dbSeek(xFilial()+aREFs[nAux01,4]+aREFs[nAux01,5]+aREFs[nAux01,3,nAux02,3]+aREFs[nAux01,3,nAux02,4],.F.)
+				RecLock("SF8",.T.)
+				Replace F8_FILIAL 	With xFilial()
+				Replace F8_NFDIFRE 	With aREFs[nAux01,4]
+				Replace F8_SEDIFRE 	With aREFs[nAux01,5]
+				Replace F8_TRANSP		With ca100For
+				Replace F8_LOJTRAN 	With cLoja
+				Replace F8_DTDIGIT 	With dDEmissao
+				Replace F8_NFORIG		With aREFs[nAux01,3,nAux02,1]
+				Replace F8_SERORIG 	With aREFs[nAux01,3,nAux02,2]
+				Replace F8_FORNECE 	With aREFs[nAux01,3,nAux02,3]
+				Replace F8_LOJA		With aREFs[nAux01,3,nAux02,4]
+				Replace F8_TIPO		With "D"
+				MsUnlock()
+			ElseIf !(F8_NFORIG+F8_SERORIG)==(aREFs[nAux01,3,nAux02,1]+aREFs[nAux01,3,nAux02,2])
+				RecLock("SF8",.T.)
+				Replace F8_FILIAL 	With xFilial()
+				Replace F8_NFDIFRE 	With aREFs[nAux01,4]
+				Replace F8_SEDIFRE 	With aREFs[nAux01,5]
+				Replace F8_TRANSP		With ca100For
+				Replace F8_LOJTRAN 	With cLoja
+				Replace F8_DTDIGIT 	With dDEmissao
+				Replace F8_NFORIG		With aREFs[nAux01,3,nAux02,1]
+				Replace F8_SERORIG 	With aREFs[nAux01,3,nAux02,2]
+				Replace F8_FORNECE 	With aREFs[nAux01,3,nAux02,3]
+				Replace F8_LOJA		With aREFs[nAux01,3,nAux02,4]
+				Replace F8_TIPO		With "D"
+				MsUnlock()
+			Endif
+		Next
+	Next
+Else
+	For nAux03:=1 To Len(aPosSF1)
+		dbSelectArea("SF1")
+		dbGoto(aPosSF1[nAux03])
+		
+		dbSelectArea("SF8")
+		If !dbSeek(xFilial()+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA) .AND. SF1->F1_DOC+SF1->F1_SERIE != MV_PAR05+MV_PAR06
+			RecLock("SF8",.T.)
+			Replace F8_FILIAL 	With xFilial()
+			Replace F8_NFDIFRE 	With cNFiscal
+			Replace F8_SEDIFRE 	With cSerie
+			Replace F8_TRANSP		With ca100For
+			Replace F8_LOJTRAN 	With cLoja
+			Replace F8_DTDIGIT 	With dDEmissao
+			Replace F8_NFORIG		With SF1->F1_DOC
+			Replace F8_SERORIG 	With SF1->F1_SERIE
+			Replace F8_FORNECE 	With SF1->F1_FORNECE
+			Replace F8_LOJA		With SF1->F1_LOJA
+			Replace F8_TIPO		With "D"
+			MsUnlock()
+		Endif
+	Next
+Endif
+
+dbSelectArea(cAlias)
+
+Return Nil
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A118Esto ³ Autor ³ Rodrigo de A. Sartorio³ Data ³ 15.05.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Faz a exclusao da Nota de Despesa de Importacao            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Mata118                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118Esto(cAlias,nReg,nOpcx)
+LOCAL cOldAlias:=Alias(),nOldOrder:=IndexOrd()
+LOCAL cSeek:=SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA
+LOCAL cSeek2:=SF1->F1_DOC+SF1->F1_SERIE
+LOCAL nDelSF8:=0
+LOCAL aRecCQ:={},cLocCQ:=GetMV("MV_CQ")
+Local nX         := 0
+
+PRIVATE cArquivo := ""
+PRIVATE lLancPad40:=lLancPad50:=lLancPad60:=.F.
+PRIVATE lLancPad55:=lLancPad65:=lLancPad95:=.F.
+PRIVATE nHdlPrv:=1,nTotal:=0,cLoteCom,nLinha:=2,nMoedaCor:=1
+cAlias:="SD1"
+
+//-- Array aRecCQ:
+//-- [n, 1] = D1_NUMCQ
+//-- [n, 2] = D1_COD
+//-- [n, 3] = D1_LOCAL
+//-- [n, 4] = {D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA} - (Para ser utilizado Idem ao D7_CHAVE)
+
+dbSelectArea(cAlias)
+dbSetOrder(1)
+If dbSeek(xFilial()+cSeek)
+	nReg:=Recno()
+	While !Eof() .And. xFilial()+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA == xFilial()+cSeek
+		If D1_LOCAL==cLocCQ
+			aAdd(aRecCQ, {D1_NUMCQ, D1_COD, D1_LOCAL, {D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA}})
+		Endif
+		dbSkip()
+	EndDo
+	dbGoto(nReg)
+	
+	dbSelectArea(cAlias)
+	A100Deleta(cAlias,nReg,nOpcx,.T.)
+	
+	If lmat118
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Estorna movimento de custeio do CQ          ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nX := 1 to Len(aRecCQ)
+			fEstoCQ8(aRecCQ[nX, 1], aRecCQ[nX, 2], aRecCQ[nX, 3], aRecCQ[nX, 4])
+		Next nX	
+
+		dbSelectArea("SF8")
+		dbSetOrder(1)
+		If dbSeek(xFilial()+cSeek2)
+			Begin Transaction
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Limpa o flag na NF original.                                 ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SF8")
+			Do While !Eof() .And. xFilial()+cSeek2 == F8_FILIAL+F8_NFDIFRE+F8_SEDIFRE
+				If xFilial()+cSeek != F8_FILIAL+F8_NFDIFRE+F8_SEDIFRE+F8_TRANSP+F8_LOJTRAN
+					dbSkip()
+					Loop
+				EndIf
+				dbSelectArea("SF1")
+				dbSetOrder(1)
+				If dbSeek(xFilial()+SF8->F8_NFORIG+SF8->F8_SERORIG+SF8->F8_FORNECE+SF8->F8_LOJA,.F.)
+					RecLock("SF1",.F.)
+					Replace SF1->F1_ORIGLAN With IIF(Substr(SF1->F1_ORIGLAN,1,1) == "F","F ","  ")
+					Replace SF1->F1_NFORIG  With Space(Len(SF1->F1_NFORIG))
+					Replace SF1->F1_SERORIG With Space(03)
+					MsUnlock()
+				EndIf
+				dbSelectArea("SF8")
+				RecLock("SF8",.F.,.T.)
+				dbDelete()
+				nDelSF8++
+				dbSkip()
+			EndDo
+			End Transaction
+		Endif
+	EndIf
+EndIf
+cAlias:=cOldAlias
+dbSelectArea(cOldAlias)
+dbSetOrder(nOldOrder)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A118EstD3 ³ Autor ³ Cesar Eduardo Valadao  ³ Data ³16/11/1999³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Estorna o lancamento na NF do SD3                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118EstD3(cNumCQ,cNumSeq,cLocal)
+Local nRecOri:=0,i,nRecDest:=0
+Local bCampo:={|nCPO| Field(nCPO)}
+Local aOriDest:={}, j
+
+dbSelectArea("SD3")
+dbSetOrder(4)
+If dbSeek(xFilial()+cNumSeq,.F.)
+	While !Eof() .And. xFilial()+cNumSeq == D3_FILIAL+D3_NUMSEQ
+		If D3_QUANT<=0
+			AAdd(aOriDest, {Recno(), 0})
+			dbSkip()
+			If xFilial()==D3_FILIAL .And. cNumSeq==D3_NUMSEQ
+				aOriDest[Len(aOriDest)][2] := Recno()
+			Endif
+		EndIf
+		dbSkip()
+		
+		
+	EndDo
+Endif
+
+For j := 1 To Len(aOriDest)
+	nRecOri  := aOriDest[j][1]
+	nRecDest := aOriDest[j][2]
+	If nRecOri > 0
+		dbSelectArea("SD3")
+		dbGoto(nRecOri)
+		RecLock("SD3",.F.)
+		Replace D3_ESTORNO With "S"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Salva a integridade dos campos de Bancos de Dados       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For i := 1 to FCount()
+			M->&(EVAL(bCampo,i)):=FieldGet(i)
+		Next
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Cria o registro de estorno com mesmos dados do original ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		RecLock("SD3",.T.)
+		For i := 1 TO FCount()
+			FieldPut(i,M->&(EVAL(bCampo,i)))
+		Next
+		If D3_TM=="499"
+			Replace  D3_TM    With "999",;
+			D3_CF    With "RE6",;
+			D3_CHAVE With "E9"
+		Else
+			Replace  D3_TM    With "499",;
+			D3_CF    With "DE6",;
+			D3_CHAVE With "E0"
+		EndIf
+		Replace D3_USUARIO With CUSERNAME
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Pega o custo da movimentacao               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aCusto := PegaCusD3()
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Atualiza o saldo atual (VATU) com os dados do SD3     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		B2AtuComD3(aCusto)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Acerta custo da OP relacionada na NF de Entrada       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(SD3->D3_OP)
+			C2AtuComD3(aCusto)
+		EndIf
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Gera movimento inverso do destino          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nRecDest > 0
+		dbSelectArea("SD3")
+		dbGoTo(nRecDest)
+		RecLock("SD3",.F.)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Grava o Flag de estorno                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		Replace D3_ESTORNO With "S"
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Salva a integridade dos campos de Bancos de Dados       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For i:=1 TO FCount()
+			M->&(EVAL(bCampo,i)):=FieldGet(i)
+		Next
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Cria o registro de estorno com mesmos dados do original ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		RecLock("SD3",.T.)
+		For i:=1 TO FCount()
+			FieldPut(i,M->&(EVAL(bCampo,i)))
+		Next
+		If D3_TM=="499"
+			Replace  D3_TM    With "999",;
+			D3_CF    With "RE6",;
+			D3_CHAVE With "E9"
+		Else
+			Replace  D3_TM    With "499",;
+			D3_CF    With "DE6",;
+			D3_CHAVE With "E0"
+		EndIf
+		Replace D3_USUARIO With CUSERNAME
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Pega o custo da movimentacao               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aCusto := PegaCusD3()
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Atualiza o saldo atual (VATU) com os dados do SD3     ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		B2AtuComD3(aCusto)
+	EndIf
+Next
+Return(NIL)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A118EstCQ ³ Autor ³    Marcos Simidu       ³ Data ³ 09/12/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Estorna o lancamento na NF do SD3                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118EstCQ(cNumCQ,cCod,cLocal)
+Local bCampo:={|nCPO| Field(nCPO) },i
+Local nRecDest:=0,nRecOri:=0
+
+dbSelectArea("SD7")
+If D7_TIPO==8
+	//-- Exclus„o de Movimenta‡”es Internas Ref. CQ
+	dbSelectArea('SD3')
+	nOrdSD3 := IndexOrd()
+	nRecSD3 := RecNo()
+	dbSetOrder(4)
+	If dbSeek(xFilial()+SD7->D7_NUMSEQ)
+		A118EstD3(SD7->D7_NUMERO, SD7->D7_NUMSEQ, SD7->D7_LOCAL)
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Estorna custeio do SD7.                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SD7")
+	RecLock("SD7",.F.)
+	Replace D7_ESTORNO With "S"
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Salva a integridade dos campos de Bancos de Dados            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For i:=1 To FCount()
+		M->&(EVAL(bCampo,i)):=FieldGet(i)
+	Next
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Cria o registro de estorno com mesmos dados do original      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	RecLock("SD7",.T.)
+	For i:=1 TO FCount()
+		FieldPut(i,M->&(EVAL(bCampo,i)))
+	Next i
+	Replace D7_TIPO With 9
+	MsUnlock()
+	
+Endif
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A118GravaCQ  ³ Autor ³   Marcos Simidu    ³ Data ³ 05/12/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Grava item no SD7 - Despesa de Importacao.                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118GravaCQ(cLocCQ,cNumSeq,cDocCQ,nSaldo)
+Local nSavRec:=0,cSeq:=""
+Local cTipoCQ := ''
+Local cLibera := ''
+
+dbSelectArea("SB1")
+dbSeek(xFilial()+SD1->D1_COD,.F.)
+cTipoCQ := If(Empty(RetFldProd(SB1->B1_COD,"B1_TIPOCQ")),'M',RetFldProd(SB1->B1_COD,"B1_TIPOCQ"))
+
+dbSelectArea("SD7")
+dbSeek(xFilial()+cDocCQ+SD1->D1_COD+cLocCq)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³  Pega numero sequencial - campo D7_SEQ                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nSavRec:=Recno()
+While !Eof().And.xFilial()==D7_FILIAL ;
+	.And.(cDocCQ+SD1->D1_COD+cLocCQ)==(D7_NUMERO+D7_PRODUTO+D7_LOCAL)
+	If SD7->D7_TIPO == 0
+		cTipoCQ := SD7->D7_TIPOCQ
+		cLibera := SD7->D7_LIBERA
+	EndIf
+	cSeq:=D7_SEQ
+	dbSkip()
+EndDo
+dbGoto(nSavRec)
+
+RecLock("SD7",.T.)
+
+Replace 	D7_FILIAL	With xFilial()
+Replace 	D7_NUMERO	With cDocCQ
+Replace 	D7_PRODUTO	With SD1->D1_COD
+Replace 	D7_ORIGLAN	With "CP"
+Replace 	D7_USUARIO	With CUSERNAME
+Replace 	D7_LOCAL	With cLocCQ
+Replace 	D7_LOCDEST	With RetFldProd(SB1->B1_COD,"B1_LOCPAD")
+Replace     D7_TIPO		With 8
+Replace     D7_DOC      With  SD1->D1_DOC
+Replace     D7_SERIE    With  SD1->D1_SERIE
+Replace     D7_FORNECE  With  SD1->D1_FORNECE
+Replace     D7_LOJA     With  SD1->D1_LOJA
+Replace	    D7_SALDO	With 0
+Replace	    D7_QTDE		With 0
+Replace	    D7_DATA		With dDataBase
+Replace	    D7_NUMSEQ	With cNumSeq
+Replace	    D7_SEQ		With StrZero((Val(cSeq)+1),3)
+Replace	    D7_SALDO	With nSaldo //(aSaldoCQ[1]-aSaldoCQ[2]-aSaldoCQ[3]+aSaldoCQ[4]-aSaldoCQ[5])
+Replace     D7_TIPOCQ   With cTipoCQ
+Replace     D7_LIBERA   With cLibera
+Replace     D7_NUMLOTE  With SD1->D1_NUMLOTE
+Replace     D7_LOTECTL  With SD1->D1_LOTECTL
+
+MsUnlock()
+
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A118GravaD3	³ Autor ³   Marcos Simidu    ³ Data ³ 05/12/97 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Grava item no SD3 - RE6/DE6.                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A118GravaD3(cTipo,cLocDev,aCusto,nLiber,nSaldoOri,cNumSeq,cLocReq,cDocCQ)
+
+dbSelectArea("SB1")
+dbSeek(xFilial()+SD1->D1_COD,.F.)
+
+cLocReq := If(cLocReq==NIL,RetFldProd(SB1->B1_COD,"B1_LOCPAD"),cLocReq)
+
+RecLock("SD3",.T.)
+
+Replace D3_FILIAL 	With xFilial()
+Replace D3_DOC			With cDocCQ
+Replace D3_COD			With SD1->D1_COD
+Replace D3_UM			With SB1->B1_UM
+Replace D3_EMISSAO	With ddatabase
+Replace D3_GRUPO 		With SB1->B1_GRUPO
+Replace D3_TIPO  		With SB1->B1_TIPO
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Grava a classe do movimento RE6/DE6            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If cTipo=="R" //-- Requisi‡„o
+	Replace D3_CF 		With "RE6"
+	Replace D3_LOCAL 	With cLocReq
+	Replace D3_TM	 	With "999"
+	Replace D3_CHAVE  With "E9"
+Else //-- Devolu‡„o
+	Replace D3_CF 		With "DE6"
+	Replace D3_LOCAL 	With cLocDev
+	Replace D3_TM	 	With "499"
+	Replace D3_CHAVE  With "E0"
+EndIf
+Replace D3_USUARIO With CUSERNAME
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Grava o numero sequencial do movimento         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Replace D3_NUMSEQ With cNumSeq
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Grava Qtde. zero - Movimento apenas para agregar custo  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Replace D3_QUANT With 0
+
+Replace D3_CUSTO1 With (aCusto[1]/nSaldoOri)*nLiber
+Replace D3_CUSTO2 With (aCusto[2]/nSaldoOri)*nLiber
+Replace D3_CUSTO3 With (aCusto[3]/nSaldoOri)*nLiber
+Replace D3_CUSTO4 With (aCusto[4]/nSaldoOri)*nLiber
+Replace D3_CUSTO5 With (aCusto[5]/nSaldoOri)*nLiber
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualiza o saldo atual (VATU) com os dados do SD3     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+B2AtuComD3({D3_CUSTO1,D3_CUSTO2,D3_CUSTO3,D3_CUSTO4,D3_CUSTO5})
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualiza os saldos atuais (VATU) das OP's ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(SD3->D3_OP)
+	C2AtuComD3({D3_CUSTO1,D3_CUSTO2,D3_CUSTO3,D3_CUSTO4,D3_CUSTO5})
+EndIf
+
+MsUnlock()
+
+Return

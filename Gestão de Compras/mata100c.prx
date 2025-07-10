@@ -1,0 +1,3495 @@
+#INCLUDE "MATA100C.CH"
+#INCLUDE "PROTHEUS.CH"
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ATENCAO!!! AS FUNCOES QUE SERAO UTILIZADAS APENAS NA VERSAO  ARGENTINA ³±±
+±±³           DEVERAO ESTAR DENTRO DO IFDEF A SEGUIR POIS SAO COMPILADAS  ³±±
+±±³           APENAS NA VERSAO WINDOWS!!!!!                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATA100C ³ Autor ³ Jos‚ Lucas            ³ Data ³ 24/04/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Funcoes do programa MATA100 - DOS E WINDOWS                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³PROGRAMADOR³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Lucas     ³01/12/98³XXXXXX³Adapta‡”es das fun‡”es para atender o m¢du-³±±
+±±³           ³        ³      ³lo SigaLoja...                             ³±±
+±±³ Lucas     ³09/12/98³XXXXXX³Inclus„o das STR0001...STR0003.            ³±±
+±±³ Lucas     ³05/08/98³XXXXXX³Inicializa‡„o da variavel lDupl na fun‡„o  ³±±
+±±³           ³        ³      ³A100CalcIV().                              ³±±
+±±³ Lucas     ³16/10/98³XXXXXX³Tratamento do Desconto e incl. A100dVld(). ³±±
+±±³ Bruno     ³12/11/98³XXXXXX³Agregado de funciones A100ActVar e         ³±±
+±±³           ³        ³      ³A100ZerTela                                ³±±
+±±³ Lucas     ³17/10/98³XXXXXX³Rateio do Imposto qdo a Base do mesmo for  ³±±
+±±³           ³        ³      ³o valor total das Mercadorias...           ³±±
+±±³ Lucas     ³01/12/98³XXXXXX³Adapta‡”es das fun‡”es para atender o m¢du-³±±
+±±³           ³        ³      ³lo SigaLoja...                             ³±±
+±±³ Lucas     ³09/12/98³XXXXXX³Inclus„o das STR0001...STR0003.            ³±±
+±±³ Edson M.  ³16/04/99³xxxxxx³Transferencia de funcoes do MATA100A para  ³±±
+±±³           ³        ³      ³o MATA100C.                                ³±±
+±±³ Edson M.  ³28/04/99³xxxxxx³Correcao na vld. do lote nas devolucoes.   ³±±
+±±³ Bruno     ³18/06/99³Melhor³Inclus„o da Fun‡ao A100ItDev, a100Valor    ³±±
+±±³           ³        ³      ³A100ItDev (de MatxFunb),A100GerRE5 de      ³±±
+±±³           ³        ³      ³Mata100a                                   ³±±
+±±³ Lucas     ³14/07/99³      ³Incl. A100Detalhe temporariamente...       ³±±
+±±³ Rodrigo Sa³21/07/99³22936A³Acerto na funcao A100Lote()                ³±±
+±±³ Bruno     ³27.07.99³Melhor³Funcao A100CalcSolIt movida para MatxFUNC. ³±±
+±±³ Fernando J³27/07/99³XXXXXX³Revis„o na fun‡„o A100LotCtl()             ³±±
+±±³ Bruno     ³24/08/99³16318A³Reinicializar AimpVarSD1[3].               ³±±
+±±³ Fernando J³20/09/99³23977A³Na A100Lote n„o consistir produtos cuja TES³±±
+±±³           ³        ³      ³n„o atualize estoque.                      ³±±
+±±³ Lucas     ³25/09/99³Melhor³Inclusao do Pto de entrada M101DET.        ³±±
+±±³ Bruno     ³01/10/99³Melhor³Acerto na funcao a100valor().              ³±±
+±±³ Bruno     ³07/10/99³Melhor³Tratamento da especie na A100TesXIp        ³±±
+±±³ Bruno     ³09/12/99³Melhor³Gravar custo s¢ quando o imposto nao for   ³±±
+±±³           ³        ³      ³acreditavel.                               ³±±
+±±³ Marcello  ³28/12/99³oooooo³Criacao da array aRetenc (A100CALCIV) para ³±±
+±±³           ³        ³      ³o tratamento de retencoes para o Mexico    ³±±
+±±³ Leonardo  ³11/01/00³xxxxxx³Criacao da funcao a101Gastos()             ³±±
+±±³ Leonardo  ³21/02/00³xxxxxx³Retirar/Substituir diret.SPANISH (cPaisLoc)³±±
+±±³ Leonardo  ³13/03/00³Melhor³Acerto A100CalcIV localizar TES e conside- ³±±
+±±³           ³        ³      ³rar F4_DUPLIC por item do Acols (nbasedup) ³±±
+±±³ Bruno     ³23.03.00³Melhor³Validacoes dos campos digitados no rodape  ³±±
+±±³           ³        ³      ³ da Nota Fiscal.                           ³±±
+±±³ Denis     ³30.06.00³XXXXXX³Inclusao aImpVarSD1[7] - atender calculo de³±±
+±±³           ³        ³      ³Valores de Terceiros - Local.Colombia      ³±±
+±±³ Lucas     ³14/06/00³Melhor³Distribuir Impostos e Custo qdo calculo por³±±
+±±³           ³        ³		³Total da Fatura...						        ³±±
+±±³Fernando M.³06.07.00³oooooo³Permitir alterar o valor do imposto, atua- ³±±
+±±³           ³        ³      ³lizar valor bruto da fatura, impostos e    ³±±
+±±³           ³        ³      ³livros fiscais                             ³±±
+±±³Lucas      ³26.08.00³Melhor³Substituir MV_RNDLOC por MsDecimais()      ³±±
+±±³           ³01.09.00³Melhor³Tratamento para nao chamar a Rot.de Calculo³±±
+±±³           ³        ³Melhor³CalcTesXIp() qdo a factura for importacao e³±±
+±±³           ³        ³Melhor³o parametro MV_EASY == "S", nao permitir   ³±±
+±±³           ³        ³Melhor³tambem alterar os valores de impostos.     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ A100RodaVar()        ³Autor³Jose Lucas    ³Data ³ 04.05.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Rodap‚ para os clientes que optaram pelo C lculo dos       ³±±
+±±³          ³ Impostos Variaveis (Internacionaliza‡„o).                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100RodaVar(nOpcx,lEdita,lConfrete,lConImp,lDesc,aLivro,aCusto,cTipoMov)
+LOCAL aHeaderAnt := {}, aColsAnt := {}
+
+PRIVATE lTotais := lImpostos := lLivros := .F.
+
+PRIVATE lDescItem:=.f.
+PRIVATE nValNeg:=0
+PRIVATE lAltBaseICM:=.f., lAltIcmRet:=.f.
+PRIVATE nBaseAnt:=0
+PRIVATE nSeguro:=0
+PRIVATE nValAnt:=0
+PRIVATE nSvDifBsICM:=0,nDifBsICM:=0
+
+aHeaderAnt := AClone(aHeader)
+aColsAnt := AClone(aCols)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se for Inclus„o ou Classifica‡„o disparar A100Calc(), se for ³
+//³ Visualiza‡„o ou Exclusao disparar A100GetIpxTes().           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ( nOpcx == 3 .or. nOpcx == 4 )
+	aCusto:= A100Calc(@aLivro,lDesc,.T.,0.00,0.00)
+Else
+	A100GetIpxTes(@aLivro)
+EndIf
+
+aHeader := AClone(aHeaderAnt)
+aCols := AClone(aColsAnt)
+
+If ( nOpcx == 3 .or. nOpcx == 4 )
+	aCusto:= A100Calc(@aLivro,lDesc,.T.,0.00,0.00)
+EndIf
+Return(.T.)
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A100Header  ³ Autor ³ Jos‚ Lucas         ³ Data ³ 04.05.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Retornar o Array referente aos campos ou header dos Totais  ³±±
+±±³          ³gerais, Impostos e Livro Fiscal para tratamento dos impostos³±±
+±±³          ³variaveis (MercoSul).                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ aArray := A101FldArray(cArray)                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100, MATA100A e MATA100B                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Function A100Header(aCpos,nOpcx,aLivro)
+Local cAlias := Alias()
+Local nI:=0, nPos:=0, nAliq:=0.00, nCpos:=0
+Local aHeaderBrw := {}, aColsBrw :={}
+Local nC:=0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Desconsiderar o Cpo F3_FILIAL qdo o tratamento for do Livro  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lLivros
+	nPos := Ascan(aCpos,"F3_FILIAL")
+	If nPos > 0
+		ADel(aCpos,nPos)
+		ASize(aCpos,Len(aCpos)-1)
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o aHeader para utiliza‡Æo no Browse.                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("Sx3")
+dbSetOrder(2)
+
+If lTotais
+	For nI := 1 To Len(aCpos)
+		If dbSeek(aCpos[nI])
+			If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+				nCpos ++
+				AADD(aHeaderBrw,{ TRIM(X3Titulo()), x3_campo, x3_picture,;
+					x3_tamanho, x3_decimal, x3_valid,;
+					x3_usado, x3_tipo, x3_arquivo, x3_context} )
+			EndIf
+		EndIf
+	Next nI
+	aColsBrw := Array(1,nCpos)
+EndIf
+
+If lImpostos
+	For nI := 1 To Len(aCpos)
+		If aCpos[nI] == "ALIQUOTA"
+			nCpos ++
+			AADD(aHeaderBrw,{ OemToAnsi(STR0001), "ALIQUOTA", "@E 999.99",7,2,"AlwaysFalse()","S","N","   ","N"})
+		ElseIf aCpos[nI] == "VALORBASE"
+			nCpos ++
+			AADD(aHeaderBrw,{ OemToAnsi(STR0002), "VALORBASE", "@E 9,999,999,999.99",16,2,"AlwaysFalse()","S","N","   ","N"})
+		ElseIf aCpos[nI] == "VALORIMP"
+			nCpos ++
+			AADD(aHeaderBrw,{ OemToAnsi(STR0003), "VALORBASE", "@E 9,999,999,999.99",16,2,"AlwaysFalse()","S","N","   ","N"})
+		Else
+			If dbSeek(aCpos[nI])
+				If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+					nCpos ++
+					AADD(aHeaderBrw,{ TRIM(X3Titulo()), x3_campo, x3_picture,;
+						x3_tamanho, x3_decimal, x3_valid,;
+						x3_usado, x3_tipo, x3_arquivo, x3_context} )
+				EndIf
+			EndIf
+		EndIf
+	Next nI
+	aColsBrw := Array(Len(aImpVarSF1)/2,nCpos)
+EndIf
+
+If lLivros
+	For nI := 1 To Len(aCpos)
+		If dbSeek(aCpos[nI])
+			If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+				nCpos ++
+				AADD(aHeaderBrw,{ TRIM(X3Titulo()), x3_campo, x3_picture,;
+					x3_tamanho, x3_decimal, x3_valid,;
+					x3_usado, x3_tipo, x3_arquivo, x3_context } )
+			EndIf
+		EndIf
+	Next nI
+	aColsBrw := Array(Len(aLivro)-1,nCpos)
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o aCols para utiliza‡Æo no Browse dentro do Folder.    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nCnt  := 0
+nUsado:= 0
+If lTotais
+	For nI := 1 To If(lLivros,Len(aLivro)-1,Len(aColsBrw))
+		nCnt++
+		For nC := 1 To nCpos
+			nUsado++
+			Do Case
+			Case AllTrim(aHeaderBrw[nC][2]) ==	"F1_VALMERC"
+				aColsBrw[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nTotMerc,SF1->F1_VALMERC)
+			Case AllTrim(aHeaderBrw[nC][2]) == "F1_FRETE"
+				aColsBrw[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValFrete,SF1->F1_FRETE)
+			Case AllTrim(aHeaderBrw[nC][2]) == "F1_DESPESA"
+				aColsBrw[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValDesp,SF1->F1_DESPESA)
+			Case AllTrim(aHeaderBrw[nC][2]) == "F1_DESCONT"
+				aColsBrw[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValDesc,SF1->F1_DESCONT)
+			Case AllTrim(aHeaderBrw[nC][2]) == "F1_VALBRUT"
+				aColsBrw[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nTotNot,SF1->F1_VALBRUT)
+			EndCase
+		Next nC
+	Next nI
+EndIf
+
+If lImpostos
+	nUsado:=5
+	For nI := 1 To Len(aImpVarSF1) Step 2
+		nCnt++
+		SFB->( dbSeek(xFilial("SFB")+AllTrim(aImpVarSF1[nI][1])) )
+		nPos := Ascan(aColsBrw,{|x| x[1] == aImpVarSF1[nI][1]})
+		If nPos != 0
+			aColsBrw[nPos][1] := aImpVarSF1[nI][1]
+			aColsBrw[nPos][2] := SFB->FB_DESCR
+			aColsBrw[nPos][4] := aImpVarSF1[nI+1][3]
+			aColsBrw[nPos][5] := aImpVarSF1[nI][3]
+			nAliq := ((aColsBrw[nPos][5]/aColsBrw[nPos][4])*100)
+			aColsBrw[nPos][3] := If( nAliq <= 0, 0.00, nAliq )
+		Else
+			aColsBrw[nCnt][1] := aImpVarSF1[nI][1]
+			aColsBrw[nCnt][2] := SFB->FB_DESCR
+			aColsBrw[nCnt][4] := aImpVarSF1[nI+1][3]
+			aColsBrw[nCnt][5] := aImpVarSF1[nI][3]
+			nAliq := ((aColsBrw[nCnt][5]/aColsBrw[nCnt][4])*100)
+			aColsBrw[nCnt][3] := If( nAliq <= 0, 0.00, nAliq )
+		EndIf
+	Next nI
+EndIf
+
+If lLivros
+	For nI := 1 To If(lLivros,Len(aLivro)-1,Len(aColsBrw))
+		nCnt++
+		nUsado:=0
+		For nC := 1 To nCpos
+			nUsado++
+			aColsBrw[nCnt][nUsado] := aLivro[nI+1][nC+1]
+			If aColsBrw[nCnt][nUsado] == NIL
+				aColsBrw[nCnt][nUsado] := CriaVar(AllTrim(aHeaderBrw[nC][2]))
+			EndIf
+		Next nC
+	Next nI
+EndIf
+
+aHeader := AClone(aHeaderBrw)
+aCols   := AClone(aColsBrw)
+Return
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡Æo    ³A100CalcIV³ Autor ³ Jos‚ Lucas            ³ Data ³ 24/04/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡Æo ³ C lculo dos Impostos Variaveis                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Function A100CalcIV(aLivro)
+Local cProduto    := Space(15), cLocal := Space(2)
+Local nQuant:=0, nPrcVen:=0, nItemValTot:=0, nFreteItem:=0
+Local nX := 0, nE := 0, nC := 0,nI := 0
+Local aCusto      := {}, aImpCusto := {}
+Local aTotalItem  := {}
+Local nDescItem   := 0
+Local nTotBaseImp := 0
+Local cTes        := "   "
+Local cFileRdMk   := ""
+Local nPosRow     := 0
+Local nPosCols    := 0
+
+Local nTotUltImp  := 0.00
+Local nBasUltImp  := 0.00
+Local nVlrUltImp  := 0.00
+Local nCod        := 0
+Local nTes        := 0
+Local nCf         := 0
+Local nPICM       := 0
+Local nNFori      := 0
+Local nSeriori    := 0
+Local nLocal      := 0
+Local nQtd        := 0
+Local nVunit      := 0
+Local nTotal      := 0
+Local nNumNit     := 0
+Local nItens		:=	0
+Local nNBM := 0, cNBM := ""
+Local aGetBook
+Local nPosTes     := 0
+Local aUltImp	:=	{}
+	
+nTotNot  := Iif( nTotNot== Nil, 0.00,nTotNot)
+nBaseDup  := Iif( nBaseDup== Nil, 0.00,nBaseDup)
+nTotMerc  := Iif( nTotMerc== Nil, 0.00,nTotMerc)
+nTotPeso  := Iif( nTotPeso== Nil, 0.00,nTotPeso)
+If nTotPeso > 0
+	lRatValor := .F.
+Else
+	lRatValor := .T.
+Endif
+
+nMaxArray := Len(aCols)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Controla o n£mero de execu‡”es da fun‡„o A100CalcIV().      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+For nX:=1 To nMaxArray
+    If !aCols[nX][Len(aCols[nX])]
+			nItens++
+			AADD(aCusto, { 0, {}, 0, " "," ", " ", " ", " ", " ", 0, 0 } )
+	
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Zera o Valor da Base de Calculo  o Valor do Imposto e a     ³
+			//³ Aliquota antes de Recalcular os Impostos.                   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If Len(aImps) > 0  .And. Len(aImps) >= nX .And. Len(aImps[nX]) > 0  .And. !aCols[nX,Len(aCols[nX])]
+
+				For nC := 1 To Len( aImps[nX,6] )	
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Valor Base do Imposto...                                    ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					nColuna	:= Ascan(aHeader,{|X| Trim(X[2]) ==  aImps[nX,6,nC,7] })
+					If nColuna > 0
+						aCols[nx][nColuna] := 0
+					EndIf
+				
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Valor do Imposto calculado...                               ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					nColuna	:= Ascan(aHeader,{|X| Trim(X[2]) == aImps[nX,6,nC,6] })
+					If nColuna > 0
+						aCols[nx][nColuna] := 0
+					EndIf
+				
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Gravar Aliquotas dos Impostos...                            ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					nColuna	:= Ascan(aHeader,{|X| Trim(X[2]) == "D2_ALQ"+Subs(aImps[nX,6,nC,7],7,4) })
+					If nColuna > 0
+						aCols[nx][nColuna] := 0
+					EndIf
+				Next nC
+			EndIf
+		EndIf	
+Next nX
+
+nPosTes := Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_TES"  } )
+If nPosTes > 0
+   For nX:=1 To Len(aCols)
+      If !aCols[nX][Len(aCols[nX])] .And. Empty(aCols[nX][nPosTes])
+	     HELP("",1,"NOTES")
+		 Return( aCusto )
+      EndIf
+   Next nX
+EndIf	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Obter o Rateio para os valores de Frete, Despesas e Seguros.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+aRateios:=A100FazRateio(lRatValor,nTotPeso,nTotMerc,nTotServ,(nValDesp+nSeguro),nValFrete,nBsFrete1)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Obter o valor do Desconto para cada Item qdo impostos variaveis. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+aDescontos := A100DescIV()
+
+aLivro    := {}
+aImpVarSF1:= {}
+
+nValDesc  := 0
+
+nTotMerc  := 0
+nTotNot   := 0
+nBaseDup  := 0
+aImps     := {}
+
+nCod     :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_COD"    } )
+nTes     :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_TES"    } )
+nCf      :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_CF"     } )
+nPICM    :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_IPI"    } )
+nNFori   :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_NFORI"  } )
+nSeriori :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_SERIORI"} )
+nLocal   :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_LOCAL"  } )
+nQtd     :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_QUANT"  } )
+nVunit   :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_VUNIT"  } )
+nTotal   :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_TOTAL"  } )
+nNumNit  :=   Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_NIT"    } )
+
+If ( SF1->F1_IMPORT=="S" .and. lIntegracao )
+	nNBM := Ascan(aHeader,{|X| Alltrim(Substr(X[2],3,8)) ==  "_TEC"  } )
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Carrega o Array aUltImp para identificar o ultimo item do   ³
+//³ aCols que esta contido o(s) Imposto(s) com Calculo P/Total  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nC   := 1  To Len(aCols)
+   If !aCols[nC][Len(aCols[nC])]
+      SFC->(dBSeek(xFilial("SFC")+aCols[nC][nTes]))
+	  While SFC->FC_TES == aCols[nC][nTes] .And. !SFC->(EOF())
+	     If SFC->FC_CALCULO == "T"
+		    SFB->(dBSeek(xFilial("SFB")+SFC->FC_IMPOSTO))
+		    nAliquota := IIf(SFC->FC_BASE==0, SFB->FB_ALIQ, SFB->FB_ALIQ  *  (SFC->FC_BASE/100) )
+			nPos	:=	Ascan(aUltImp,{|x| x[1] == SFC->FC_IMPOSTO .And. x[4]==nAliquota} )
+			If nPos == 0
+			   Aadd(aUltImp,{SFC->FC_IMPOSTO,nC,aCols[nC][nTotal],nAliquota })
+			Else
+			   aUltImp[nPos][2]	:= nC                   // Ultima Posicao do Imposto
+			   aUltImp[nPos][3]	+= aCols[nC][nTotal]   //  Base de Calculo
+			Endif
+         Endif
+		 SFC->(DbSkip())
+      EndDo
+   Endif
+Next nC
+
+For nX := 1 to Len(aCols)		
+    If aCols[nX][Len(aCols[nX])]
+       AAdd(aImps,{Nil,Nil,Nil,Nil,Nil,{}})
+	   AAdd(aTotalItem,0)			
+       Loop
+    EndIf
+	
+	If nCod     >  0  ;  cProduto := aCols[nx][nCod    ]  ;  Endif
+	If nTes     >  0  ;  cTes     := aCols[nx][nTes    ]  ;  Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Posicionar o SF4 (Obrigat¢rio)...                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	SF4->( dbSeek(xFilial("SF4")+cTes) )
+	
+	If nCf      >  0  ;  cCF      := aCols[nx][nCf     ]  ;  Endif
+	If nPICM    >  0  ;  nAliqImp := aCols[nx][nPICM   ]  ;  Endif
+	If nNFori   >  0  ;  cNfOri   := aCols[nx][nNFori  ]  ;  Endif
+	If nSeriori >  0  ;  cSerieOri:= aCols[nx][nSeriori]  ;  Endif
+	If nLocal   >  0  ;  cLocal   := aCols[nx][nLocal  ]  ;  Endif
+	If nQtd     >  0  ;  nQuant   := aCols[nx][nQtd    ]  ;  Endif
+	If nVunit   >  0  ;  nPrcVen  := aCols[nx][nVunit  ]  ;  Endif
+	If nNumNit  >  0  ;  cNitCC   := aCols[nx][nNumNit ]  ;  Endif
+	If nNBM > 0; cNBM := aCols[nx][nNBM]; EndIf
+	If nTotal   >  0
+		nItemValTot := aCols[nx][nTotal]
+		nTotBaseImp += aCols[nx][nTotal]
+		nTotMerc    += aCols[nx][nTotal]
+		If SF4->F4_DUPLIC  == "S"
+			lDupl:=.T.
+			nBaseDup += (aCols[nx][nTotal] - aDescontos[nx])
+		Endif
+	Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ O cadastro de Produtos deve estar posicionado...            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	SB1->( dbSeek(xFilial("SB1")+cProduto) )
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Acumular Totais.                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If aDescontos[nx] > 0.00
+		nValDesc    += aDescontos[nx]
+	EndIf
+	
+	aImpVarSD1[1] := nQuant
+	aImpVarSD1[2] := nPrcVen
+	aImpVarSD1[3] := ( nItemValTot)
+	aImpVarSD1[4] := aRateios[nX][4] + aRateios[nX][5]
+	aImpVarSD1[5] := aRateios[nX][3]
+	aImpVarSD1[6] := {}
+	If cPaisLoc == "COL" .AND. Type("cNitCC") <> "U" //Tratamento de Terceiros - Local.Colombia
+		aImpVarSD1[7] := cNitCC
+	Endif
+	
+	AADD(aTotalItem,( nItemValTot - aDescontos[nx] ))
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Disparar rotina para executar o RdMake                      ³
+	//³ OMB - 03/05/99 - Nao estava passando nX na funcao abaixo    ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+	If nX == Len(aCols)
+		nTotBaseImp := ( nTotMerc - nValDesc )
+	EndIf
+	
+	nPosRow := nX
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Qdo haver integracao  com SIGAEIC, nao passar pelo roteiro, ³
+	//³ os impostos sao recibidos pelo aImposEIC baseado no arquivo ³
+	//³ SWN (Propriedade da AVERAGE)                                ³
+	//ÀÄLucasÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If ( SF1->F1_IMPORT=="S" .and. lIntegracao )
+	    A100IniImp(cSerie,cNFiscal,cNBM,,,,,,,nX)
+		For nI := 1 to Len(aImposEIC)
+			If aImposEIC[nI][1] == nX	
+				
+				SFC->(dbSetOrder(1))
+				SFC->(dbSeek(xFilial("SFC")+aImposEIC[nI][2]+aImposEIC[nI][3]+aImposEIC[nI][4]))
+				
+				SFB->(dbSetOrder(1))
+				SFB->(dbSeek(xFilial("SFB")+aImposEIC[nI][4]))
+				
+				aEICImp := {}
+				AAdd( aEICImp, aImposEIC[nI][4] )
+				AAdd( aEICImp, aImposEIC[nI][5] )
+				AAdd( aEICImp, aImposEIC[nI][7] )
+				AAdd( aEICImp, aImposEIC[nI][9] )
+				AAdd( aEICImp, SFC->FC_INCDUPL + SFC->FC_INCNOTA + SFC->FC_CREDITA + SFC->FC_LIQUIDO)
+				AAdd( aEICImp, "D1_VALIMP"+SFB->FB_CPOLVRO )
+				AAdd( aEICImp, "D1_BASIMP"+SFB->FB_CPOLVRO )
+				AAdd( aEICImp, "F1_VALIMP"+SFB->FB_CPOLVRO )
+				AAdd( aEICImp, "F1_BASIMP"+SFB->FB_CPOLVRO )
+				AAdd( aEICImp, SFC->FC_INCIMP )
+				AAdd( aEICImp, 0.00 )
+				AAdd( aEICImp, 0.00 )
+				AAdd( aEICImp, 0.00 )
+				AAdd( aEICImp, 0.00 )
+				AAdd( aEICImp, SFC->FC_CALCULO )
+				AAdd( aEICImp, cProduto)
+				AAdd( aEICImp, SFB->FB_CPOLVRO)
+				AAdd( aEICImp, IIf(SFC->FC_CALCULO $ "T",If(nX == nItens ,nValDesc,0) ,aDescontos[nX]))
+			  	AAdd( aEICImp, { 1, -1, 0 } )
+				AAdd( aImpVarSD1[6], AClone( aEICImp ) )
+			EndIf
+		Next nI
+		If Len(aImposEIC) == 0
+			CalcTesXIp( "E", nTotBaseImp, nItemValTot, cProduto, nPosCols, nPosRow , Nil, aDescontos[nX],nValDesc )	
+		EndIf
+	Else
+       CalcTesXIp( "E", nTotBaseImp, nItemValTot, cProduto, nPosCols, nPosRow, Nil, aDescontos[nX],nValDesc, ,aUltImp)
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ aImpVarSD1[6][n][01] := C¢digo do Imposto                                                 ³
+	//³              [n][02] := Al¡quota do Imposto                                               ³
+	//³              [n][03] := Base de C lculo do Imposto                                        ³
+	//³              [n][04] := Valor Calculado do Imposto                                        ³
+	//³	              [n][05] := "___" = Pos.: 1-Inclui no Valor da Duplicata   (S/N)              ³
+	//³                                       2-Inclui no Total da Nota Fiscal (S/N)              ³
+	//³									    			3-Credita se do imposto para c lculo do Custo (SN)  ³
+	//³              [n][06] := Cpo.Grava‡Æo SD1 (Valor Imposto)                                  ³
+	//³              [n][07] :=                  (Base de C lculo)                                ³
+	//³              [n][08] := Cpo.Grava‡Æo SF1 (Valor Imposto)                                  ³
+	//³              [n][09] :=                  (Base de C lculo)                                ³
+	//³              [n][10] := C¢digo dos Impostos Incidentes no C lculo.                        ³
+	//³				  [n][11] := Valor do Frete Rateado.                                           ³
+	//³				  [n][12] := Valor Calculado do Imposto sobre Valor do Frete.                  ³
+	//³				  [n][13] := Valor das Despesas Rateadas.                                      ³
+	//³				  [n][14] := Valor Calculado do Imposto sobre Valor das Despesas.              ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	//Bruno... Acumulo toda a informa‡~ao de impostos para n~ao ter ne-
+	// cesidade de chamar a A100Detalhe depois de confirmar a NOTA.
+	
+	Aadd(aImps,aClone(aImpVarSD1))
+
+Next nX
+	
+/*BEGINDOC
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Carregar o aImpVarSF1 (deve ser carregado aqui, para poder acertar as        ³
+//³diferencas por arredondamento antes de calcular os custos, valor de duplicata³
+//³e valor de nota). Bruno.                                                      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ENDDOC*/
+For nX := 1 To Len(aImps)
+   For nC := 1 To Len( aImps[nX,6] )
+      If aImps[nX] <> Nil .And. Len(aImps[nX][6]) > 0
+	     If aImps[nX,6,nC,4] <> 0.00
+		    If (nE := aScan( aImpVarSF1,{|x| x[2] == aImps[nX,6,nC,8] .And. x[4] == aImps[nX,6,nC,2] } )) == 0
+			   AAdd( aImpVarSF1, { aImps[nX,6,nC,1], aImps[nX,6,nC,8], 0.00 ,aImps[nX,6,nC,2]  } )
+			   nE := Len( aImpVarSF1 )
+			EndIf
+			aImpVarSF1[ nE,3 ] += aImps[nX,6,nC,4]
+					
+			If (nE := aScan( aImpVarSF1,{|x| x[2] == aImps[nX,6,nC,9] .And. x[4] == aImps[nX,6,nC,2] } )) == 0
+			   AAdd( aImpVarSF1, { aImps[nX,6,nC,1],aImps[nX,6,nC,9], 0.00 , aImps[nX,6,nC,2] } )
+			   nE := Len( aImpVarSF1 )
+			EndIf
+			aImpVarSF1[ nE,3 ] += aImps[nX,6,nC,3]
+		 Endif
+      Endif
+   Next nC		
+Next nX
+	
+/*BEGINDOC
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄNdÛ¼dÛ¼¿
+//³Acertar os valores nos impostos por items, de acordo com o total (nao arredondado)³
+//³para poder arredondar nos itens e que nao dé diferença no total. Bruno            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄNÙ
+ENDDOC*/
+ArredImp(@aImps,@aImpVarSF1,MsDecimais(nMoedaCor))
+
+For nX :=1  To Len(aCols)
+   If aCols[nX][Len(aCols[nX])]
+      Loop
+   EndIf
+	
+   If nTes     >  0  ;  cTes   := aCols[nx][nTes    ]  ;  Endif
+   //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   //³ Posiciono SF4.                                                     ³
+   //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+   SF4->(DbSetOrder(1))
+   SF4->( dbSeek(xFilial("SF4")+cTes) )
+   aImpcusto	:=	{}
+   For nC := 1 To Len( aImps[nX,6] )			
+	   If aImps[nX] <> Nil .And. Len(aImps[nX][6]) > 0
+		   If aImps[nX,6,nC,4] <> 0.00					
+			   AAdd(aImpCusto,{aImps[nX,6,nC,1],aImps[nX,6,nC,2],;
+			        aImps[nX,6,nC,3],aImps[nX,6,nC,4],;
+					aImps[nX,6,nC,5],aImps[nX,6,nC,11],;
+					aImps[nX,6,nC,12]})									
+					
+			   nTotNot  += aImps[nX,6,nC,4] * IIf(Subs(aImps[nX,6,nC,5],2,1) == "1",1,IIf(Subs(aImps[nX,6,nC,5],2,1) == "2",-1,0))
+			   nBaseDup += IIf(SF4->F4_DUPLIC=="S" .And. Subs(aImps[nX,6,nC,5],1,1) <> "3" ,;
+					        aImps[nX,6,nC,4] * If(Subs(aImps[nX,6,nC,5],1,1) == "1",1,-1 ),0)
+										
+			   If !Empty( aImps[nX,6,nC,6] )
+			      SFC->( dbSetOrder(2) )
+				  SFC->( dbSeek(xFilial("SFC")+cTes+aImps[nX,6,nC,1]) )
+				  //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				  //³ Valor Base do Imposto...                                    ³
+				  //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				  nPosCpo :=	Ascan(aHeader,{|X| Alltrim(x[2])==Alltrim(aImps[nX,6,nC,7])})
+				  If nPosCpo > 0
+				     aCols[nx][nPosCpo] := aImps[nX,6,nC,3]
+			      EndIf
+				  //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				  //³ Valor do Imposto calculado...                               ³
+				  //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				  nPosCpo :=	Ascan(aHeader,{|X| Alltrim(x[2])==Alltrim(aImps[nX,6,nC,6])})
+				  If nPosCpo > 0
+				     aCols[nx][nPosCpo] := aImps[nX,6,nC,4]
+			      EndIf
+				  //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				  //³ Gravar Aliquotas dos Impostos...                            ³
+				  //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				  nPosCpo :=	Ascan(aHeader,{|X| Alltrim(SubStr(x[2],3))=="_ALQIMP"+Alltrim(Substr(aImps[nX,6,nC,6],9))})
+				  If nPosCpo > 0
+				     aCols[nx][nPosCpo] := aImps[nX,6,nC,2]
+			      EndIf
+				  //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				  //³ Valor do Desconto...                                        ³
+				  //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				  nPosCpo :=	Ascan(aHeader,{|X| Alltrim(SubStr(x[2],3,8))=="_VALDESC"})
+				  If nPosCpo > 0
+				     aCols[nx][nPosCpo] := aDescontos[nx]
+			      EndIf
+			   EndIf
+		   Endif
+	   Endif
+   Next nC
+		
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Grava o Custo considerando para os impostos os campos da tabela SFC ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Nova estrutura de aCusto,  considerando  os  impostos  variaveis e  ³
+	//³ permitindo a compatibilidade com o aCusto anterior e as fun‡”es de  ³
+	//³ tratamento de Custos (SIGACUSX.PRX)                                 ³
+	//³                                                                     ³
+	//³ aCusto[n][01] := Valor total da Nota                                ³
+	//³ aCusto[n][02] := Array com impostos variaveis.                      ³
+	//³   Onde : aCusto[n][02][j][1] := C¢digo do Imposto                       ³
+	//³          aCusto[n][02][j][2] := Al¡quota do Imposto                     ³
+	//³          aCusto[n][02][j][3] := Base de C lculo do Imposto              ³
+	//³          aCusto[n][02][j][4] := Valor Calculado do Imposto              ³
+	//³          aCusto[n][02][j][5] := "SSS"                                   ³
+	//³	                                 ÀÅÅÄ> Inclui no Valor da Duplicata     ³
+	//³                                   ÀÅÄ> Inclui no Total da Nota Fiscal   ³
+	//³		 				   	           ÀÄ> Credita se para c lculo do Custo ³
+	//³          aCusto[n][02][j][6] := Valor do Frete (Rateado)                ³
+	//³          aCusto[n][02][j][7] := Imposto sobre o Frete                   ³
+	//³ aCusto[n][03] := 0.00                                               ³
+	//³ aCusto[n][04] := " "                                                ³
+	//³ aCusto[n][05] := " "                                                ³
+	//³ aCusto[n][06] := Nota Fiscal Original                               ³
+	//³ aCusto[n][07] := Serie da Nota Fiscal Original                      ³
+	//³ aCusto[n][08] := Codigo do Produto                                  ³
+	//³ aCusto[n][09] := Array com impostos variaveis.                      ³
+	//³ aCusto[n][11] := Valor do IPI Atacadista.                           ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+	aCusto[nx][01] := aTotalItem[nx] + ( aRateios[nx][3] +aRateios[nX][4] + IIf(lGetFrete,0,aRateios[nX][5]) )
+	aCusto[nx][02] := AClone(aImpCusto)
+	aCusto[nx][03] := 0.00
+	aCusto[nx][04] := SPACE(1)
+	aCusto[nx][05] := SPACE(1)
+	aCusto[nx][06] := cNfOri
+	aCusto[nx][07] := cSerieOri
+	aCusto[nx][08] := cProduto
+	aCusto[nx][09] := cLocal
+	
+	aCusto[nx][10] := aImps[nX,1]
+	aCusto[nx][11] := 0.00
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Acumula em "nBaseDup" os Impostos que Incidem no Valor      ³
+	//³ Total Base para Duplicatas e tambem do Custo.               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+	For nC := 1 To Len( aImps[nX,6] )
+	   If SubStr( aImps[nX,6,nC,5],1,1 ) == "1"
+	      AAdd(aImpVarDup,{aImps[nX,6,nC,1],aImps[nX,6,nC,4]})
+	   EndIf
+	Next nC
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Posicionar Array para gravacao dos Livros Fiscais		³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+	// Calcula desconto 	
+    aImps[nX,3] -= aDescontos[nx]	 
+
+	// Calcula o Livro
+	aLivro := GetBook( @aGetBook, aImps[nX], "C", nTaxa, aLivro, "E",,,,,,,dDEmissao)
+
+    If nMoedaNF<> Nil .And. nMoedaNF > 1
+	   aCusto[nx][01] := xMoeda(aCusto[nx][01],nMoedaNF,1,dDataBase,,nTaxa)
+    Endif	
+Next nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³           Identificacao da Notas geradas pela Average           ³
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//³ PRIMEIRA     F1_TIPO_NF == "1" Importacao  Brasil-Localizacoes  ³
+//³ COMPLEMENTAR F1_TIPO_NF == "2" Despesas    Brasil-Localizacoes  ³
+//³ UNICA        F1_TIPO_NF == "3" Nota Fiscal Brasil-Localizacoes  ³
+//³ CUSTO REAL   F1_TIPO_NF == "4" Complemento Brasil-Localizacoes  ³
+//ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+//³ NFE FOB      F1_TIPO_NF == "5" Factura de Fob     Localizacoes  ³
+//³ NFE FRETE    F1_TIPO_NF == "6" Factura de Frete   Localizacoes  ³
+//³ NFE SEGURO   F1_TIPO_NF == "7" Factura de Seguro  Localizacoes  ³
+//³ NFE CIF      F1_TIPO_NF == "8" Factura de CIF     Localizacoes  ³
+//³ NFE FAA      F1_TIPO_NF == "9" Factura A. Aduana  Localizacoes  ³
+//³ NFE DESPESAS F1_TIPO_NF == "A" Factura de Gastos  Localizacoes  ³
+//³ NFE CUSTO    F1_TIPO_NF == "B" Factura de Costos  Localizacoes  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Tratamento para as Novas Facturas de Importacao...			     ³
+//ÀÄLucasÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lIntegracao .and. lRecebto
+	If SF1->F1_TIPO_NF $ "5"
+		nTotNot := SF1->F1_VALMERC
+	ElseIf SF1->F1_TIPO_NF $ "6"
+		nTotNot := SF1->F1_FRETE
+	ElseIf SF1->F1_TIPO_NF $ "7"
+		nTotNot := SF1->F1_SEGURO
+	ElseIf SF1->F1_TIPO_NF $ "9"
+		nTotNot := SF1->F1_DESPESA + SF1->F1_VALIMP1 + SF1->F1_VALIMP2 + SF1->F1_VALIMP3
+	ElseIf SF1->F1_TIPO_NF $ "A"
+		nTotNot := SF1->F1_VALMERC + SF1->F1_VALIMP1
+	EndIf
+Else		 
+	nTotNot  += (nTotMerc + nValDesp + IIf(lGetFrete,0,nValFrete) + nSeguro - nValDesc)
+	nBaseDup += (nValDesp + IIf(lGetFrete,0,nValFrete) + nSeguro )
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Disparar ponto de entrada apos acionar o bottom Detalhe...  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If ExistBlock("M101DET")
+	ExecBlock("M101DET",.F.,.F.)
+EndIf
+
+Return( aCusto )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100DescIV³ Autor ³ Jos‚ Lucas             ³ Data ³ 28.04.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Obter os Descontos para cada item do aCols...               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³MATA100, chamado pela fun‡„o A100CalcIV().                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A100DescIV()
+Local nI:=0, nTotDesc:=0
+Local nPosDesc   :=0
+Local nPosTotal  :=0
+Local nDescontos :=0
+Local nPosTes    :=0, nDif:=0
+Local nPosAliq   :=0
+Local lDescItem  :=.F.  // Hay Descuentos?
+Local nTotAjuste :=0
+Local nCasDesIt := TamSX3("D1_VALDESC")[2]
+Local nDescAcum := 0
+
+Local nPosVlrUnit:=0 //Posicao do Vlr Unitario - Sergio Camurca
+Local nPosQtde:=0 //Posicao da Qtde - Sergio Camurca
+Local nVeriDesconto:=0 //Verificacao de Desconto - Sergio Camurca
+Local nVeriVlrUnit:=0 //Verificacao do Vlr Unitario - Sergio Camurca
+Local aVeriDesc:=aDescontos // Array para verificar Desconto - Sergio Camurca
+
+//Armazena o numero de casas decimais - Sergio Camurca
+Local nTamPrcVend:=0
+Local nTamAliq:=0
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Preencher o Array aDescontos...                                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Len(aDescontos) == 0
+	For nI := 1 To Len(aCols)
+	   AADD(aDescontos,0.00)
+	Next nI
+Else
+	If Len(aDescontos) < Len(aCols)
+		For nI := Len(aDescontos) To Len(aCols)
+		   AADD(aDescontos,0.00)
+		Next nI
+	Endif
+EndIf
+
+aDescontos := Array(Len(aCols))
+aDescontos := AFill(aDescontos,0.00)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ nValNeg  := Valores Acumulados Negativos de Descontos por Item.    ³
+//³ nValDesc := Valor Total do Desconto digitado no Folder de Totais.  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nDescontos := IIf( nValNeg > 0, nValNeg, nValDesc)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica se houve descontos nos items                ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nPosVlDesc:=Ascan(aHeader,{|x|AllTrim(x[2])$"D1_VALDESC,D2_DESCON"})
+nPosAliq  :=Ascan(aHeader,{|x|AllTrim(x[2])$"D1_DESC,D2_DESC"})
+nPosQtd   :=Ascan(aHeader,{|x|AllTrim(x[2])$"D1_QUANT,D2_QUANT"})
+nPosPreco :=Ascan(aHeader,{|x|AllTrim(x[2])$"D1_VUNIT,D2_PRCVEN"})
+nPosTotal :=Ascan(aHeader,{|x|AllTrim(Substr(x[2],3,6))=="_TOTAL"})
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica a posicao do Campo Vlr Unitario e do Campo Qtde  ³
+//³ Sergio Camurca                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nPosVlrUnit:=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_VUNIT".or.AllTrim(x[2])=="D2_PRCVEN"})
+nPosQtde:=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_QUANT".or.AllTrim(x[2])=="D2_QUANT"})
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Armazena o numero de casas decimais conforme TamSX3.      ³
+//³ Sergio Camurca                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nTamPrcVend:=TamSX3(aHeader[nPosVlrUnit][2])[2]
+nTamAliq:=TamSX3(aHeader[nPosAliq][2])[2]
+If nPosTotal == 0 .or. nPosAliq == 0 .or. nPosVlDesc == 0
+	AFill(aDescontos,0.00)
+	Return( aDescontos )
+EndIf
+
+For nI:=1 to Len(aCols)
+	If aCols[nI,Len(aCols[nI])]
+		Loop
+	Endif
+	If ( nPosVlDesc > 0 .and. aCols[nI,nPosVlDesc] > 0.00) .or.;
+			( nPosAliq   > 0 .and. aCols[nI,nPosAliq]   > 0.00)
+		lDescItem:=.T.
+		Exit
+	Endif
+Next nI
+
+If ! lDescItem
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcular o Desconto com base no Val. Desconto digitado...  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nDescontos > 0
+		For nI := 1 To Len(aCols)
+			If aCols[nI,Len(aCols[nI])]
+				Loop
+			Endif
+			If nPosTotal > 0
+				If aCols[nI,nPosTotal] > 0
+					If cPaisLoc == "BRA"
+					   //aDescontos[nI]:=aCols[nI,nPosTotal] * nDescontos / nTotMerc
+					   aDescontos[nI]:=aCols[nI,nPosTotal] * nValDesc / nDescTotal
+					Else
+					   aDescontos[nI]	:=	Round(aCols[nI,nPosTotal] * nValDesc / nDescTotal,nCasDesIt)
+						//Atualiza Valor e Percentual de Desconto - Sergio Camurca
+						aCols[nI,nPosVlDesc] := aDescontos[nI]
+						aCols[nI,nPosAliq] := Round((aCols[nI,nPosVlDesc] / aCols[nI,nPosTotal])*100,nTamAliq)
+					   nDescAcum		+=	aDescontos[nI]
+					EndIf	
+				EndIf
+			EndIf
+		Next nI
+	Endif
+	If cPaisLoc != "BRA" .And. nDescAcum <> nValDesc
+	   For nI := 1 To Len(aCols)
+	      If !aCols[nI,Len(aCols[nI])]
+             aDescontos[nI]	+=	(nValDesc - nDescAcum )
+			 Exit
+	      Endif
+	   Next	nX
+	Endif		 	
+Else
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcular o Desconto com base no Aliq. ou Desconto no Item. ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nI:=1 to Len(aCols)
+		// Verifica se foi modificado o Valor do Desconto - Sergio Camurca
+		If nPosVlDesc > 0.00 .AND. ( Len(aVeriDesc) = 0 .OR. aVeriDesc[nI] <> aCols[nI,nPosVlDesc] )
+			//aDescontos[nI] := aCols[nI,nPosVlDesc]
+			aDescontos[nI] := Round(aCols[nI,nPosVlDesc],MsDecimais(nMoedaCor))
+			//Atualiza Percentual de Desconto - Sergio Camurca
+			aCols[nI,nPosAliq] := Round((aCols[nI,nPosVlDesc] / aCols[nI,nPosTotal])*100,nTamAliq )
+		Else
+			If nPosAliq > 0.00
+				If cPaisLoc == "BRA"
+					//aDescontos[nI] := (( aCols[nI,nPosAliq]/100) * aCols[nI,nPosTotal])
+					aDescontos[nI] := (( aCols[nI,nPosAliq]/100) * aCols[nI,nPosPreco] * aCols[nI,nPosQtd])
+				Else
+				    //aDescontos[nI] := Round((( aCols[nI,nPosAliq]/100) * aCols[nI,nPosPreco] * aCols[nI,nPosQtd]),nCasDesIt)
+					aDescontos[nI] := Round((( aCols[nI,nPosAliq]/100) * aCols[nI,nPosTotal]),MsDecimais(nMoedaCor))
+					//Atualiza Total de Desconto no Item - Sergio Camurca 
+					aCols[nI,nPosVlDesc] := aDescontos[nI]
+				EndIf
+			EndIf
+		Endif
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se existe diferenca entre o Desconto dado no Vlr Total e o desconto dado no Vlr Unitario ³ 
+		//³ se existir diferencas e feito o ajuste automatico dos campos de desconto                          ³
+		//³ Sergio Camurca                                                                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nVeriVlrUnit := Round( ( aCols[nI,nPosVlrUnit] - ( aDescontos[nI] / aCols[nI,nPosQtde] ) ),nTamPrcVend )
+		nVeriDesconto := Round( (( aCols[nI,nPosVlrUnit] - nVeriVlrUnit ) * aCols[nI,nPosQtde]),MsDecimais(nMoedaCor))
+
+		If aDescontos[nI] <> nVeriDesconto
+			aCols[nI,nPosVlDesc] :=  nVeriDesconto
+			aDescontos[nI] := nVeriDesconto
+			aCols[nI,nPosAliq] := Round((aCols[nI,nPosVlDesc] / aCols[nI,nPosTotal])*100,nTamAliq)
+		Endif
+
+	Next nI
+EndIf
+Return( aDescontos )
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡Æo    ³A100GetIpxTes³ Autor ³ Jos‚ Lucas         ³ Data ³ 06/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡Æo ³ Retorna os Impostos calculados e registros do Livro Fiscal ³±±
+±±³          ³ com base na amarra‡„o TES x Impostos.                      ³±±
+±±³          ³ ( Clientes que utilizam impostos variaveis )               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A100GetIpxTes()                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Function A100GetIpxTes(aLivro,cEspecies)
+
+Local nx:=0, ny:=0, nCnt:=0, nCpos:=0, nQuant:=0 , cItems := ""
+Local cProduto:=Space(15)
+Local nPrCVen:=0.00, nItemValTot:=0.00, nDescItem := 0.00
+Local aImposto := {}
+Local cTES := CriaVar("D1_TES")
+Local cAlias := Alias()
+Local nC := 0
+cEspecies	:=	IIf(cEspecies	==	Nil ,"",cEspecies)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ler os Impostos calculados com base na amarra‡„o TesXip.     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nValDesc := 0.00
+For nX := 1 to Len(aCols)
+	If (Inclui .or. Altera) .and. aCols[nX][Len(aCols[1])]
+		Loop
+	Endif
+	For ny := 1 to Len(aHeader)		
+		cCampo:=Substr(Trim(aHeader[ny,2]),3)		
+		Do Case
+		Case cCampo=="_COD"
+			cProduto := aCols[nx][ny]
+		Case cCampo=="_NFORI"
+			cNfOri := aCols[nx][ny]
+		Case cCampo=="_SERIORI"
+			cSerieOri := aCols[nx][ny]
+		Case cCampo=="_COD"
+			cProduto := aCols[nx][ny]
+		Case cCampo=="_LOCAL"
+			cLocal := aCols[nx][ny]
+		Case cCampo == "_QUANT"
+			nQuant := aCols[nx][ny]
+		Case cCampo == "_VUNIT"
+			nPrcVen := aCols[nx][ny]
+		Case cCampo == "_TES"
+			cTES := aCols[nx][ny]
+		Case cCampo == "_VALDESC"
+			nDescItem := aCols[nx][ny]
+			nValDesc := nValDesc + aCols[nx][ny]
+		Case cCampo == "_TOTAL"
+			nItemValTot := aCols[nx][ny]
+		Case cCampo == "_ITEM"      		//Loc.Colombia - Humberto
+			cItems := aCols[nx][ny]
+		Case cPaisLoc ==  "COL" .And. cCampo == "_NIT" //Tratam.Terceiros - Local.Colombia
+			cNitCC  := aCols[nx][ny]  		
+		EndCase		
+	Next ny	
+	aImpVarSD1[1] := nQuant
+	aImpVarSD1[2] := nPrcVen
+	aImpVarSD1[3] := ( nItemValTot - nDescItem )
+	aImpVarSD1[4] := 0.00
+	aImpVarSD1[5] := 0.00
+	aImpVarSD1[6] := {}
+	If cPaisLoc ==  "COL" .AND. Type("cNitCC") <> "U" //Tratam. Terceiros - Local.Colombia
+		aImpVarSD1[7] := cNitCC
+	Endif
+	
+	SD1->( dbSetOrder(1) )
+	if !(cPaisLoc $"COL|PAR|MEX")   //Loc.Colombia - Humberto
+		SD1->( dbSeek(xFilial("SD1")+cNFiscal+cSerie+cA100For+cLoja+cProduto) )
+	Else
+		SD1->( dbSeek(xFilial("SD1")+cNFiscal+cSerie+cA100For+cLoja+cProduto+cItems) )
+	Endif
+	SF4->( dbSeek(xFilial("SF4")+cTES) )
+	
+	SFC->( dbSetOrder(1) )
+	SFB->( dbSetOrder(1) )
+	
+	If Len( aImpVarSD1 ) = 5 ; AADD( aImpVarSD1, {} ) ; End
+	
+	SFC->( dbSeek( xFilial("SFC")+SF4->F4_CODIGO ) )
+	
+	While SFC->( !Eof() .and. FC_FILIAL+FC_TES == xFilial("SFC")+SF4->F4_CODIGO )
+		
+		If SFB->( dbSeek( xFilial("SFB")+SFC->FC_IMPOSTO ) )
+				
+			//Se cEspecies nao estiver vazio, s¢ vai carregar quando a base do imposto for > 0
+			//Modificacao para carregar correto na Visualiza‡ao e Apagado . (Bruno 05/10/99)
+			If Empty(cEspecies).Or. &("D1_BASIMP"+SFB->FB_CPOLVRO) > 0
+				aImposto  := {}
+				AAdd( aImposto, SFB->FB_CODIGO )
+				If !( cPaisLoc $ "COL|PAR|MEX")
+					AAdd( aImposto, SFB->FB_ALIQ )
+				Else
+					AAdd( aImposto, SD1->&("D1_ALQIMP"+SFB->FB_CPOLVRO))
+				Endif
+				AAdd( aImposto, SD1->&("D1_BASIMP"+SFB->FB_CPOLVRO))
+				AAdd( aImposto, SD1->&("D1_VALIMP"+SFB->FB_CPOLVRO))
+				AAdd( aImposto, SFC->FC_INCDUPL + SFC->FC_INCNOTA + SFC->FC_CREDITA  + SFC->FC_LIQUIDO )
+				AAdd( aImposto, "D1_VALIMP"+SFB->FB_CPOLVRO )
+				AAdd( aImposto, "D1_BASIMP"+SFB->FB_CPOLVRO )
+				AAdd( aImposto, "F1_VALIMP"+SFB->FB_CPOLVRO )
+				AAdd( aImposto, "F1_BASIMP"+SFB->FB_CPOLVRO )
+				AAdd( aImposto, SFC->FC_INCIMP  )
+				AAdd( aImposto, 0.00 )
+				AAdd( aImposto, 0.00 )
+				AAdd( aImposto, 0.00 )
+				AAdd( aImposto, 0.00 )
+				AAdd( aImposto, SFC->FC_CALCULO )
+				AAdd( aImposto, "" )								//16
+				AAdd( aImposto, SFB->FB_CPOLVRO )			//17
+				AADD( aImposto, 0.00 )				//18
+				AADD( aImposto, {1,-1,0} )			//19			
+				AAdd( aImpVarSD1[6], AClone( aImposto ) )
+			EndIf
+		EndIf	
+		SFC->( dbSkip() )
+	EndDo
+	
+	For nC := 1 To Len( aImpVarSD1[6] )
+	    If (nE := aScan( aImpVarSF1,{|x| x[2] == aImpVarSD1[6,nC,8] .And. x[4] == aImpVarSD1[6,nC,2] .And. x[1] == aImpVarSD1[6,nC,1] } )) == 0
+		   AAdd( aImpVarSF1, { aImpVarSD1[6,nC,1], aImpVarSD1[6,nC,8], 0.00, 0.00 } )
+		   nE := Len( aImpVarSF1 )
+		   aImpVarSF1[ nE,4 ] := aImpVarSD1[6,nC,2] // Local.Colombia - Aliq.do Imposto
+	    EndIf
+		aImpVarSF1[ nE,3 ] += aImpVarSD1[6,nC,4]
+		
+		If (nE := aScan( aImpVarSF1,{|x| x[2] == aImpVarSD1[6,nC,9] .And. x[4] == aImpVarSD1[6,nC,2] .And. x[1] == aImpVarSD1[6,nC,1]} )) == 0
+			AAdd( aImpVarSF1, { aImpVarSD1[6,nC,1],aImpVarSD1[6,nC,9], 0.00, 0.00 } )
+			nE := Len( aImpVarSF1 )
+			aImpVarSF1[ nE,4 ] := aImpVarSD1[6,nC,2] // Local.Colombia - Aliq.do Imposto
+		EndIf
+		
+		aImpVarSF1[ nE,3 ] += aImpVarSD1[6,nC,3]
+	Next nC
+Next nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Ler SF3 e montar o array aLivro.                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nCpos := 0
+aLivro := {}
+dbSelectArea("SX3")
+dbSetOrder(1)
+dbSeek("SF3")
+While !Eof() .and. X3_ARQUIVO=="SF3"
+	If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+		nCpos++
+	EndIf
+	dbSkip()
+End
+
+nCnt := 0
+dbSelectArea("SF3")
+//dbSetOrder(5)
+//dbSeek( xFilial("SF3")+cSerie+cNFiscal )
+dbSetOrder(4)
+dbSeek( xFilial("SF3")+cA100For+cLoja+cNFiscal+cSerie )              //Bruno 04/10/99
+While !Eof() .and. F3_SERIE+F3_NFISCAL+F3_CLIEFOR+F3_LOJA==cSerie+cNFiscal+cA100for+cLoja
+	If F3_TIPOMOV=="C" .And. Alltrim(F3_ESPECIE) $ cEspecies                //Bruno 04/10/99
+		nCnt ++
+	Endif
+	dbSkip()
+End
+
+aLivro := Array(nCnt+1,nCpos)
+
+nCnt  := 0
+nCpos := 0
+dbSelectArea("SF3")
+//dbSetOrder(5)
+//dbSeek( xFilial("SF3")+cSerie+cNFiscal )
+//While !Eof() .and. F3_SERIE+F3_NFISCAL==cSerie+cNFiscal
+dbSetOrder(4)
+dbSeek( xFilial("SF3")+cA100For+cLoja+cNFiscal+cSerie )              //Bruno 04/10/99
+While !Eof() .and. F3_SERIE+F3_NFISCAL+F3_CLIEFOR+F3_LOJA==cSerie+cNFiscal+cA100for+cLoja
+	If F3_TIPOMOV<>"C" .or. ! (Alltrim(F3_ESPECIE) $ cEspecies )               //Bruno 04/10/99
+		DbSkip()
+		Loop
+	Endif
+	nCnt++
+	nCpos:=0
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	dbSeek("SF3")
+	While !Eof() .and. X3_ARQUIVO=="SF3"
+		If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+			nCpos++
+			If nCnt==1
+				aLivro[1][nCpos] := x3_campo
+			EndIf
+			aLivro[nCnt+1][nCpos] := &( "SF3->"+AllTrim(x3_campo))
+		EndIf
+		dbSkip()
+	End
+	dbSelectArea("SF3")
+	dbSkip()
+End
+dbSetOrder(1)
+dbSelectArea(cAlias)
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Lin2Ok³ Autor ³ Jos‚ Lucas            ³ Data ³ 05/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Critica se a linha de Totais digitada esta' Ok             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Objeto a ser verificado.                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100Lin2Ok(o)
+LOCAL nX := 0, lRet := .T.
+//Return(.T.)
+
+If n > Len(aCols)
+	HELP(" ",1,"A100IPV")
+	lRet := .F.
+	Return( lRet )
+EndIf
+
+For nx:= 1 To Len(aHeader)
+	Do Case
+	Case AllTrim(aHeader[nx][2]) == "F1_VALMERC"
+		nTotMerc  := aCols[n][nx]
+	Case AllTrim(aHeader[nx][2]) == "F1_FRETE"
+		nValfrete := aCols[n][nx]
+	Case AllTrim(aHeader[nx][2]) == "F1_DESPESA"
+		nValDesp  := aCols[n][nx]
+	Case AllTrim(aHeader[nx][2]) == "F1_DESCONT"
+		nValDesc  := aCols[n][nx]
+	Case AllTrim(aHeader[nx][2]) == "F1_VALBRUT"
+		nBaseDup  := aCols[n][nx]
+	EndCase
+Next nx
+If nTotMerc <= 0.00
+	HELP(" ",1,"A100TM")
+	lRet := .F.
+EndIf
+Return( lRet )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Tudo2Ok³ Autor ³ Jos‚ Lucas           ³ Data ³ 05/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Critica se os totais est„o Ok                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Objeto a ser verificado.                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100Tudo2Ok(o)
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A100Detalhe ³ Autor ³ Jos‚ Lucas         ³ Data ³ 08/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Calcular os impostos, montar folders apos click no botao   ³±±
+±±³          ³ Detalhes...                                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Null                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+//TIREI OS PARAMETROS, NUNCA CHAMADA COM PARAMETROS. BRUNO
+Function A100Detalhe() //(aLivro,lDesc)
+Local nD, nPosTot
+Local nDescTmp	:=	nValDesc
+
+If cPaisLoc == "BRA"
+	Return
+EndIf
+a100TudOk()
+nValDesc	:=	nDescTmp
+nPosTot  := Ascan(aHeader,{|X| AllTrim(X[2])=="D1_TOTAL"})
+nTotMerc := 0
+nDetCols := 0
+For nD:=1   To Len(aCols)
+	If !aCols[nD][Len(aHeader)+1]
+		nTotMerc += aCols[nD][nPosTot]
+	Endif
+Next
+
+MsProcTxt(OemToAnsi(STR0009))   //"Calculando costos..."
+aCusto:= A100Calc(@aLivro,lDesc,.T.,0.00,0.00)
+MsProcTxt(OemToAnsi(STR0010))  //"Actualizando totalizadores..."
+
+A100WHeader(nOpc,.T.,.F.,.F.)
+A100WHeader(nOpc,.F.,.T.,.F.)
+A100WHeader(nOpc,.F.,.F.,.T.,@aLivro)
+
+oLbx1:SetArray(aColsTotais)
+oLbx1:bLine:={ || A100bLine(1,oLbx1,oLbx2,oLbx3) }
+oLbx1:Refresh()
+
+oLbx2:SetArray(aColsImpostos)
+oLbx2:bLine:={ || A100bLine(2,oLbx1,oLbx2,oLbx3) }
+oLbx2:Refresh()
+
+oLbx3:SetArray(aColsLivros)
+oLbx3:bLine:={ || A100bLine(3,oLbx1,oLbx2,oLbx3) }
+oLbx3:Refresh()
+
+lDetalhe := .T.
+lDetaClick := .T.
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100bLine    ³ Autor ³ Jos‚ Lucas         ³ Data ³ 17/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retornar um array para Codigo Block do Methodo bLine do    ³±±
+±±³          ³ LISTBOX (TWBrowse).                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ aLine := A100bLine( nListBox, oObj1, oObj2, oObj3 )        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100bLine(nListBox,oLbx1,oLbx2,oLbx3)
+Local nI:=0, aLine:={}
+Local cPictNum
+
+//Verifica declaracao da variavel que e usada como parametro dentro desta rotina, embora nao fosse declarada
+If Type("nMoedaCor") == "U"
+  nMoedaCor := 0 
+EndIf  
+//---
+
+SX3->( dbSetOrder(2) )
+If nModulo == 12 .OR. nModulo == 72  //SigaLoja ou SIGAPHOTO
+	SX3->( dbSeek("F2_VALMERC") )
+Else
+	SX3->( dbSeek("F1_VALMERC") )
+EndIf
+If SX3->( Found() )
+	If nModulo == 12 .OR. nModulo == 72  //SigaLoja ou SIGAPHOTO
+		cPictNum := PesqPict("SF2","F2_VALMERC",,nMoedaCor)
+	Else
+		cPictNum := PesqPict("SF1","F1_VALMERC",,nMoedaCor)
+	EndIf
+EndIf
+SX3->( dbSetOrder(1) )
+
+Do Case
+Case nListBox == 1
+	For nI := 1 To Len(aFieldTotais)
+		AAdd( aLine , Transform(aColsTotais[oLbx1:nAt,nI],cPictNum) )
+	Next nI
+Case nListBox == 2
+	For nI := 1 To Len(aFieldImpostos)
+		If ValType(aColsImpostos[oLbx2:nAt,nI])=="N"
+			AAdd( aLine,Transform(aColsImpostos[oLbx2:nAt,nI],cPictNum) )
+		Elseif Valtype(aColsImpostos[oLbx2:nAt,nI])=="D"
+			AAdd( aLine,Dtoc(aColsImpostos[oLbx2:nAt,nI]) )
+		Else
+			AAdd( aLine,aColsImpostos[oLbx2:nAt,nI] )
+		Endif
+	Next nI
+Case nListBox == 3
+	For nI := 1 To Len(aFieldLivros)
+		If ValType(aColsLivros[oLbx3:nAt,nI])=="N"
+			AAdd( aLine,Transform(aColsLivros[oLbx3:nAt,nI],cPictNum) )
+		Elseif Valtype(aColsLivros[oLbx3:nAt,nI])=="D"
+			AAdd( aLine,Dtoc(aColsLivros[oLbx3:nAt,nI]) )
+		Else
+			AAdd( aLine,aColsLivros[oLbx3:nAt,nI] )
+		Endif
+	Next nI
+EndCase
+Return( aLine )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100ValMerc  ³ Autor ³ Jos‚ Lucas         ³ Data ³ 08/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar o valor totas das mercadorias.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Null                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A100ValMerc(oGet,nNovoMerc)
+
+Local lRet:=.T.
+Local nX:=0, nPosValMerc:=0,nPosTotal,nPosVunit,nPosQuant
+Local nCol
+Local nOldMerc
+Local nTotTmp  := 0
+Local nIten := 0
+Local nRnd  := MsDecimais(nMoedaCor)
+For nX:=1 To Len(aHeadTotais)
+	If Subs(AllTrim(aHeadTotais[nX][2]),3,8) == "_VALBRUT"
+		nPosValMerc := nX
+		Exit
+	EndIf
+Next nX
+nTotNot  := nTotNot - nTotMerc + nNovoMerc
+nDif     := nNovoMerc - nTotMerc
+nTotMerc := nNovoMerc
+
+nPosTotal   := Ascan(aHeader,{|X| Trim(X[2]) == "D1_TOTAL"})
+nPosQuant   := Ascan(aHeader,{|X| Trim(X[2]) == "D1_QUANT"})
+nPosVunit   := Ascan(aHeader,{|X| Trim(X[2]) == "D1_VUNIT"})
+
+nCol     :=  Len(aHeader)+1
+nOldMerc := 0
+For nX   := 1  To Len(aCols)
+	If !aCols[nX][nCol]
+		nOldMerc += aCols[nX][nPosTotal]
+		nIten++
+	Endif
+Next
+For nX   := 1  To Len(aCols)
+	If !aCols[nX][nCol]
+		nIten--
+		If nIten > 0
+			aCols[nX][nPosTotal] += NoRound(nDif * (aCols[nX][nPosTotal]/nOldMerc),nRnd)
+			aCols[nX][nPosVunit] := aCols[nX][nPosTotal]/aCols[nX][nPosQuant]
+			nTotTmp  += aCols[nX][nPosTotal]
+		Else
+			aCols[nX][nPosTotal] := nTotMerc - noRound(nTotTmp,nRnd)
+			aCols[nX][nPosVunit] := aCols[nX][nPosTotal]/aCols[nX][nPosQuant]
+			Exit
+		Endif
+	Endif
+Next
+MsAguarde({|| A100Detalhe()},OemToAnsi(STR0015),OemToAnsi(STR0016)) // "Por favor aguarde..."##"Prorrateando costos " +CHR(10)+CHR(13)+"Recalculando impuestos y totales..."
+oGet:ForceRefresh()
+Return( .T. )
+
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Frete    ³ Autor ³ Jos‚ Lucas         ³ Data ³ 08/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar o valor total do Frete.                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Null                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+//Function A100Frete(o)
+Function A100Frete(nNovoFrete)
+Local lRet:=.T.
+Local nX:=0, nPosValBruto:=0
+
+For nX:=1 To Len(aHeadTotais)
+	If Subs(AllTrim(aHeadTotais[nX][2]),3,8) == "_VALBRUT"
+		nPosValBruto := nX
+		Exit
+	EndIf
+Next nX
+
+If !lGetFrete
+	nTotNot := nTotNot - nValFrete + nNovoFrete
+Endif
+nValFrete := nNovoFrete
+
+MsAguarde({|| A100Detalhe()},OemToAnsi(STR0015),OemToAnsi(STR0016)) // "Por favor aguarde..."##"Prorrateando costos " +CHR(10)+CHR(13)+"Recalculando impuestos y totales..."
+
+Return( lRet )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Despesa  ³ Autor ³ Jos‚ Lucas         ³ Data ³ 08/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar o valor total das Despesas.                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Null                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+//   Function A100Despesa(o)
+Function A100Despesa(nNovaDesp)
+Local lRet:=.T.
+Local nX:=0, nPosValBruto:=0
+For nX:=1 To Len(aHeadTotais)
+	If Subs(AllTrim(aHeadTotais[nX][2]),3,8) == "_VALBRUT"
+		nPosValBruto := nX
+		Exit
+	EndIf
+Next nX
+If nNovaDesp > nTotNot
+	HELP(" ",1,"INVALIDO")
+	lRet:=.F.
+Else
+	nTotNot := nTotNot - nValDesp + nNovaDesp
+	nValDesp := nNovaDesp
+	
+	MsAguarde({|| A100Detalhe()},OemToAnsi(STR0015),OemToAnsi(STR0016)) // "Por favor aguarde..."##"Prorrateando costos " +CHR(10)+CHR(13)+"Recalculando impuestos y totales..."
+	
+EndIf
+Return( lRet )
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Desc     ³ Autor ³ Jos‚ Lucas         ³ Data ³ 08/05/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Validar o valor total dos Descontos.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Null                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ACTUALIZACIONES EFECTUADAS DESDE LA CODIFICACION INICIAL      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Jose Otermin³17/05/99³xxxxxx³Pone a Cero los D1_VALDESC para Recalc.   ³±±
+±±³            ³        ³      ³Tambien opera con D2_DESCON.              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A100Desc()
+Local lRet     :=.T.
+Local nX       := 0, nPosValBruto:=0
+Local nNovoDesc	
+Local nL := 0
+If lIntegracao .and. lFacImport
+	HELP(" ",1,"FACIMPORT")
+	lRet:=.F.
+Else	
+	For nX:=1 To Len(aHeadTotais)
+		If Subs(AllTrim(aHeadTotais[nX][2]),3,8) == "_VALBRUT"
+			nPosValBruto := nX
+		ElseIf Subs(AllTrim(aHeadTotais[nX][2]),3,8) == "_DESCONT"
+			nNovoDesc := aColsTotais[1][nX]
+		EndIf
+	Next nX
+	If nNovoDesc > nTotNot
+		HELP(" ",1,"INVALIDO")
+		lRet:=.F.
+	Else
+		nTotNot  := nTotNot + nValDesc - nNovoDesc
+		nValDesc := nNovoDesc
+		nDescTotal := nTotMerc
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Fuerza ceros en Descuentos en aCols para Re-Calcular   ³
+		//³ Descuentos.                                            ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ[Jose Luis]ÄÄÙ
+		nPosVlDesc:=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_VALDESC".or.AllTrim(x[2])=="D2_DESCON"})
+		nPosAliq:=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_DESC".or.AllTrim(x[2])=="D2_DESC"})
+		For nL:=1 To Len(aCols)
+			aCols[nL][nPosAliq] := 0.00
+			aCols[nL][nPosVlDesc] := 0.00
+		Next nL
+		
+		MsAguarde({|| A100Detalhe()},OemToAnsi(STR0015),OemToAnsi(STR0016)) // "Por favor aguarde..."##"Prorrateando costos " +CHR(10)+CHR(13)+"Recalculando impuestos y totales..."
+	EndIf
+EndIf	
+Return( lRet )
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡Æo    ³A100ValImp³ Autor ³ Jos‚ Lucas            ³ Data ³ 09/09/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡Æo ³ Validar a digita‡„o do valor do imposto.                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Function A100ValImp(oGet,aCusto,aImpCalc,oBrwImp,nNumDig)
+Local lRet	:=	.T.
+Local nX:=0
+Local nC:=0
+Local nImpDigit:=0
+//Local nRow := oLbx2:nRowPos()
+Local nRow  := oLbx2:nAt
+Local aCusTmp
+Local nQtd  := 0
+Local nRnd	:=	MsDecimais(nMoedaCor)
+Local lModif :=	GetMv("MV_EDITIMP")
+Local nDifer := 0, nPosImps := 0, nPosTes := 0, nPosTotal := 0, nPosVal := 0
+LOCAL aGetBook
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Qdo for uma Factura de importacion nao permitir alterar ³
+//³ os impostos,  pois  este foram  ingressados pelo modulo ³
+//³ de importacao SIGAEIC/Average. 									³
+//ÀÄLucasÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lIntegracao .and. lFacImport
+	lModif := .F.
+EndIf
+For nX:= 1  To Len(aCols)
+	If !aCols[nX][Len(aCols[nX])]
+		nQtd++
+	Endif
+Next
+
+If nQtd == nDetCols .Or. !lDetalhe
+	MsgAlert(OemToAnsi(STR0007),OemToAnsi(STR0008))// "Ejecutar Detalles..."##"Atenci¢n ! "
+	Return .F.
+Endif
+
+nImpDigit	:= aCOLSImpostos[nRow][5]
+nDiferA		:= nImpDigit - aImpCalc[oBrwImp:nAt]
+nDifer		:= nDiferA
+
+If !lModif .And. Abs(nDiferA) > ((1/(10**(nRnd-1)))/2)
+	Help(" ",1,"NoAcreditar")
+	lRet  := .F.
+	
+	//Nao recalcular, jogar a diferenca no ultimo iten, pois se pressupoe que
+	//uma diferenca tao pequena ‚ de arredondamento, e de recalcular, ‚ fact¡vel
+	//perder a correcao.
+ElseIf Abs(nDiferA) < ((1/(10**(nRnd-1)))/2)
+	For nX:=len(aCols) to 1 Step -1
+		
+		If !aCols[nX][Len(aCols[nX])] .And. Len(aImps[nX][6])>0
+			
+			//Procuro o Imposto que estou modificando no Array aImps
+			nPosImps := Ascan(aImps[nX][6],{ |X| X[1] == aColsImpostos[nRow][1]})
+			
+			If nPosImps > 0 .And. aImps[nX][6][nPosImps][4] <> 0
+				aImps[nX][6][nPosImps][4]+=nDifer
+				nPosTes  := Ascan(aHeader,{|X| Trim(X[2])=="D1_TES" })
+				SF4->(DbSetOrder(1))
+				SF4->(DbSeek(xFilial()+aCols[nX][nPosTes]))
+				
+				For nC := 1 To Len(aImpVarSD1[6])
+					//Atualizo o valor da duplicata dependendo do SFC
+					
+					If SF4->F4_DUPLIC != "N"
+						nBaseDup		+= nDifer * aImpVarSD1[6,nC,19,Val(Subs(aImpVarSD1[6,nC,5],1,1))]
+					Endif
+					
+					//Atualizo o Custo do item se correspondente.
+					
+					If SF4->F4_ESTOQUE=="S"
+						aCusto[nx][1]	+= nDifer * aImpVarSD1[6,nC,19,Val(Subs(aImpVarSD1[6,nC,5],3,1))]
+					Endif
+				Next nC	
+				
+				nPosTotal	:= Ascan(aHeadTotais,{|X| Trim(X[2] ) == "F1_VALBRUT" })
+				nTotNot		+= nDifer
+				
+				If nPosTotal > 0
+					aColsTotais[1][nPosTotal] := nTotNot
+				Endif
+				
+				For nC   := 1  To Len(aImps[nX][6])
+					If aImps[nX,6,nC,3] > 0.00
+						SFC->( dbSetOrder(2) )
+						SFC->( dbSeek(xFilial("SFC")+aCols[nX][nPosTes]+aImps[nX,6,nC,1]) )
+						nPosVal  := Ascan(aHeader,{|X| Trim(X[2])==Trim(aImps[nX,6,nC,6])})
+						If nPosVal  >  0  ;  aCols[nX][nPosVal] := Round(aImps[nX,6,nC,4],nRnd) ;  Endif
+					EndIf
+				Next nC                      
+				nE := Ascan(aImpVarSF1,{|x| x[1] == aColsImpostos[nRow][1] .and. x[4] == aColsImpostos[nRow][3] .And. SUBSTR(x[2],1,6) =='F1_VAL' })				
+				aImpVarSF1[ nE,3 ] += nDifer				
+				nX := 0
+			EndIf
+		Endif
+	Next nX
+	
+	aLivro   := {}
+	
+	For nX:=1 to Len(aImps)
+	   If !aCols[nX][Len(aCols[nX])] 
+		  // Calcula o Livro
+		  aLivro := GetBook( @aGetBook, aImps[nX], "C", nTaxa, aLivro, "E",,,,,,,dDEmissao)
+
+		  A100WHeader(nOpc,.F.,.F.,.T.,@aLivro)
+		  oLbx3:SetArray(aColsLivros)
+		  oLbx3:bLine:={ || A100bLine(3,oLbx1,oLbx2,oLbx3) }
+	   EndIf	  
+	Next nX
+	oGet:ForceRefresh()
+	oLbx1:Refresh()
+	oLbx2:Refresh()
+	oLbx3:Refresh()
+	lRet := .T.
+Else
+	aCOLSImpostos[nRow][5] := nImpDigit
+	oLbx2:SetArray(aCOLSImpostos)
+	oLbx2:bLine:={ || A100bLine(2,oLbx1,oLbx2,oLbx3) }
+	
+	Processa({|| aCusTmp   := A101RatImp(aColsImpostos[nRow][1],nImpDigit,nDifer),OemToAnsi(STR0013)}) //"Actualizando costos..."})
+	
+	If SF4->F4_ESTOQUE=="S"
+		For nX   := 1  To Len(aCusTmp)
+			aCusto[nX][1]  += aCusTmp[nX]
+		Next
+	Endif
+	oGet:ForceRefresh()
+	oLbx1:Refresh()
+	oLbx2:Refresh()
+	oLbx3:Refresh()
+	lRet := .T.
+EndIf
+
+Return( lRet )
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100ZerTELA  ³ Autor ³ Bruno              ³ Data ³ 11/11/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Agrega ceros a la izquierda de la variable que se ingresa  ³±±
+±±³          ³ Como parametro. Para ser usada en las entradas de ciertos  ³±±
+±±³          ³ campos, con la funcion Valid.Formato de Argentina          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³  A100ZerTela( @cCaptura )                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function  A100ZerTela(cCaptura)
+If ! Empty(cCaptura)
+	cCaptura:=StrZero(Val(cCaptura),Len(cCaptura))
+Endif
+Return(.T.)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A100ActVar  ³ Autor ³ Bruno              ³ Data ³ 12/11/98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Actualiza variables usadas en objetos.                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ A100ActVar(@cActual,cPrim,cSec)                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100ActVar(cActual,cPrim,cSec)
+If cPaisLoc=="ARG"
+	cActual := cPrim+cSec
+Else
+	cActual := cSec
+EndIf
+Return(.T.)
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100WHeader  ³ Autor ³ Jos‚ Lucas         ³ Data ³ 04.05.98 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Retornar o Array referente aos campos ou header dos Totais  ³±±
+±±³          ³gerais, Impostos e Livro Fiscal para tratamento dos impostos³±±
+±±³          ³variaveis (MercoSul).                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³aArray:=A100WHeader(nOpcx,lTotais,lImpostos,lLivros,aLivro) ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100, MATA100A e MATA100B                               ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+*/
+Function A100WHeader(nOpcx,lTotais,lImpostos,lLivros,aLivro)
+Local cAlias := Alias()
+Local nI:=0, nPos:=0, nAliq:=0.00, nCpos:=0
+Local aCposTG := {}, aCposIP := {}, aCposLF := {}
+Local cValid
+Local nC := 0
+
+//Verifica declaracao da variavel que e usada como parametro dentro desta rotina, embora nao fosse declarada
+If Type("nMoedaCor") == "U"
+  nMoedaCor := 0 
+EndIf  
+//---
+
+If lTotais
+	aHeadTotais:={}
+	aFieldTotais:={}
+	aCpos := {"F1_VALMERC","F1_FRETE","F1_DESPESA","F1_DESCONT","F1_VALBRUT"}
+ElseIf lImpostos
+	aHeadImpostos:={}
+	aFieldImpostos:={}
+	aCpos := {"FB_CODIGO","FB_DESCR","ALIQUOTA","VALORBASE","VALORIMP"}
+ElseIf lLivros
+	aHeadLivros:={}
+	aFieldLivros:={}
+	aColsLbx3:={}
+	aCpos := A100CposLivro()
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Desconsiderar o Cpo F3_FILIAL qdo o tratamento for do Livro  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lLivros
+	nPos := Ascan(aCpos,"F3_FILIAL")
+	If nPos > 0
+		ADel(aCpos,nPos)
+		ASize(aCpos,Len(aCpos)-1)
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o aHeader para utiliza‡Æo no Browse.                   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("Sx3")
+dbSetOrder(2)
+
+If lTotais
+	nCpos:=0
+	For nI := 1 To Len(aCpos)
+		If dbSeek(aCpos[nI])
+			If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+				Do case
+				Case  aCPOS[nI]	==	"F1_VALMERC"
+					cValid   := "A100ValMerc(@oGet,cTemp)"
+				Case aCPOS[nI]	==  "F1_FRETE"
+					cValid   := "A100Frete(cTemp)"
+				Case aCPOS[nI]	==	"F1_DESPESA"
+					cValid   := "A100Despesa(cTemp)"
+				Case aCPOS[nI]	==	"F1_DESCONT"
+					cValid   := "A100Desc(cTemp)"
+				OtherWise
+					cValid   := Alltrim(X3_VALID)
+				EndCase
+				nCpos++
+				AADD(aHeadTotais,{ TRIM(x3_titulo), x3_campo, PesqPict(x3_arquivo,x3_campo,,nMoedaCor),;
+					x3_tamanho, x3_decimal, cValid ,;
+					x3_usado, x3_tipo, x3_arquivo, x3_context} )
+				AADD(aFieldTotais, OemToAnsi(TRIM(X3Titulo())))
+			EndIf
+		EndIf
+		dbSetOrder(2)
+	Next nI
+	aColsTotais := Array(1,nCpos)
+EndIf
+
+If lImpostos
+	nCpos:=0
+	For nI := 1 To Len(aCpos)
+		If aCpos[nI] == "ALIQUOTA"
+			nCpos ++
+			AADD(aHeadImpostos,{ OemToAnsi(STR0001), "ALIQUOTA", "@E 999.99",7,2,"AlwaysFalse()","S","N","   ","N"})
+			AADD(aFieldImpostos, OemToAnsi(STR0001))
+		ElseIf aCpos[nI] == "VALORBASE"
+			nCpos ++
+			AADD(aHeadImpostos,{ OemToAnsi(STR0002), "VALORBASE",PesqPict("SF1","F1_VALIMP1",,nMoedaCor),16,2,"AlwaysFalse()","S","N","   ","N"})
+			AADD(aFieldImpostos, OemToAnsi(STR0002))
+		ElseIf aCpos[nI] == "VALORIMP"
+			nCpos ++
+			AADD(aHeadImpostos,{ OemToAnsi(STR0003), "VALORIMP", "@E 9,999,999,999.99",16,2,"A100ValImp(@oGet,@aCusto,cTemp,oBrw)","S","N","   ","N"})
+			AADD(aFieldImpostos, OemToAnsi(STR0003))
+		Else
+			If dbSeek(aCpos[nI])
+				If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+					nCpos ++
+					AADD(aHeadImpostos,{ TRIM(x3_titulo), x3_campo, PesqPict(x3_arquivo,x3_campo,,nMoedaCor),;
+						x3_tamanho, x3_decimal, x3_valid,;
+						x3_usado, x3_tipo, x3_arquivo, x3_context} )
+					AADD(aFieldImpostos, OemToAnsi(TRIM(X3Titulo())))
+				EndIf
+			EndIf
+		EndIf
+		dbSetOrder(2)
+	Next nI
+	If Len(aImpVarSF1) == 0
+		aColsImpostos := Array(1,nCpos)
+	Else
+		aColsImpostos := Array(Len(aImpVarSF1)/2,nCpos)
+	EndIf
+EndIf
+
+If lLivros
+	nCpos:=0
+	For nI := 1 To Len(aCpos)
+		If dbSeek(aCpos[nI])
+			If x3uso(x3_usado) .AND. cNivel >= x3_nivel
+				nCpos++
+				AADD(aHeadLivros,{ TRIM(X3Titulo()), x3_campo, x3_picture,;
+					x3_tamanho, x3_decimal, x3_valid,;
+					x3_usado, x3_tipo, x3_arquivo, x3_context } )
+				AADD(aFieldLivros,OemToAnsi(TRIM(X3Titulo())))
+				AADD(aColsLbx3,(x3_tamanho+x3_decimal)*12)
+			EndIf
+		EndIf
+	Next nI
+	If Len(aLivro) > 2
+		aColsLivros := Array(Len(aLivro)-1,nCpos)
+	Else
+		aColsLivros := Array(1,nCpos)
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o aCols para utiliza‡Æo no Browse dentro do Folder.    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nCnt  := 0
+nUsado:= 0
+If lTotais
+	For nI := 1 To Len(aColsTotais)
+		nCnt++
+		For nC := 1 To nCpos
+			nUsado++
+			Do Case
+			Case AllTrim(aHeadTotais[nC][2]) ==	"F1_VALMERC"
+				aColsTotais[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nTotMerc,SF1->F1_VALMERC)
+			Case AllTrim(aHeadTotais[nC][2]) == "F1_FRETE"
+				aColsTotais[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValFrete,SF1->F1_FRETE)
+			Case AllTrim(aHeadTotais[nC][2]) == "F1_DESPESA"
+				aColsTotais[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValDesp,SF1->F1_DESPESA)
+			Case AllTrim(aHeadTotais[nC][2]) == "F1_DESCONT"
+				aColsTotais[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nValDesc,SF1->F1_DESCONT)
+			Case AllTrim(aHeadTotais[nC][2]) == "F1_VALBRUT"
+				aColsTotais[nCnt][nUsado] := If(nOpcx==3.or.nOpcx==4,nTotNot,SF1->F1_VALBRUT)
+			EndCase
+		Next nC
+	Next nI
+EndIf
+
+If lImpostos
+	For nI	:=	1 To Len(aColsImpostos)
+		aColsImpostos[nI,3]   := 0
+		aColsImpostos[nI,4]   := 0
+		aColsImpostos[nI,5]   := 0
+	Next
+	nCnt:=0
+	nUsado:=5
+	For nI := 1 To Len(aImpVarSF1) Step 2
+		nCnt++
+		SFB->( dbSeek(xFilial("SFB")+AllTrim(aImpVarSF1[nI][1])) )
+		nPos := Ascan(aColsImpostos,{|x| x[1] == aImpVarSF1[nI][1].And. x[3]== aImpVarSF1[nI][4]})
+		If nPos != 0
+			aColsImpostos[nPos][1] := aImpVarSF1[nI][1]
+			aColsImpostos[nPos][2] := SFB->FB_DESCR
+			aColsImpostos[nPos][4] += aImpVarSF1[nI+1][3]
+			aColsImpostos[nPos][5] += aImpVarSF1[nI][3]
+			nAliq := aImpVarSF1[nI][4]
+			aColsImpostos[nPos][3] := If( nAliq <= 0, 0.00, nAliq )			
+		Else
+			aColsImpostos[nCnt][1] := aImpVarSF1[nI][1]
+			aColsImpostos[nCnt][2] := SFB->FB_DESCR
+			aColsImpostos[nCnt][4] := aImpVarSF1[nI+1][3]
+			aColsImpostos[nCnt][5] := aImpVarSF1[nI][3]
+			nAliq := aImpVarSF1[nI][4]
+			aColsImpostos[nCnt][3] := If( nAliq <= 0, 0.00, nAliq )			
+		EndIf
+	Next nI
+EndIf
+
+If lLivros
+	For nI := 1 To Len(aLivro)-1
+		nCnt++
+		nUsado:=0
+		For nC := 1 To nCpos
+			nUsado++
+			aColsLivros[nCnt][nUsado] := aLivro[nI+1][nC]
+			If aColsLivros[nCnt][nUsado] == NIL
+				aColsLivros[nCnt][nUsado] := CriaVar(AllTrim(aHeadLivros[nC][2]))
+			EndIf
+		Next nC
+	Next nI
+EndIf
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡…o   ³ a101RatImp ³ Autor ³ Bruno Sobieski      ³ Data ³ 20.03.00 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡…o³ Ajusta custos e rateia impostos quando foram modificados   ³±±
+±±³          ³ os totais no rodape da nota de Entrdada.                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ A100Valimp                                                 ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Function A101RatImp(cImp,nValor,nDif)
+Local aLivro   := {}
+Local aDifsCus := Array(Len(aCols))
+Local aDifs    := Array(Len(aCols))
+Local nX,nPosImp,aItens := {}
+Local nRndLoc  := MsDecimais(nMoedaCor)
+Local nValRat
+Local nTotImp  := 0
+Local nPosTes,nPosVal,nPosAlq,nC
+Local aGetBook
+Local nItem, nPosItem,nPosTot
+
+aFill(aDifsCus,0)
+aFill(aDifs,0)
+
+// Bruno... Procuro iten a iten se o imposto foi calculado para ese item,
+//    se foi, vou acumular o valor do imposto para obter a pondera‡~ao a
+//    ser usada ao incluir o valor rateado do corrigido na m~ao.
+
+Procregua(Len(aImps)*4)
+
+For nX   := 1  To Len(aImps)
+	IncProc(OemToAnsi(STR0011)) //"Prorrateando..."
+	If Len(aImps[nX]) > 5
+		If !aCols[nX][Len(aCols[nX])]
+			nPosImp  := Ascan(aImps[nX][6], {|X| X[1] == cImp })
+			If nPosImp  >  0
+				nTotImp  += aImps[nX][6][nPosImp][3]
+				AADD(aItens,{nX,nPosImp})
+			Endif
+		Endif
+	Endif
+Next
+
+For nX   := 1  To Len(aItens)
+	
+	IncProc(OemToAnsi(STR0012)) // "Grabando Prorrateo..."
+	//Calculo el valor rateado para este item
+	
+	nValRat  := Round(nValor * (aImps [aItens[nX][1]] [6] [aItens[nX][2]] [3] / nTotImp),nRndLoc)
+	
+	//Grabo el numero de item y la diferencia de valor actual para nuevo
+	AAdd(aDifs,{aItens[nX][1],NoRound(aImps [aItens[nX][1]] [6] [aItens[nX][2]] [4] - nValRat,2)})
+	
+	//Gravo as diferen‡as caso deva modificar o custo.
+	aDifs[nX]   := aImps [aItens[nX][1]] [6] [aItens[nX][2]] [4] - nValRat
+	
+	//Actualizo el valor del impuesto
+	aImps [aItens[nX][1]] [6] [aItens[nX][2]] [4] := nValRat
+	
+Next
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Grava os Impostos Gerados Atraves da Amarra‡Æo TesXImpostos ³
+//³ no array aCols                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄLucasÄÙ
+
+nPosTes  := Ascan(aHeader,{|X| Trim(X[2])=="D1_TES" })
+
+SF4->(DbSetOrder(1))
+
+nPosTot := Ascan(aImpVarSF1,{|x| x[1] == aColsImpostos[oLbx2:nAt][1] .and. x[4] == aColsImpostos[oLbx2:nAt][3] .And. SUBSTR(x[2],1,6) =='F1_VAL' })
+aImpVarSF1[ nPosTot,3 ] := nValor
+
+/*BEGINDOC
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄNdÛ¼dÛ¼¿
+//³Acertar os valores nos impostos por items, de acordo com o total (nao arredondado)³
+//³para poder arredondar nos itens e que nao dé diferença no total. Bruno            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄNÙ
+ENDDOC*/
+ArredImp(@aImps,@aImpVarSF1,nRndLoc)
+
+For nX   := 1  To Len(aImps)
+	IncProc(OemToAnsi(STR0013)) // "Actualizando Costos..."
+	//For para os impostos do ITEM.
+	SF4->(DbSeek(xFilial()+aCols[nX][nPosTes]))
+	For nC   := 1  To Len(aImps[nX][6])
+		If aImps[nX,6,nC,3] > 0.00
+			
+			SFC->( dbSetOrder(2) )
+			SFC->( dbSeek(xFilial("SFC")+aCols[nX][nPosTes]+aImps[nX,6,nC,1]) )
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Valor do Imposto calculado...                               ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			//Acha o campo do valor do imposto no Acols.
+			
+			nPosVal  := Ascan(aHeader,{|X| Trim(X[2])==Trim(aImps[nX,6,nC,6])})
+			
+			If nPosVal  >  0  ;  aCols[nX][nPosVal] := Round(aImps[nX,6,nC,4],nRndLoc) ;  Endif
+			
+		EndIf
+	Next nC	
+	nPosItem		:=	Ascan(aItens,{|X| X[1]==nX})
+	If nPosItem  >  0
+		nPosImp		:=	aItens[nPosItem,2]
+		nItem  		:=	aItens[nPosItem,1]
+		If SF4->F4_ESTOQUE=="S"
+			If SubStr( aImps[nX,6,nPosImp,5],3,1 ) == "2" //Quando incide na nota e Nao se acredita
+				aDifsCus[nx] -= aDifs[nItem]
+			ElseIf SubStr( aImps[nX,6,nPosImp,5],3,1 ) == "1" //Quando Nao incide na nota e se acredita
+				aDifsCus[nx] += aDifs[nItem]
+			EndIf
+		Endif
+	
+		If SF4->F4_DUPLIC != "N"
+			If SubStr( aImps[nx][6][nPosImp][5],1,1 ) == "1"
+				nBaseDup  -= aDifs[nItem]
+			ElseIf SubStr( aImps[nx][6][nPosImp][5],1,1 ) == "2"
+				nBaseDup  += aDifs[nItem]
+			Endif
+		EndIf
+	Endif	
+	If !aCols[nX][Len(aCols[nX])] 	
+	   // Calcula o Livro
+   	aLivro := GetBook( @aGetBook, aImps[nX], "C", nTaxa, aLivro, "E",,,,,,,dDEmissao)
+	EndIf
+Next nX
+
+Incproc(OemToAnsi(STR0014))  //"Actualizando Libro..."
+
+A100WHeader(nOpc,.F.,.F.,.T.,@aLivro)
+
+oLbx3:SetArray(aColsLivros)
+oLbx3:bLine:={ || A100bLine(3,oLbx1,oLbx2,oLbx3) }
+
+
+nPosTot  := Ascan(aHeadTotais,{|X| Trim(X[2] ) == "F1_VALBRUT" })
+
+nTotNot  += nDif
+
+If nPosTot > 0 ;  aColsTotais[1][nPosTot] := nTotNot ; Endif
+
+
+Return aDifsCus
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100MScan ³ Autor ³ Gilson do NAscimneto  ³ Data ³20/12/93  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Procura no aARRAY, a posicao correta para os campos        ³±±
+±±³          ³ informados                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a100MScan(aArray,cCampo1)
+Local i,nRet:=0
+For i:= 1 to Len(aArray)
+	If aArray[i,1]==cCampo1
+		nRet := i
+		Exit
+	Endif
+Next
+Return(nRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100GerRE5³ Autor ³ Marcos / Wilson       ³ Data ³29/12/93  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera registro no SD3, Apropriacao Direta Entrada na Op RE5 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a100GerRE5()
+Local cAlias:=Alias(), nQuant, nRegSD4 := 0, nRegSB2 := 0
+Local nOrdSD4 := 0, nOrdSB2 := 0
+
+
+// Ignora a rotina caso ja tenha feito apartir do remito
+IF cPaisLoc <> "BRA" .and. !Empty(SD1->D1_REMITO)
+	Return
+EndIf
+dbSelectArea("SD3")
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Gera requisicao automatica               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RecLock("SD3",.T.)
+If cAlias <> "SCM"  .or. cPaisLoc == "BRA"
+	Replace     D3_FILIAL  With xFilial()       ,D3_COD     With SD1->D1_COD,;
+	D3_QUANT   With SD1->D1_QUANT ,D3_TM      With "999",;
+	D3_OP      With SD1->D1_OP    ,D3_LOCAL   With SD1->D1_LOCAL,;
+	D3_DOC     With SD1->D1_DOC   ,D3_EMISSAO With SD1->D1_DTDIGIT,;
+	D3_NUMSEQ  With SD1->D1_NUMSEQ,D3_UM      With SD1->D1_UM,;
+	D3_GRUPO   With SD1->D1_GRUPO ,D3_TIPO    With SD1->D1_TP,;
+	D3_SEGUM   With SD1->D1_SEGUM ,D3_CONTA   With SD1->D1_CONTA,;
+	D3_CF      With "RE5"         ,D3_QTSEGUM With SD1->D1_QTSEGUM,;
+	D3_USUARIO With SubStr(cUsuario,7,15),;
+	D3_CUSTO1  With SD1->D1_CUSTO ,D3_CUSTO2  With SD1->D1_CUSTO2,;
+	D3_CUSTO3  With SD1->D1_CUSTO3,D3_CUSTO4  With SD1->D1_CUSTO4,;
+	D3_CUSTO5  With SD1->D1_CUSTO5,D3_NUMLOTE With SD1->D1_NUMLOTE,;
+	D3_LOTECTL With SD1->D1_LOTECTL,D3_DTVALID WITH SD1->D1_DTVALID
+
+    SC2->(dbSetOrder(1))
+    If SC2->(dbSeek(xFilial("SC2")+SD1->D1_OP))
+	   Replace D3_CC 			With SC2->C2_CC					// Centro de Custo
+	   Replace D3_ITEMCTA   With SC2->C2_ITEMCTA				// Item Contabil
+	   Replace D3_CLVL		With SC2->C2_CLVL					// Classe de Valor
+    EndIf
+
+    dbSelectArea("SD4")
+    nOrdSD4 := IndexOrd()
+    nRegSD4 := RecNo()
+    dbSetOrder(1)
+    If dbSeek(xFilial()+SD1->D1_COD+SD1->D1_OP)
+	   nQuant := IIf(SD4->D4_QUANT < SD1->D1_QUANT,SD4->D4_QUANT,SD1->D1_QUANT)
+	   RecLock("SD4",.f.)
+	   Replace SD4->D4_QUANT   With SD4->D4_QUANT - nQuant
+	   Replace SD4->D4_QTSEGUM With SD4->D4_QTSEGUM - ConvUM(SD4->D4_COD, nQuant, 0, 2)
+	   dbSelectArea("SB2")
+	   nOrdSB2 := IndexOrd()
+	   nRegSB2 := RecNo()
+	   If dbSeek(xFilial()+SD4->D4_COD+SD4->D4_LOCAL)
+		  RecLock("SB2",.F.)
+		  nQuant := IIf(nQuant==NIL,SD1->D1_QUANT,nQuant)
+		  Replace B2_QEMP  With B2_QEMP - nQuant
+		  Replace B2_QEMP2 With B2_QEMP2 - ConvUM(SB2->B2_COD, nQuant, 0, 2)
+	   Endif
+	   dbSetOrder(nOrdSB2)
+	   dbGoto(nRegSB2)
+    EndIf
+Else
+	Replace D3_FILIAL  With xFilial(),D3_COD     With SCM->CM_PRODUTO,;
+	D3_QUANT   With SCM->CM_QUANT ,D3_TM      With "999",;
+	D3_OP      With SCM->CM_OP    ,D3_LOCAL   With SCM->CM_LOCAL,;
+	D3_DOC     With SCM->CM_REMITO,D3_EMISSAO With SCM->CM_EMISSAO,;
+	D3_NUMSEQ  With SCM->CM_NUMSEQ,D3_UM      With SCM->CM_UM,;
+	D3_SEGUM   With SCM->CM_SEGUM ,D3_CONTA   With SCM->CM_CONTA,;
+	D3_CF      With "RE5"         ,D3_QTSEGUM With SCM->CM_QTSEGUM,;
+	D3_USUARIO With SubStr(cUsuario,7,15),;
+	D3_CUSTO1  With SCM->CM_CUSTO1,D3_CUSTO2  With SCM->CM_CUSTO2,;
+	D3_CUSTO3  With SCM->CM_CUSTO3,D3_CUSTO4  With SCM->CM_CUSTO4,;
+	D3_CUSTO5  With SCM->CM_CUSTO5,D3_NUMLOTE With SCM->CM_NUMLOTE,;
+	D3_LOTECTL With SCM->CM_LOTECTL,D3_DTVALID WITH SCM->CM_DTVALID
+
+	SB1->(MsSeek(xFilial("SB1")+SCM->CM_PRODUTO+SCM->CM_LOCAL))
+	Replace D3_GRUPO with SB1->B1_GRUPO
+	Replace D3_TIPO  with SB1->B1_TIPO
+	
+	SC2->(dbSetOrder(1))
+	If SC2->(dbSeek(xFilial("SC2")+SCM->CM_OP))
+		Replace	D3_CC With SC2->C2_CC
+	EndIf
+	
+	dbSelectArea("SD4")
+	nOrdSD4 := IndexOrd()
+	nRegSD4 := RecNo()
+	dbSetOrder(1)
+	If dbSeek(xFilial()+SCM->CM_PRODUTO+SCM->CM_OP)
+		nQuant := IIf(SD4->D4_QUANT < SCM->CM_QUANT,SD4->D4_QUANT,SCM->CM_QUANT)
+
+		RecLock("SD4",.f.)
+		Replace SD4->D4_QUANT   With SD4->D4_QUANT - nQuant
+		Replace SD4->D4_QTSEGUM With SD4->D4_QTSEGUM - ConvUM(SD4->D4_COD, nQuant, 0, 2)
+		dbSelectArea("SB2")
+		nOrdSB2 := IndexOrd()
+		nRegSB2 := RecNo()
+		If dbSeek(xFilial()+SD4->D4_COD+SD4->D4_LOCAL)
+			RecLock("SB2",.F.)
+			nQuant := IIf(nQuant==NIL,SCM->CM_QUANT,nQuant)
+			Replace B2_QEMP  With B2_QEMP - nQuant
+			Replace B2_QEMP2 With B2_QEMP2 - ConvUM(SB2->B2_COD, nQuant, 0, 2)
+		Endif
+		dbSetOrder(nOrdSB2)
+		dbGoto(nRegSB2)    		
+	EndIf
+EndIf
+dbSelectArea("SD4")
+dbSetOrder(nOrdSD4)
+dbgoto(nRegSD4)
+
+B2AtuComD3({SD3->D3_CUSTO1,SD3->D3_CUSTO2,SD3->D3_CUSTO3,SD3->D3_CUSTO4,SD3->D3_CUSTO5})
+C2AtuComD3({SD3->D3_CUSTO1,SD3->D3_CUSTO2,SD3->D3_CUSTO3,SD3->D3_CUSTO4,SD3->D3_CUSTO5})
+dbSelectArea(cAlias)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100EstRE5³ Autor ³ Marcos / Wilson       ³ Data ³29/12/93  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Gera registro no SD3, Estorno Apropriacao Direta na Op DE5 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a100EstRE5()
+Local cAlias:=Alias(),lEofSD3,nQuant, nRegSD4 := 0, nRegSB2 := 0
+Local nOrdSD4 := 0, nOrdSB2 := 0
+
+dbSelectArea("SD3")
+dbSetOrder(4)
+dbSeek(xFilial()+SD1->D1_NUMSEQ)
+While !Eof() .And. SD3->D3_CF # "RE5" .And. SD3->D3_NUMSEQ == SD1->D1_NUMSEQ
+	dbSkip()
+End
+
+lEofSD3 := IIF(SD3->D3_NUMSEQ # SD1->D1_NUMSEQ,.t.,.f.)
+
+If !lEofSD3
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Gera requisicao automatica               ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	RecLock("SD3",.F.)
+	Replace  D3_ESTORNO With "S"
+	RecLock("SD3",.T.)
+	Replace D3_FILIAL  With xFilial()       ,D3_COD     With SD1->D1_COD,;
+		D3_QUANT   With SD1->D1_QUANT ,D3_TM      With "499",;
+		D3_OP      With SD1->D1_OP    ,D3_LOCAL   With SD1->D1_LOCAL,;
+		D3_DOC     With SD1->D1_DOC   ,D3_EMISSAO With SD1->D1_DTDIGIT,;
+		D3_NUMSEQ  With SD1->D1_NUMSEQ,D3_UM      With SD1->D1_UM,;
+		D3_GRUPO   With SD1->D1_GRUPO ,D3_TIPO    With SD1->D1_TP,;
+		D3_SEGUM   With SD1->D1_SEGUM ,D3_CONTA   With SD1->D1_CONTA,;
+		D3_CF      With "DE5"         ,D3_QTSEGUM With SD1->D1_QTSEGUM,;
+		D3_USUARIO With SubStr(cUsuario,7,15),;
+		D3_CUSTO1  With SD1->D1_CUSTO ,D3_CUSTO2  With SD1->D1_CUSTO2,;
+		D3_CUSTO3  With SD1->D1_CUSTO3,D3_CUSTO4  With SD1->D1_CUSTO4,;
+		D3_CUSTO5  With SD1->D1_CUSTO5,D3_ESTORNO With "S"
+	
+	SC2->(dbSetOrder(1))
+	If SC2->(dbSeek(xFilial("SC2")+SD1->D1_OP))
+		Replace D3_CC 			With SC2->C2_CC				// Centro de Custo
+		Replace D3_ITEMCTA   With SC2->C2_ITEMCTA			// Item Contabil
+		Replace D3_CLVL		With SC2->C2_CLVL				// Classe de Valor
+	EndIf
+	
+	dbSelectArea("SD4")
+	nOrdSD4 := IndexOrd()
+	nRegSD4 := RecNo()
+	dbSetOrder(1)
+	If dbSeek(xFilial()+SD1->D1_COD+SD1->D1_OP)
+		nQuant := IIf(SD4->D4_QTDEORI - SD4->D4_QUANT < SD1->D1_QUANT,SD4->D4_QTDEORI - SD4->D4_QUANT,SD1->D1_QUANT)
+		RecLock("SD4",.f.)
+		Replace SD4->D4_QUANT   With SD4->D4_QUANT + nQuant
+		Replace SD4->D4_QTSEGUM With SD4->D4_QTSEGUM + ConvUM(SD4->D4_COD, nQuant, 0, 2)
+	Endif
+	dbSetOrder(nOrdSD4)
+	dbgoto(nRegSD4)
+	
+	dbSelectArea("SB2")
+	nOrdSB2 := IndexOrd()
+	nRegSB2 := RecNo()
+	RecLock("SB2",.F.)
+	nQuant := IIf(nQuant==NIL,SD1->D1_QUANT,nQuant)
+	Replace B2_QEMP  With B2_QEMP + nQuant
+	Replace B2_QEMP2 With B2_QEMP2 + ConvUM(SB2->B2_COD, nQuant, 0, 2)
+	dbSetOrder(nOrdSB2)
+	dbgoto(nRegSB2)
+	
+	B2AtuComD3({SD3->D3_CUSTO1,SD3->D3_CUSTO2,SD3->D3_CUSTO3,SD3->D3_CUSTO4,SD3->D3_CUSTO5})
+	C2AtuComD3({SD3->D3_CUSTO1,SD3->D3_CUSTO2,SD3->D3_CUSTO3,SD3->D3_CUSTO4,SD3->D3_CUSTO5})
+EndIf
+
+dbSetOrder(1)
+dbSelectArea(cAlias)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Rateio³ Autor ³ Gilson do Nascimento  ³ Data ³04/03/94  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Calculo o Rateio do IPI para somar ao Frete e Despesas      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function a100Rateio(nTotMerc,nValFrete,nValDesp,nRatIpiFre,nRatIpiDes,nRatIpiCon)
+
+Local nTotItem:=0,nPerIpi,nx,ny,cCampo,cAlias:=Alias()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Acumula valores negativos de itens (item desconto)   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nValNeg:=0
+For nx:=1 to Len(aCols)
+	For ny:=1 to Len(aHeader)
+		cCampo := Subst(Trim(aHeader[ny][2]),3)
+		If cCampo=="_TOTAL" .and. aCols[nx][ny]<0
+			nValNeg+=Abs(aCols[nx][ny])
+		Endif
+	Next
+Next
+
+For nx := 1 to Len(aCols)
+	If ValType(aCols[nx][Len(aCols[nx])]) == "L"
+		If aCols[nx][Len(aCols[nx])]
+			Loop
+		Endif
+	Endif
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicializa Variaveis para calculo dos Itens          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For ny := 1 to Len(aHeader)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Posiciona Ponteiro dos Arquivos a serem utilizados   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		cCampo := Substr(Trim(aHeader[ny][2]),3)
+		Do Case
+		Case cCampo == "_TOTAL"
+			nTotItem := aCols[nx][ny]
+		Case cCampo == "_IPI"
+			nPerIPI  := (aCols[nx][ny]/100)
+		Case cCampo == "_TES"
+			dbSelectArea("SF4")
+			dbSeek(xFilial()+aCols[nx][ny])
+		EndCase
+	Next ny
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula valor do IPI do Frete                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SF4->F4_IPIFRET # "N"
+		nRatIpiFre += nValFrete * nTotItem / nTotMerc * nPerIpi
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula valor do IPI da Despesa                      ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nRatIpiDes += nValDesp  * nTotItem / nTotMerc * nPerIpi
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Calcula valor do IPI da Despesa e Frete para Consumo ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If SF4->F4_INCIDE=="S"
+		nRatIpiCon += ((IIf(SF4->F4_IPIFRET$"S ",nValFrete,0)+nValDesp) *  (nTotItem/nTotMerc) * nPerIpi )
+	Endif
+Next nx
+
+dbSelectArea(cAlias)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100VlrDes³ Autor ³ Claudinei M. Benzi    ³ Data ³ 16.08.93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Inicializa valor unitario considerando desc. em Valor      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A100VlrDes(void)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100VlrDes(void)
+Local nValDesc:=0, nDesc:=0, nx, nQuant:=0, nPrcTot:=0, nValAnt := 0
+Local nPrcUni:=0, nVlDesItem := &(ReadVar())
+Local nPosDes:= 0
+
+For nx  := 1 to Len(aHeader)
+	If Trim(aHeader[nx][2]) == "D1_TOTAL"
+		nPrcTot:= aCols[n][nx]
+	ElseIf Trim(aHeader[nx][2]) == "D1_QUANT"
+		nQuant:= aCols[n][nx]
+	ElseIf Trim(aHeader[nx][2]) == "D1_VUNIT"
+		nPrcUni:= aCols[n][nx]
+	ElseIf Trim(aHeader[nx][2]) == "D1_DESC"
+		nPosDes:= nx
+	Endif
+Next nx
+
+If nVlDesItem > nPrcTot
+	HELP(" ",1,"100VALDESC")
+	Return .F.
+Endif
+
+If nPosDes#0 .And. nVlDesItem#0
+	aCols[n][nPosDes] := 0.00
+EndIf
+
+If cPaisLoc == "BRA" //Utilizada somente para o Brasil
+	a100Impos()
+Endif
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100Lote  ³ Autor ³ Marcos Bregantim      ³ Data ³ 28.09.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de consistencia das requisicoes por lotes           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function A100Lote()
+
+Local aAreaAnt   := GetArea()
+Local aAreaSB1   := SB1->(GetArea())
+Local aAreaSD1   := SD1->(GetArea())
+Local aAreaSD3   := SD3->(GetArea())
+Local aAreaSF4   := SF4->(GetArea())
+Local aAreaSWN   := If(Select('SWN')>0,SWN->(GetArea()),{})
+Local aSaldos    := {}
+Local cLocSWN    := ''
+Local cLoteSWN   := ''
+Local cSLotSWN   := ''
+Local cSeek      := ''
+Local cSeekSD3   := ''
+Local cSeekSWN   := ''
+Local lRet       := .F.
+Local nPos       := 0
+Local nX         := 0
+
+lIntegracao := If(!Type('lIntegracao')=='L',(GetMV('MV_EASY')=='S'),lIntegracao)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona os Arquivos Utilizados nas Ordens Necessarias      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Select('SWN') > 0
+	dbSelectArea('SWN')
+	dbSetOrder(1)
+EndIf
+dbSelectArea('SF4')
+dbSetOrder(1)
+dbSelectArea('SD3')
+dbSetOrder(4)
+dbSelectArea('SB1')
+dbSetOrder(1)
+dbSelectArea('SD1')
+dbSetOrder(1)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Acumula Saldo por Prod/Loc/Lote/SLote de todos os Itens da NF³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If dbSeek(cSeek:=xFilial('SD1')+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA, .F.)
+	Do While !Eof() .And. cSeek==D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA
+		If SF4->(dbSeek(xFilial('SF4')+SD1->D1_TES, .F.)) .And. AvalTES(D1_TES, 'S') .And. (cPaisLoc == "BRA" .or. Empty(D1_REMITO))
+			If lIntegracao .And. SF1->F1_IMPORT=='S' .And. Select('SWN')>0
+				If SWN->(dbSeek(cSeekSWN:=xFilial('SWN')+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_TEC, .F.))
+					Do While !SWN->(Eof()) .And. cSeekSWN==SWN->WN_FILIAL+SWN->WN_DOC+SWN->WN_SERIE+SWN->WN_TEC+SWN->WN_EX_NCM+SWN->WN_EX_NBM
+						If SB1->(dbSeek(xFilial('SB1')+SWN->WN_PRODUTO, .F.)).And.Rastro(SWN->WN_PRODUTO)
+							cLocSWN  := RetFldProd(SB1->B1_COD,"B1_LOCPAD")
+							cLoteSWN := SWN->WN_LOTECTL
+							cSLotSWN := Space(Len(SB8->B8_NUMLOTE))
+							//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+							//³ Tenta encontrar o Registro Correto no SD3 com base no SWN    ³
+							//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+							If SD3->(dbSeek(cSeekSD3:=xFilial('SD3')+SD1->D1_NUMSEQ+'E9'+SWN->WN_PRODUTO, .F.))
+								cLocSWN  := SD3->D3_LOCAL
+								cLoteSWN := SD3->D3_LOTECTL
+								cSLotSWN := SD3->D3_NUMLOTE
+								If !Empty(SWN->WN_LOTECTL)
+									Do While !SD3->(Eof()) .And. cSeekSD3==SD3->D3_FILIAL+SD3->D3_NUMSEQ+SD3->D3_CHAVE+SD3->D3_COD
+										If SD3->D3_LOTECTL == SWN->WN_LOTECTL
+											cLocSWN  := SD3->D3_LOCAL
+											cLoteSWN := SD3->D3_LOTECTL
+											cSLotSWN := SD3->D3_NUMLOTE
+											Exit
+										EndIf
+										SD3->(dbSkip())
+									EndDo																	
+								ElseIf !Empty(SD3->D3_IDENT)
+									Do While !SD3->(Eof()) .And. cSeekSD3==SD3->D3_FILIAL+SD3->D3_NUMSEQ+SD3->D3_CHAVE+SD3->D3_COD
+										If AllTrim(SD3->D3_IDENT) == AllTrim(SWN->WN_ITEM)
+											cLocSWN  := SD3->D3_LOCAL
+											cLoteSWN := SD3->D3_LOTECTL
+											cSLotSWN := SD3->D3_NUMLOTE
+											Exit
+										EndIf
+										SD3->(dbSkip())
+									EndDo
+								EndIf	
+							EndIf
+							If (nPos:=aScan(aSaldos,{|x|x[1]+x[2]+x[3]+x[4]==SWN->WN_PRODUTO+cLocSWN+cLoteSWN+cSLotSWN})) > 0
+								aSaldos[nPos,5] += SWN->WN_QUANT
+							Else
+								aAdd(aSaldos,{SWN->WN_PRODUTO,cLocSWN,cLoteSWN,cSLotSWN,SWN->WN_QUANT})
+							EndIf
+						EndIf
+						SWN->(dbSkip())
+					EndDo
+				EndIf
+			ElseIf SB1->(dbSeek(xFilial('SB1')+SD1->D1_COD, .F.)) .And. Rastro(D1_COD)
+				If (nPos:=aScan(aSaldos,{|x|x[1]+x[2]+x[3]+x[4]==D1_COD+D1_LOCAL+D1_LOTECTL+D1_NUMLOTE})) > 0
+					aSaldos[nPos,5] += D1_QUANT
+				Else
+					aAdd(aSaldos,{D1_COD,D1_LOCAL,D1_LOTECTL,D1_NUMLOTE,D1_QUANT})
+				EndIf
+			EndIf
+		EndIf
+		dbSkip()
+	EndDo
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica saldo de Cada Prod/Local/Lote/SLote                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nX := 1 to Len(aSaldos)
+	If QtdComp(SaldoLote(aSaldos[nX,1],aSaldos[nX,2],aSaldos[nX,3],aSaldos[nX,4],,,.T.)) < QtdComp(aSaldos[nX,5])
+		Help(' ',1,'A100NOLOTE',,aSaldos[nX,1]+'  '+aSaldos[nX,2]+'    '+aSaldos[nX,3],5,4)
+		lRet := .T.
+		Exit
+	EndIf
+Next nX
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Restaura areas originais                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Select('SWN') > 0
+	RestArea(aAreaSWN)
+EndIf
+RestArea(aAreaSF4)
+RestArea(aAreaSD3)
+RestArea(aAreaSD1)
+RestArea(aAreaSB1)
+RestArea(aAreaAnt)
+
+Return lRet
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A100Dev   ³ Autor ³ Cristina Ogura        ³ Data ³ 11.05.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Verifica Nota Fiscal de Devolucao de Venda                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100Dev()
+Local cNota:= "" , cSerie:= "", nPreco:=0 , cAlias := Alias(),nRegIpi:=Recno(), nx
+Local cProd := "", nQtd := 0  , nVlDev:= 0, cLocal:= "",cItem :=""
+Local cSaldo :="", nTamProdDev:=0
+Local cOrdem:=IndexOrd()
+Local nPosCod:=0, nPosNf:=0, nPosSer:=0, nPosItem:=0, nQuantPed := 0
+Local nPosLocaliz:=0,nPosNumSer:=0
+Local cCampo100, cConte100,cCampo
+Local nZ 		 := 0
+Local cMV_RASTRO := GetMV("MV_RASTRO")
+
+If !(cTipo  $ "PD")
+	Return .T.
+Endif
+
+If Trim(aHeader[o:ColPos][2]) == "D1_NFORI"
+	cNota := &(ReadVar())
+ElseIf Trim(aHeader[o:ColPos][2]) == "D1_SERIORI"
+	cSerie := &(ReadVar())
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Recupera dados para posicionamento no arquivo SD2(Venda)      ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nx := 1 to Len(aHeader)
+	cCampo:=Trim(aHeader[nx,2])
+	Do Case
+	Case cCampo=="D1_COD"
+		cProd:=aCols[n][nx]
+		nPosCod:= nX
+	Case cCampo=="D1_LOCAL"
+		cLocal:=aCols[n][nx]
+	Case cCampo=="D1_NUMLOTE".and. cMV_RASTRO == "S"
+		aCols[n][nx] := Space(Len(SD1->D1_NUMLOTE))
+	Case cCampo=="D1_NFORI"
+		cNota:= IIf(Empty(cNota),aCols[n][nx],cNota)
+		nPosNf:= nX
+	Case cCampo=="D1_SERIORI"
+		cSerie:= IIf(Empty(cSerie),aCols[n][nx],cSerie)
+		nPosSer:= nX
+	Case cCampo=="D1_QUANT"
+		nQtd:= aCols[n][nx]
+		nPosQtd:= nX
+	Case cCampo=="D1_ITEMORI"
+		cItem:=aCols[n][nx]
+		nPosItem:=nX
+	EndCase
+Next nx
+
+If Empty(cNota)
+	Return .t.
+Endif
+
+If cTipo == "D"
+	dbSelectArea("SD2")
+	dbSetOrder(3)
+	If !Empty(cSerie)
+		dbSeek(xFilial()+cNota+cSerie+cA100For+cLoja+cProd)
+	Else
+		dbSeek(xFilial()+cNota)
+		While !Eof() .and. cA100For+cLoja == D2_CLIENTE+D2_LOJA
+			If cProd <> D2_COD
+				dbSkip()
+				Loop
+			Endif
+			For nx = 1 to Len(aHeader)
+				cCampo:=Trim(aHeader[nx,2])
+				Do Case
+				Case cCampo=="D1_SERIORI"
+					aCols[n][nx]  := SD2->D2_SERIE
+					M->D1_SERIORI := SD2->D2_SERIE
+					Exit
+				Case cCampo=="D1_ITEMORI"
+					aCols[n][nx] := SD2->D2_ITEM
+					M->D1_ITEMORI := SD2->D2_ITEM
+					Exit
+				EndCase
+			Next
+			Exit
+		End
+	Endif
+	
+	cCampo100:=ReadVar()
+	cConte100:=&(cCampo100)
+	If Eof() .AND. cModulo!="FIS"
+		Help(" ",1,"A100NF")
+		// ROTINA PENDENTE PARA WINDOWS
+		Return .T.
+	Endif
+	
+	While !Eof() .And. cA100For+cLoja+cProd == D2_CLIENTE+D2_LOJA+D2_COD .And. !Empty(cItem)
+		
+		If cItem != D2_ITEM
+			dbSkip()
+			Loop
+		Endif
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Atribui preco de saida da mercadoria de acordo com a Venda   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		lZfranca:=DevZfranca(D2_COD)
+		For nx := 1 to Len(aHeader)
+			cCampo:=Trim(aHeader[nx,2])
+			Do Case
+			Case cCampo=="D1_VUNIT"
+				If lZfranca
+					aCols[n][nx] := (D2_TOTAL+D2_DESCZFR)/D2_QUANT
+				Else
+					aCols[n][nx] := D2_PRCVEN+(D2_DESCON/D2_QUANT)
+				Endif
+			Case cCampo=="D1_QUANT"
+				// Verifica no pedido que esta sendo digitado, se ja houve ocorrencia
+				// deste produto e subtrai a quantidade
+				nQuantPed := 0
+				For nZ := 1 to Len(aCols)
+					If aCols[nZ][nPosCod] == SD2->D2_COD .And. aCols[nZ][nPosNf] == SD2->D2_DOC .And. aCols[nZ][nPosSer] == SD2->D2_SERIE .And. n != nZ .And. aCols[nZ][nPosItem] == SD2->D2_ITEM
+						nQuantPed += aCols[nZ][nPosQtd]
+					Endif
+				Next
+				If nQtd == 0
+					aCols[n][nx]:= (D2_QUANT - D2_QTDEDEV - nQuantPed)
+					nQtd:= (D2_QUANT - D2_QTDEDEV - nQuantPed)
+				Endif
+			Case cCampo=="D1_NUMLOTE"
+				aCols[n][nx] := SD2->D2_NUMLOTE
+			Case cCampo=="D1_LOTECTL"
+				aCols[n][nx] := SD2->D2_LOTECTL
+			Case cCampo=="D1_DTVALID"
+				aCols[n][nx] := SD2->D2_DTVALID
+			Case cCampo=="D1_ITEMORI"
+				aCols[n][nx] := SD2->D2_ITEM
+			Case cCampo=="D1_VALDESC".and.lZfranca
+				aCols[n][nx] := D2_DESCZFR
+			Case cCampo=="D1_LOCALIZ"
+				aCols[n][nx]:=D2_LOCALIZ
+			Case cCampo=="D1_NUMSERI"
+				aCols[n][nx]:=D2_NUMSERI
+			EndCase
+		Next nx
+		Exit
+	End
+Elseif cTipo == "P"
+	dbSelectArea("SD1")
+	dbSetOrder(2)
+	If !Empty(cSerie)
+		dbSeek(xFilial()+cProd+cNota+cSerie+cA100For+cLoja)
+	Else
+		dbSeek(xFilial()+cProd+cNota)
+	Endif
+	
+	If Found() .And. cA100For+cLoja+cProd == D1_FORNECE+D1_LOJA+D1_COD
+		nx:=Ascan(aHeader,{|x|Trim(x[2])=="D1_SERIEORI"})
+		If nx>0
+			aCols[n][nx]:=SD1->D1_SERIE
+			M->D1_SERIORI:=SD1->D1_SERIE
+		Endif
+	Endif
+	If Eof()
+		// Avisa que esta nota fiscal nao existe
+		Help(" ",1,"A410NF")
+		dbSelectArea(cAlias)
+		dbSetOrder(cOrdem)
+		dbGoto(nRegIPI)
+		Return .F.
+	Else
+		dbSelectArea(cAlias)
+		dbSetOrder(cOrdem)
+		dbGoto(nRegIPI)
+		Return .T.
+	Endif
+Endif
+
+Return .T.
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A100ZERA  ³ Autor ³ Cristina Ogura        ³ Data ³ 11.05.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Zera Nota Fiscal de Origem e Serie da Nota                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100Zera()
+Local  cAlias := Alias(),nx, ntam:= 0,cCampo
+Local cVar	:= ReadVar()
+Local nPosUnit
+
+nPosUnit := Ascan(aHeader,{|X| Trim(X[2]) ==  "D1_VUNIT" })
+
+If cTipo == "D"
+   If cPaisLoc=="BRA" .Or.  QtdComp(&(cVar)) <> QtdComp(aCols[n][nPosUnit]) //A alteracao no campo deve limpar a nf original
+      For nx := 1 to Len(aHeader)
+         cCampo:=Trim(aHeader[nx,2])
+         Do Case
+         Case cCampo=="D1_NFORI"
+            ntam := len(SD1->D1_NFORI)
+            aCols[n][nx] := IIf(!Empty(aCols[n][nx]),space(ntam),aCols[n][nx])
+         Case cCampo=="D1_SERIORI"
+            ntam := len(SD1->D1_SERIORI)
+            aCols[n][nx] := IIf(!Empty(aCols[n][nx]),space(ntam),aCols[n][nx])
+         Case cCampo=="D1_ITEMORI"
+            ntam := len(SD1->D1_ITEMORI)
+            aCols[n][nx] := IIf(!Empty(aCols[n][nx]),space(ntam),aCols[n][nx])
+         EndCase
+      Next nx
+	EndIf
+Endif
+Return(.T.)
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³Consumo   ³ Autor ³ Marcos Bregantim      ³ Data ³ 30.06.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Verifica se o CFO e de material de consumo                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100  e  MATA930                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function Consumo(cCfo)
+Local lRet := .F.
+
+IF SF4->F4_CONSUMO == " "
+	If SF4->F4_INCIDE == "S" .And. Substr(cCfo,2,2) $ "91/92/97"
+		lRet := .T.
+	Endif
+Else
+	lRet := (SF4->F4_CONSUMO == "S")
+Endif
+
+Return lRet
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A100RestauraValorIpi()³Autor³Juan J.Pereira³Data ³ 30.06.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Restaura o valor o Ipi no aCols sem os valores de despesa   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100, MATA910, MATA920                                  ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100RestauraValorIpi()
+Local nx:=1, ny:=1
+
+nx:=Ascan(aHeader,{|x|Substr(Trim(x[2]),3)=="_VALIPI"})
+If nx>0
+	For ny:=1 to Len(aCols)
+		aCols[ny][nx]:=aSalvaIpi[ny]
+	Next ny
+Endif
+
+Return nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100dDEmis³ Autor ³ Claudinei M. Benzi    ³ Data ³          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Critica de Data                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100dDEmissao
+Local dData:=&(ReadVar())
+Local lRet:= !Empty(dData)
+
+If dData > dDataBase
+	HELP(" ",1,"A100DATAM")
+	lRet:=.F.
+EndIf
+
+If lRet
+	cA100For := cA100For //+Space(6)
+Endif
+
+Return lRet
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ A100CorrigRet()      ³Autor³Juan J.Pereira³Data ³ 31/05/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Corrige valor do Icms Retido (Base e Imposto) do calculado ³±±
+±±³          ³ para o informado nos itens da nota                         ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION A100CorrigRet(aSolid,nBaseRet,nValRet)
+
+// NOVO //
+LOCAL       nCpoBsRet,nCpoVlRet,i,nIndBs:=0,nIndVl:=0,nNewBase:=0,nNewImp:=0,;
+	nDif1:=0,nDif2:=0
+
+nCpoBsRet:=Ascan(aHeader,{|x|Substr(Alltrim(x[2]),3)=="_BRICMS"})
+nCpoVlRet:=Ascan(aHeader,{|x|Substr(Alltrim(x[2]),3)=="_ICMSRET"})
+If nCpoVlRet+nCpoBsRet==0
+	Return (NIL)
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Calcula indices de correcao de valores                               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nIndBs:=nBaseRet/aSolid[1] // Indice de correcao da Base
+nIndVl:=nValRet/aSolid[2] // Indice de correcao do Imposto
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Aplica indice de correcao                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nIndBs!=1 .or. nIndVl!=1
+	For i:=1 to Len(aCols)
+		aCols[i,nCpoBsRet]:=LfRound(aCols[i,nCpoBsRet]*nIndBs,2,@nDif1,(i==Len(aCols)))
+		aCols[i,nCpoVlRet]:=LfRound(aCols[i,nCpoVlRet]*nIndVl,2,@nDif2,(i==Len(aCols)))
+		aIcmsSolid[i][1] := aCols[i,nCpoBsRet]
+		aIcmsSolid[i][2] := aCols[i,nCpoVlRet]
+	Next
+Endif
+
+RETURN (NIL)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³ Fun‡„o   ³ A100LotCTL  ³Autor³Rodrigo de A. Sartorio³ Data ³ 22/11/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Descri‡„o³ Valida o lote de control digitado pelo usuario.            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Mata100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Function A100LotCTL()
+Local cVar       := ReadVar()
+Local cConteudo  := &(ReadVar())
+Local cCod       := ""
+Local cLocal     := ""
+Local cLoteCtl   := ""
+Local aAreaAnt   := GetArea()
+Local aAreaSB8   := {}
+Local lRet       := .T.
+Local nPosCod    :=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_COD"})
+Local nPosLocal  :=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_LOCAL"})
+Local nPosLote   :=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_NUMLOTE"})
+Local nPosLotCTL :=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_LOTECTL"})
+Local nPosDValid :=Ascan(aHeader,{|x|AllTrim(x[2])=="D1_DTVALID"})
+
+If nPosCod > 0
+	cCod       := aCols[n,nPosCod]
+EndIf
+
+If nPosLocal > 0
+	cLocal     := aCols[n,nPosLocal]
+EndIf
+
+If nPosLotCTL > 0
+	cLoteCtl   := aCols[n,nPosLotCTL]
+EndIf
+
+If !Rastro(cCod)
+	If nPosLote  > 0
+		aCols[n,nPosLote]   := CriaVar("D1_NUMLOTE")
+	EndIf
+	If nPosLotCTL > 0
+		aCols[n, nPosLotCTL] := CriaVar("D1_LOTECTL")
+	EndIf
+	If nPosDValid > 0
+		aCols[n, nPosDValid] := CriaVar("D1_DTVALID")
+	EndIf
+	Help(" ",1,"NAORASTRO")
+	lRet     := .F.
+ElseIf cVar == "M->D1_NUMLOTE" .And. !Empty(cConteudo)
+	If cTipo == 'D' //-- NF Devolu‡„o
+		dbSelectArea("SB8")
+		aAreaSB8 := GetArea()
+		dbSetOrder(2)
+		If dbSeek(xFilial()+cConteudo+cLoteCTL, .F.) .And. B8_PRODUTO+B8_LOCAL == cCod+cLocal
+			aAreaSB8[3]          := Recno()
+			If nPosLote  > 0
+				aCols[n, nPosLote]   := cConteudo
+			EndIf
+			If nPosLotCTL > 0
+				aCols[n, nPosLotCTL] := SB8->B8_LOTECTL
+				M->D1_LOTECTL        := SB8->B8_LOTECTL
+			EndIf
+		Else
+			If nPosLote  > 0
+				aCols[n, nPosLote]   := CriaVar("D1_NUMLOTE")
+				M->D1_NUMLOTE        := CriaVar("D1_NUMLOTE")
+			EndIf
+			If nPosLotCTL > 0
+				aCols[n, nPosLotCTL] := CriaVar("D1_LOTECTL")
+				M->D1_LOTECTL        := CriaVar("D1_LOTECTL")
+			EndIf
+			If nPosDValid > 0
+				aCols[n, nPosDValid] := CriaVar("D1_DTVALID")
+				M->D1_DTVALID        := CriaVar("D1_DTVALID")
+			EndIf
+		EndIf
+		RestArea(aAreaSB8)
+	Else
+		If nPosLote  > 0
+			M->D1_NUMLOTE        := CriaVar("D1_NUMLOTE")
+			aCols[n, nPosLote]   := CriaVar("D1_NUMLOTE")
+		EndIf
+		If nPosDValid > 0
+			M->D1_DTVALID        := CriaVar("D1_DTVALID")
+			aCols[n, nPosDValid] := CriaVar("D1_DTVALID")
+		EndIf
+	EndIf
+EndIf
+RestArea(aAreaAnt)
+Return lRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A100ItDev ³ Autor ³ Rosane L. Chene       ³ Data ³ 31.07.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Consiste item da nota fiscal de origem                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100ItDev( cItemOri)
+Local cNota := "", cSerie := "", nPrcSaida:=0, cAlias := Alias(), nx
+Local cProduto := "", nQtdVen := 0,cSaldo:="",cTesTer,cItem:=""
+Local nPosCod:=0, nPosNf:=0, nPosSer:=0, nPosItem:=0, nQuantPed := 0
+Local lRet := .T.
+Local nPosQtd := 0, nPosPreco := 0, nPosValor := 0
+Local cCampo, cCliCod 
+
+cItemOri := If( cPaisLoc!="BRA".And.cItemOri!=nil,cItemOri,&(ReadVar()))
+
+If cPaisLoc == "BRA"
+	If cTipo == "D" .and. cModulo!="FIS"    // Devolucao
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Recupera dados para posicionamento no arquivo SD1(Compras)   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nx := 1 to Len(aHeader)
+			cCampo:=Trim(aHeader[nx,2])
+			Do Case
+			Case cCampo=="D1_COD"
+				cProduto:= aCols[n][nx]
+				nPosCod:= nX
+			Case cCampo=="D1_NFORI"
+				cNota:= aCols[n][nx]
+				nPosNf:= nX
+			Case cCampo=="D1_SERIORI"
+				cSerie:= aCols[n][nx]
+				nPosSer:= nX
+			Case cCampo=="D1_QUANT"
+				nPosQtd:= nX
+			Case cCampo=="D1_VUNIT"
+				nPosPreco:= nX
+			Case cCampo=="D1_TOTAL"
+				nPosValor:= nX
+			Case cCampo=="D1_ITEMORI"
+				nPosItem := nX
+			EndCase
+		Next nx
+		
+		dbSelectArea("SD2")
+		dbSetOrder(3)
+		If !Empty(cItemOri)
+			dbSeek(xFilial()+cNota+cSerie+cA100For+cLoja+cProduto)
+			While !Eof() .And. xFilial()+cNota+cSerie+cA100For+cLoja+cProduto == D2_FILIAL+D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_COD
+				If SD2->D2_ITEM != cItemOri
+					lRet    := .F.
+					dbSkip()
+					Loop
+				Endif
+				lRet := .T.
+				Exit
+			End
+		EndIf
+		
+		If Eof() .Or. !lRet
+			// Avisa que esta nota fiscal nao existe
+			HELP(" ",1,"A100ITDEV")
+			dbSelectArea(cAlias)
+			lRet := .F.
+		Endif
+		
+		If Empty(Acols[n][nPosPreco])   .And.;
+				Empty(Acols[n][nPosQtd])    .And.;
+				Empty(aCols[n][nPosValor])
+			Acols[n][nPosQtd]    := SD2->D2_QUANT
+			Acols[n][nPosPreco]  := SD2->D2_PRCVEN
+			ACols[n][nPosValor]  := (aCols[n][nPosQtd] * aCols[n][nPosPreco])
+		Endif
+	Endif
+	
+Else
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Notas de Credito e Debito...                                 ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If cTipo $ "C³D" .and. cModulo != "FIS"    // Devolucao
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Recupera dados para posicionamento no arquivo SD1(Compras)   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nx := 1 to Len(aHeader)
+			cCampo:=Trim(aHeader[nx,2])
+			Do Case
+			Case cCampo=="D1_COD"
+				cProduto:= aCols[n][nx]
+				nPosCod:= nX
+			Case cCampo=="D1_NFORI"
+				cNota:= aCols[n][nx]
+				nPosNf:= nX
+			Case cCampo=="D1_SERIORI"
+				cSerie:= aCols[n][nx]
+				nPosSer:= nX
+			Case cCampo=="D1_QUANT"
+				nPosQtd:= nX
+			Case cCampo=="D1_VUNIT"
+				nPosPreco:= nX
+			Case cCampo=="D1_TOTAL"
+				nPosValor:= nX
+			Case cCampo=="D1_ITEMORI"
+				nPosItem := nX
+			Case cCampo=="D1_LOTECTL"
+				nPosLotCtl := nX
+			Case cCampo=="D1_NUMLOTE"
+				nPosNumLot := nX
+			Case cCampo=="D1_DTVALID"
+				nPosDValid := nX
+			EndCase
+		Next nx
+		
+		dbSelectArea("SD2")
+		dbSetOrder(3)
+		If !Empty(cItemOri)
+			If cModulo == "COM" //Inc. Alexandre Silva. Comp. MATA466
+				cCliCod := cA466Cli
+			Else
+				cCliCod := cA465Cli
+			EndIf				
+			dbSeek(xFilial()+cNota+cSerie+cCliCod+cLoja+cProduto)
+			While !Eof() .And. xFilial()+cNota+cSerie+cCliCod+cLoja+cProduto == D2_FILIAL+D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA+D2_COD
+				If SD2->D2_ITEM != cItemOri
+					lRet    := .F.
+					dbSkip()
+					Loop
+				Endif
+				lRet := .T.
+				Exit
+			End
+		EndIf
+		
+		If Eof() .Or. !lRet
+			HELP(" ",1,"A100ITDEV")
+			dbSelectArea(cAlias)
+			lRet := .F.
+		Endif
+		
+		If Empty(aCOLS[n][nPosPreco]) .And.	Empty(aCOLS[n][nPosQtd])  .And.;
+				Empty(aCOLS[n][nPosValor])
+			aCOLS[n][nPosQtd] := SD2->D2_QUANT
+			aCOLS[n][nPosPreco] := SD2->D2_PRCVEN
+			aCOLS[n][nPosValor] := (aCols[n][nPosQtd] * aCols[n][nPosPreco])
+		Endif
+
+		If Empty(aCOLS[n][nPosLotCtl]) .And. Empty(aCOLS[n][nPosNumLot])  .And.;
+					Empty(aCOLS[n][nPosDValid]) 
+				aCOLS[n][nPosLotCtl] := SD2->D2_LOTECTL
+				aCOLS[n][nPosNumLot] := SD2->D2_NUMLOTE
+				aCOLS[n][nPosDValid] := SD2->D2_DTVALID
+		EndIf
+	Endif
+EndIf
+Return lRet
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A100Valor ³ Autor ³ Cristina Ogura        ³ Data ³ 30.06.95 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Verifica se valor unitario foi alterado na Nota de Devolucao³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ MATA100  e  MATA410                                        ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A100Valor()
+Local  cAlias := Alias(), nValor:= 0,cCampo:= "", cTes:= "", nValorAnt:=0
+Local  nQuant := 0, nPosTotal := 0
+Local nPosQuant:=0, nPosPreco:=0 //LUCAS ARGENTINA 23/08/99
+Local nX := 1
+
+nValor := &(ReadVar())
+For nx := 1 to Len(aHeader)
+	cCampo := Substr(Trim(aHeader[nx][2]),3)
+	Do Case
+	Case cCampo == "_TES"
+		cTes := aCols[n][nx]
+	Case cCampo == "_QUANT"
+		nQuant := aCols[n][nx]
+	Case cCampo == "_VUNIT"
+		nValorAnt := aCols[n][nx]
+	Case cCampo == "_TOTAL"
+		nPosTotal := nx
+	EndCase
+Next nx
+
+dbSelectArea("SF4")
+dbSeek(xFilial()+cTes)
+If Found() .and. SF4->F4_PODER3 == "D" .and. !Empty(cTes)
+	If nValorAnt <> nValor
+		HELP(" ",1,"A100VALOR",,,4,1)
+		Return .F.
+	Endif
+Endif
+
+If cPaisLoc <> "BRA"  //Lucas Filial Argentina 11/05/99
+	
+	//MICROSIGA ARGENTINA LUCAS 23/08/99
+	nPosQuant := Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_QUANT"})
+	nPosPreco := Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_VUNIT"})
+	If nPosPreco == 0
+		nPosPreco := Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_PRCVEN"})
+	EndIf
+	nPosTotal := Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_TOTAL"})
+	
+	If nPosQuant > 0 .and. nPosPreco > 0 .and. nPosTotal > 0
+		If "_TOTAL" $ ReadVar()
+			aCols[n][nPosPreco] := nValor /	aCols[n][nPosQuant]
+		ElseIf "_QUANT" $ ReadVar()
+			aCols[n][nPosTotal] := aCols[n][nPosPreco] *	nValor
+		ElseIf "_VUNIT" $ ReadVar() .or. "_PRCVEN" $ ReadVar()
+			aCols[n][nPosTotal] := aCols[n][nPosQuant] *	nValor
+		Endif
+	Endif
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Zerar o Valor do Desconto qdo alterado Preco do Item       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If &(ReadVar())<> aCols[n][nPosPreco] // Se foi alterado
+		nPosValDes := Ascan(aHeader,{|x| Subs(x[2],3,8) == "_VALDESC" })
+		If nPosValDes > 0
+			aCOLS[n][nPosValDes] := 0.00
+		EndIf
+	EndIf
+EndIf
+
+
+Return(.T.)
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A100CalcSolIt³Autor³ Juan J.Pereira       ³ Data ³ 04/09/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Calcula Base e Valor de ICMS Retido do Item da Nota         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MatA100                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+FUNCTION A100CalcSolIt(n,cRead,nPerICM,nBaseItem,nVICM,nVIPI,nBsIcmsRet,nValIcmsRet,nDesc)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define variaveis                                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL nMargem,nPerSolid,cEstSolid,cTES,nPosTES,cMV_ESTICM
+LOCAL nPosBRIt	:= Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_BRICMS"})
+LOCAL nPosCod	:= Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_COD"})
+LOCAL nPosVRIt := Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_ICMSRET"})
+
+dbSelectArea("SB1")
+dbSetOrder(1)
+dbSeek(xFilial()+aCols[n][nPosCod])
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Posiciona no TES                                                     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+nMargem:=IIF(cTipoNF=="S".or.(cTipoNf=="E".and.cTipo=="D"),SB1->B1_PICMRET,SB1->B1_PICMENT)
+If cTipoNF == "E" .And. !Empty(SB1->B1_GRTRIB)
+	If !Empty(SA2->A2_GRPTRIB)
+		dbSelectArea("SF7")
+		dbSetOrder(1)
+		If dbSeek(xFilial()+SB1->B1_GRTRIB+SA2->A2_GRPTRIB)
+			While !Eof() .And. F7_FILIAL+F7_GRTRIB+F7_GRPCLI == xFilial()+SB1->B1_GRTRIB+SA2->A2_GRPTRIB
+				If (SA2->A2_EST == F7_EST .Or. F7_EST == "**")
+					nMargem	:= SF7->F7_MARGEM
+					Exit
+				Endif
+				dbSkip()
+			End
+		EndIf
+	EndIf
+EndIf
+
+If nMargem!=0
+	cTES:=""
+	If cRead=="_TES"
+		cTES:=&(ReadVar())
+	Else
+		nPosTes:=Ascan(aHeader,{|x|Alltrim(Substr(x[2],3))=="_TES"})
+		If nPosTes>0
+			cTES:=aCols[n,nPosTes]
+		Endif
+	Endif
+	If !Empty(cTES)
+		If !SF4->(dbSeek(xFilial("SF4")+cTES))
+			nMargem:=0
+		Endif
+	Else
+		nMargem:=0
+	Endif
+Endif
+If nMargem>0 .and. !(cTipo$"IP") .and. !SF4->F4_LFICM$"NZ"
+	If (cTipoNF=="S" .and. cTipo!="D" .and. SA1->A1_TIPO!="S") .or.;
+			(cTipoNF=="E" .and. cTipo=="D" .and. SA1->A1_TIPO!="S")
+		nMargem:=0
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Definicao da Aliquota do Produto com Solidario                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If nMargem>0
+		nMargem:=(nMargem/100)+1
+		If cTipoNF=="E"
+			cEstSolid:=IIf(cTipo=="D",SA1->A1_EST,SA2->A2_EST)
+		Else
+			cEstSolid:=IIf(cTipo=="D",SA2->A2_EST,SA1->A1_EST)
+		EndIf
+		If cEstSolid==GetMv("MV_ESTADO")
+			nPerSolid:=nPerICM/100
+		Else
+			If cTipoNF=="S" .Or. (cTipoNF=="E".And.cTipo=="D")
+				cMV_ESTICM:=GetMv("MV_ESTICM")
+				nPerSolid:=Val(Substr(cMV_ESTICM,At(cEstSolid,cMV_ESTICM)+2,2))/100
+			Else
+				nPerSolid:=IIf(SB1->B1_PICM>0,SB1->B1_PICM,GetMv("MV_ICMPAD"))/100
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Calculo do Solidario                                                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		nBsICMSRet:=((nBaseItem+If(SF4->F4_STDESC=="2",nDesc,0)+If(SF4->F4_INCIDE!='S',nVipi,0))*nMargem)
+		nBsICMSRet := If(SF4->F4_BSICMST>0,SF4->F4_BSICMST/100,1)*nBsICMSRet
+		// Ponto de Entrada para recalculo do Solidario
+		If ExistBlock("MT100SOL")
+			nBsICMSRet := ExecBlock("MT100SOL",.F.,.F.,{nBaseItem+If(SF4->F4_INCIDE!='S',nVipi,0)})
+		EndIf
+		nValICMSRet:=(nBsICMSRet*nPerSolid)-nVIcm
+		nValICMSRet:=IIf(nValICMSRet>0,nValICMSRet,0)
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³      Atualiza o aCols com os valores de ICMS         ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aCols[n][nPosBRIt]:= NoRound(nBsIcmsRet,2)
+		aCols[n][nPosVRIt]:= NoRound(nValIcmsRet,2)
+	EndIf
+EndIf
+If ExistBlock("MT100RET")
+	aRet := ExecBlock("MT100RET",.F.,.F.,{n})
+	nBsICMSRet := aRet[1]
+	nValICMRet := aRet[2]
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³      Atualiza o aCols com os valores de ICMS         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	aCols[n][nPosBRIt]:= NoRound(nBsIcmsRet,2)
+	aCols[n][nPosVRIt]:= NoRound(nValIcmsRet,2)
+EndIf
+
+If cPaisLoc <> "COL" // 21/06 - Colombia - Denis - Geracao erro para Aloisio
+	If aCols[n][nPosBRIt] > 0
+		lIcmsRet:= .T.
+	EndIf
+Endif
+
+RETURN (NIL)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ArredImp  ºAutor  ³Bruno Sobieski      ºFecha ³  09/19/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Acerta Arredondamento nos array aimps com os valores sem    º±±
+±±º          ³arredondar do aImpVarSFx                                    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+STATIC FUNCTION ArredImp(aImps,aImpsTot,nDecs)
+Local aRedo := {}
+lOCAL nPosImp, nY,nX,nPosIt,lAchou,nDif
+
+//Acertar arredondamentos se calculou algum imposto
+If Len(aImpsTot) > 0
+	aRedo := {}
+	For nX	:=	1	To Len(aImps)
+		For nY	:=	1	To Len(aImps[nX][6])
+			If aImps[nX][6][nY][4] <> 0
+				nPosImp	:=	AScan(aRedo,{|x| x[1]==	aImps[nX][6][nY][8] .And. x[2]==	aImps[nX][6][nY][9] .And. x[5] == aImps[nX][6][nY][2] })
+				aImps[nX][6][nY][4]	:=	Round(aImps[nX][6][nY][4],nDecs)
+				aImps[nX][6][nY][3]	:=	Round(aImps[nX][6][nY][3],nDecs)
+				If nPosImp == 0
+					AAdd(aRedo,{aImps[nX][6][nY][8], aImps[nX][6][nY][9], aImps[nX][6][nY][4],aImps[nX][6][nY][3],aImps[nX][6][nY][2]})
+				Else
+					aRedo[nPosImp][3]	+=	aImps[nX][6][nY][4]
+					aRedo[nPosImp][4]	+=	aImps[nX][6][nY][3]
+				Endif
+			Endif
+		Next nY
+	Next nX
+	For nX	:=	1	To Len(aRedo)
+		//Acertar el redondeo en la base del impuesto
+		nPosImp	:=	Ascan(aImpsTot,{|x| x[2]==aRedo[nX][1] .And. x[4]==aRedo[nX][5]})
+		aImpsTot[nPosImp][3]	:=	Round(aImpsTot[nPosImp][3],nDecs)
+		nDif	:=	aImpsTot[nPosImp][3] - aRedo[nX][3]
+		lAchou	:=	.F.
+		While !lAchou
+			For nY	:=	1	To Len(aImps)
+				nPosIt	:=	Ascan(aImps[nY][6],{|X| x[8] == aRedo[nX][1] .And. x[2]==aRedo[nX][5] })
+				If nPosIt > 0
+					aImps[nY][6][nPosIt][4]	+=	nDif
+					lAchou	:=	.T.
+					nY	:=	Len(aImps)+1
+				Endif
+			Next nY
+		Enddo
+		//Acertar el redondeo en el valor del impuesto
+		nPosImp	:=	Ascan(aImpsTot,{|x| x[2]==aRedo[nX][2].And. x[4]==aRedo[nX][5]})
+		aImpsTot[nPosImp][3]	:=	Round(aImpsTot[nPosImp][3],nDecs)
+		nDif	:=	aImpsTot[nPosImp][3] - aRedo[nX][4]
+		lAchou	:=	.F.
+		While !lAchou
+			For nY	:=	1	To Len(aImps)
+				nPosIt	:=	Ascan(aImps[nY][6],{|X| x[9] == aRedo[nX][2].And. x[2]==aRedo[nX][5]  })
+				If nPosIt > 0
+					aImps[nY][6][nPosIt][3]	+=	nDif
+					lAchou	:=	.T.
+					nY	:=	Len(aImps)+1
+				Endif
+			Next nY
+		Enddo
+	Next
+Endif
+Return

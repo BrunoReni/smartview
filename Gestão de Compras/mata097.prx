@@ -1,0 +1,2641 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "MATA097.CH"
+#INCLUDE "FWMVCDEF.CH"
+#INCLUDE "FWADAPTEREAI.CH"	
+#INCLUDE "FWEVENTVIEWCONSTS.CH"
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ MATA097  ³ Autor ³ Edson Maricate        ³ Data ³15.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Programa de liberacao de pedido de compras.                ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ Void MATA097(void)                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Descri‡…o ³ PLANO DE MELHORIA CONTINUA        ³Programa     MATA097.PRX³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ITEM PMC  ³ Responsavel              ³ Data        BOPS                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³      01  ³Nereu Humberto Junior     ³ 13/03/2006  00000094227         ³±±
+±±³      02  ³Ricardo Berti		        ³ 14/12/2005                      ³±±
+±±³      03  ³Nereu Humberto Junior     ³ 13/03/2006  00000094227         ³±±
+±±³      04  ³Ricardo Berti		        ³ 14/12/2005                      ³±±
+±±³      05  ³ALexandre Inacio Lemes    ³ 30/01/2006                      ³±±
+±±³      06  ³Alexandre Inacio Lemes    ³ 30/01/2006                      ³±±
+±±³      07  ³Alexandre Inacio Lemes    ³ 10/05/2006                      ³±±
+±±³      08  ³Alexandre Inacio Lemes    ³ 05/12/2005                      ³±±
+±±³      09  ³Ricardo Berti             ³ 24/02/2006  090183              ³±±
+±±³      10  ³Alexandre Inacio Lemes    ³ 05/12/2005                      ³±±
+±±³     *10  ³Ricardo Berti             ³ 24/02/2006  090183  *Doc.funcoes³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function MATA097() 
+
+PRIVATE aIndexSCR		:= {}
+PRIVATE bFilSCRBrw 	:= {|| Nil}
+PRIVATE cXFiltraSCR 	:= ""
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Array contendo as Rotinas a executar do programa      ³
+//³ ----------- Elementos contidos por dimensao ------------     ³
+//³ 1. Nome a aparecer no cabecalho                              ³
+//³ 2. Nome da Rotina associada                                  ³
+//³ 3. Usado pela rotina                                         ³
+//³ 4. Tipo de Transa‡„o a ser efetuada                          ³
+//³    1 - Pesquisa e Posiciona em um Banco de Dados             ³
+//³    2 - Simplesmente Mostra os Campos                         ³
+//³    3 - Inclui registros no Bancos de Dados                   ³
+//³    4 - Altera o registro corrente                            ³
+//³    5 - Remove o registro corrente do Banco de Dados          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+PRIVATE cCadastro := OemToAnsi(STR0006) // "Liberacao do PC"
+
+//Verificação Release e data de corte
+If !A097CclVda()
+	Help( Nil, Nil, STR0110, NIL, STR0111, 1, 0,NIL, NIL, NIL, NIL, NIL,{STR0112})
+	Return .F.
+ENDIF
+
+Return Nil
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Visual³ Autor ³ Edson Maricate        ³ Data ³15.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Programa de visualiza‡ao do pedido de compras.             ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A097Visual(ExpC1,ExpN1,ExpN2)                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do arquivo                                   ³±±
+±±³          ³ ExpN1 = Numero do registro                                 ³±±
+±±³          ³ ExpN2 = Opcao selecionada                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T.                                                        ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Visual(cAlias,nReg,nOpcx)
+
+Local cSavAlias  := Alias()
+Local cSavOrd    := IndexOrd()
+Local cSavReg    := RecNo()
+Local aRetAgro	 := {} // Documentos do modulo Agro
+
+PRIVATE nTipoPed := 1
+PRIVATE l120Auto := .F.
+PRIVATE aRotina
+
+If ValType(aRotina) == "U"
+	aRotina := {}
+	AAdd( aRotina, { '' , '' , 0, 1 } )
+	AAdd( aRotina, { '' , '' , 0, 2 } )
+	AAdd( aRotina, { '' , '' , 0, 3 } )
+	AAdd( aRotina, { '' , '' , 0, 4 } )
+	AAdd( aRotina, { '' , '' , 0, 5 } )
+EndIf
+
+If SCR->CR_TIPO == "NF"
+	dbSelectArea("SF1")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SF1")+Substr(SCR->CR_NUM,1,Len(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)))
+		Pergunte("MTA103",.F.)
+		Mata103(NIL,NIL,nOpcx)
+	EndIf
+ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE" .Or. SCR->CR_TIPO == "IP"
+	dbSelectArea("SC7")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM)))
+		Mata120(NIL,NIL,NIL,nOpcx)
+	EndIf
+ElseIf SCR->CR_TIPO == "CP"
+	dbSelectArea("SC3")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC3")+Substr(SCR->CR_NUM,1,len(SC3->C3_NUM)))
+		Mata125(NIL,NIL,nOpcx)
+	EndIf
+ElseIf SCR->CR_TIPO $ "MD|IM"
+	dbSelectArea("CND")
+	dbSetOrder(4)
+	If MsSeek(xFilial("CND")+Substr(SCR->CR_NUM,1,len(CND->CND_NUMMED)))
+		PRIVATE lAuto := .F.
+		If IsNewMed(CND->CND_CONTRA,CND->CND_REVISA,CND->CND_NUMMED)
+			FWExecView(STR0003,'CNTA121',1,,{||.T.})
+		Else
+			CN130Manut("CND",CND->(Recno()),nOpcx)
+		EndIf
+	EndIf
+ElseIf SCR->CR_TIPO $ "CT|IC"	//Documentos do Tipo Contrato
+	DbSelectArea("CN9")
+	DbSetOrder(1)
+	If MsSeek(xFilial("CN9")+Left(SCR->CR_NUM,Len(CN9->CN9_NUMERO)))
+		CN300Visua()
+	EndIf
+ElseIf SCR->CR_TIPO $ "RV|IR"	//Documentos do Tipo de Revisão
+	DbSelectArea("CN9")
+	DbSetOrder(1)
+	If MsSeek(xFilial("CN9")+Left(SCR->CR_NUM,Len(CN9->CN9_NUMERO)+Len(CN9->CN9_REVISA)))
+		FWExecView(STR0003,'CNTA300',1,,{||.T.})
+	EndIf
+ElseIf SCR->CR_TIPO = "GA" // Documento de Garantia (SIGAJURI)	
+	dbSelectArea("NV3")
+	dbSetOrder(1)
+	If MsSeek(xFilial("NV3")+Substr(AllTrim(SCR->CR_NUM),4,Len(AllTrim(SCR->CR_NUM))))				
+		dbSelectArea("NT2")
+		dbSetOrder(5)
+		If MsSeek(xFilial("NT2")+NV3->NV3_CODLAN+NV3->NV3_CAJURI)
+			FWExecView(STR0097,'JURA098',1,,{||.T.}) //-- Garantia
+		EndIf
+	EndIf	
+ElseIf SCR->CR_TIPO = "SC" // Solicitação de Compra (SIGACOM)
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC1")+Substr(SCR->CR_NUM,1,len(SC1->C1_NUM)))
+		Mata110(NIL,NIL,2)		
+	EndIf
+ElseIf SCR->CR_TIPO = "SA" // Solicitação ao Armazém (SIGAEST)
+	dbSelectArea("SCP")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SCP")+Substr(SCR->CR_NUM,1,len(SCP->CP_NUM)))
+		A105Visual("SCP",SCP->(RECNO()),2)
+	EndIf
+	
+ElseIf SCR->CR_TIPO = "ST" // Solicitação de Trasferência
+	DbSelectArea("NNS")
+	DbSetOrder(1)
+	If MsSeek(xFilial("NNS")+Substr(SCR->CR_NUM,1,len(NNS->NNS_COD)))
+		FWExecView("Solicitação de Transferência",'MATA311',1,,{||.T.})
+	EndIf	
+ElseIf SCR->CR_TIPO >= "A1" .AND. SCR->CR_TIPO <= "A9" // Documentos do modulo Agro
+	
+	If FindFunction("OGXUtlOrig") //Identifica que esta utilizando o sigaagr				
+		If OGXUtlOrig() .AND. FindFunction("OGX701AALC")	
+			aRetAgro := AGRXCOM2(SCR->CR_NUM, SCR->CR_TIPO, SCR->(Recno()))	
+			
+			DbSelectArea(aRetAgro[1])
+			DbSetOrder(aRetAgro[2])
+			If MsSeek(aRetAgro[3])
+				AGRXCOM1(SCR->CR_NUM, SCR->CR_TIPO, SCR->(Recno()))	
+			EndIf
+		EndIf
+	EndIf
+	
+ElseIf !Empty(aMTAlcDoc := MTGetAlcPE(SCR->CR_TIPO))
+	dbSelectArea(aMTAlcDoc[2])
+	dbSetOrder(aMTAlcDoc[3])
+	If MsSeek(xFilial(aMTAlcDoc[2])+Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))))
+		Eval(aMTAlcDoc[5])
+	EndIf
+EndIf
+
+Pergunte("MTA097",.F.)
+dbSelectArea(cSavAlias)
+dbSetOrder(cSavOrd)
+dbGoto(cSavReg)
+
+Return(.T.)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097VldPsw³ Autor ³ Edson Maricate        ³ Data ³15.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Valida a senha digitada pelo usuario.                      ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpL1 := A097VldPsw(ExpC1,ExpC2)                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Usuario                                  ³±±
+±±³          ³ ExpC2 = Senha digitada                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T. / .F.                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097VldPsw(cUser,cPass)
+
+Local lRet := .T.
+
+PswOrder(1)
+PswSeek(cUser)
+
+If !PswName(cPass)
+	Help(" ",1,"A097SENHA") //Aviso(STR0049,STR0050,{STR0037},2) //"Senha Invalida"###"Verifique a senha digitada. Digite a senha correta."###"Voltar"
+	lRet := .F.
+EndIf
+
+Return(lRet)
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Pass  ³ Autor ³ Edson Maricate        ³ Data ³15.10.1998³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Digita e valida a senha digitada pelo usuario.         	  ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpL1 := A097Pass(ExpC1)                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Usuario                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T. / .F.                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Pass(cUser)
+
+Local cName := UsrRetName(cUser)
+Local cPass := SPACE(20)
+Local lOk   := .F.
+
+Local oDlg
+Local oBut1
+Local oBut2
+Local oBitMap
+
+DEFINE MSDIALOG oDlg FROM 50,100 TO 260,430 TITLE OemToAnsi(STR0006) PIXEL
+@ 20,02 TO 80,163 LABEL "" OF oDlg PIXEL
+@ 6,20 SAY OemToAnsi(STR0027) SIZE 122,9 Of oDlg PIXEL //" Digite a senha para o usuario a seguir."
+@ 35,08 SAY OemToAnsi(STR0028) SIZE 22,9 Of oDlg PIXEL //"Nome :"
+@ 55,08 SAY OemToAnsi(STR0030) SIZE 18,9 Of oDlg PIXEL //"Senha :"
+@ 35,43 MSGET cName When .F. SIZE 110,10 Of oDlg PIXEL
+@ 55,43 MSGET cPass SIZE 110,10 Of oDlg PIXEL PASSWORD
+@ 88,70 BUTTON oBut1 PROMPT (STR0031) SIZE 44,12 Of oDlg PIXEl Action IIF(a097VldPsw(cUser,cPass),(lOk:=.T.,oDlg:End()),) //"&Ok"
+@ 88,120 BUTTON oBut2 PROMPT (STR0032) SIZE 44,12 Of oDlg PIXEl Action (lOk:=.F.,oDlg:End()) //"&Cancela"
+@ 5,8 BITMAP oBitmap RESOURCE "CADEADO" SIZE 10,8 Of oDlg PIXEL NOBORDER
+ACTIVATE MSDIALOG oDlg
+
+Return(lOk)
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Consulta³ Autor ³ Edson Maricate      ³ Data ³16.11.2000³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Executa a chamada da funcao de consulta de Saldos           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA097                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Consulta()
+
+If SCR->CR_STATUS$"01"
+	Aviso("A097BLQ",STR0083,{STR0031}) //Esta operação não poderá ser realizada pois este registro se encontra bloqueado pelo sistema (aguardando outros niveis)"
+Else
+	A095Consulta("MTA097")
+	
+	dbSelectArea("SCR")
+	dbSetOrder(1)
+	
+	If Type("cXFiltraSCR") <> "U"
+		set filter to  &(cXFiltraSCR)
+	EndIf
+	
+EndIf
+
+Return Nil
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Estorna³ Autor ³ Edson Maricate       ³ Data ³16.11.2000³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Estorna a liberacao de todo o pedido.                       ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA097                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Estorna()
+
+Local aArea		:= GetArea()
+Local aAreaSC7	:= SC7->(GetArea())
+Local aAreaSCR	:= SCR->(GetArea())
+Local aMTAlcDoc := MTGetAlcPE(SCR->CR_TIPO)
+
+Local cNumero	:= ""
+Local cChave    := ""
+Local cAlias    := "SC7"
+Local cTipo     := SCR->CR_TIPO
+Local cSituac	:= ""
+Local cRevisa	:= ""
+Local nCrTotal	:= SCR->CR_TOTAL
+
+Local lEstorna	:= .T.
+Local lContinua := .T.
+Local lLibOk    := .F.
+
+Local nOpc      := 0
+Local nTotPC	:= 0
+Local nReg		:= SCR->(Recno())
+Local lLog  	:= GetNewPar("MV_HABLOG",.F.)
+Local aSaldo 	:= MaSalAlc(SCR->CR_APROV,MaAlcDtRef(SCR->CR_APROV,IIF(Empty(SCR->CR_DATALIB),dDataBase,SCR->CR_DATALIB)))
+Local cDbCrTipo := IIF(SCR->CR_TIPO $ "PC|IP", "C7", "C1")
+Local cQuery 	:= ''
+Local cAliasSC 	:= ''
+Local cQry 		:= ''
+Local cAliasFIE	:= ""
+Local lBlqPA    := SuperGetMv("MV_BLQPAPC",.F.,.F.)
+Local cFilFIE	:= xFilial("FIE")
+Local cFilSE2	:= xFilial("SE2")
+Local lSCSldBl	:= SuperGetMv("MV_SCSLDBL",.F.,.F.)
+
+If SCR->CR_TIPO == "NF"
+	dbSelectArea("SF1")
+	cAlias := "SF1"
+	cChave := Substr(SCR->CR_NUM,1,Len(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA))
+	If MsSeek(xFilial(cAlias)+cChave)
+		If SF1->F1_STATUS == "A"
+			Help(" ",1,"NOALTERA")
+			lContinua := .F.
+		EndIf
+	EndIf
+ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE" .Or. (SCR->CR_TIPO == "IP" .And. ScrItComPai(SCR->CR_NUM))
+	dbSelectArea("SC7")
+	cAlias := "SC7"
+	cChave := Substr(SCR->CR_NUM,1,len(SC7->C7_NUM))
+	MsSeek(xFilial("SC7")+cChave)
+	While xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM)) = SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) .And. !Eof()
+		If C7_QUJE > 0
+			Help(" ",1,"NOALTERA")
+			lContinua := .F.
+			Exit
+		EndIf
+		dbSkip()
+	EndDo
+ElseIf SCR->CR_TIPO == "CP"
+	dbSelectArea("SC3")
+	cAlias := "SC3"
+	cChave := Substr(SCR->CR_NUM,1,len(SC3->C3_NUM))
+	MsSeek(xFilial(cAlias)+cChave)
+	While xFilial("SC3")+Substr(SCR->CR_NUM,1,len(SC3->C3_NUM)) = SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) .And. !Eof()
+		If C3_QUJE > 0
+			Help(" ",1,"NOALTERA")
+			lContinua := .F.
+			Exit
+		EndIf
+		dbSkip()
+	EndDo
+ElseIf SCR->CR_TIPO == "MD"
+	dbSelectArea("CND")
+	dbSetOrder(4)
+	cAlias := "CND"
+	cChave := Substr(SCR->CR_NUM,1,len(CND->CND_NUMMED))
+	If dbSeek(xFilial(cAlias)+cChave)
+		If !Empty(CND->CND_DTFIM)
+			Help(" ",1,"NOALTERA")
+			lContinua := .F.
+		EndIf
+	EndIf
+ElseIf SCR->CR_TIPO == "SC" // Solicitação de Compras(SIGACOM)
+	SC1->(dbSetOrder(1))
+	cAlias := "SC1"
+	cChave := Substr(SCR->CR_NUM,1,Len(SC1->C1_NUM))
+	DBM->(dbSetOrder(3))
+	DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+	While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI) 
+		If SC1->(dbSeek(xFilial("SC1")+PadR(SCR->CR_NUM,tamSX3("C1_NUM")[1])+PadR(DBM->DBM_ITEM,tamSX3("C1_ITEM")[1])))
+			If 	SC1->C1_QUJE > 0
+				Help(" ",1,"NOALTERA")
+				lContinua := .F.
+				Exit
+			EndIf
+		EndIf
+		DBM->(dbSkip())
+	End
+
+	// Verifica se a SC possui Contrato (GCT) associado
+	If lContinua
+		lContinua := SCContrAss()
+	Endif
+
+	// Verifica se a SC possui Cotação em andamento
+	If lContinua
+		lContinua := SCCotAnd()
+	Endif
+
+ElseIf SCR->CR_TIPO == "SA" // Solicitação de Compras(SIGACOM)
+	SCP->(dbSetOrder(1))
+	cAlias := "SCP"
+	cChave := Substr(SCR->CR_NUM,1,Len(SCP->CP_NUM))     			
+	DBM->(dbSetOrder(3))
+	DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+	While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+		If SCP->(dbSeek(xFilial("SCP")+PadR(SCR->CR_NUM,tamSX3("CP_NUM")[1])+PadR(DBM->DBM_ITEM,tamSX3("CP_ITEM")[1])))
+			If 	SCP->CP_QUJE > 0
+				Help(" ",1,"NOALTERA")
+				lContinua := .F.
+				Exit
+			EndIf
+		EndIf
+		DBM->(dbSkip())
+	End
+ElseIf SCR->CR_TIPO == "IP" // Item do pedido (SIGACOM)
+	SC7->(dbSetOrder(1))
+	cAlias := "SC1"
+	cChave := Substr(SCR->CR_NUM,1,Len(SC7->C7_NUM))
+	DBM->(dbSetOrder(3))
+	DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+	While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+		If SC7->(dbSeek(xFilial("SC7")+PadR(SCR->CR_NUM,tamSX3("C7_NUM")[1])+PadR(DBM->DBM_ITEM,TamSX3("C7_ITEM")[1])))
+			If 	SC7->C7_QUJE > 0
+				Help(" ",1,"NOALTERA")
+				lContinua := .F.
+				Exit
+			EndIf
+		EndIf
+		DBM->(dbSkip())
+	End
+ElseIf SCR->CR_TIPO == "ST" //Solicitação de transferência
+	DbSelectArea("NNS")
+	cChave := Substr(SCR->CR_NUM,1,Len(NNS->NNS_COD))	
+	If MsSeek(xFilial("NNS")+cChave)
+		If NNS->NNS_STATUS $ "2" // Solicitação finalizada
+			Help(" ",1,"NOALTERA")
+			lContinua := .F.
+		EndIf
+	EndIf
+ElseIf !Empty(aMTAlcDoc)	
+	dbSelectArea(aMTAlcDoc[2])
+	dbSetOrder(aMTAlcDoc[3])
+	If MsSeek(xFilial(aMTAlcDoc[2])+Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4])))) .And. !Eval(aMTAlcDoc[6])
+		Help(" ",1,"NOALTERA")
+		lContinua := .F.		
+	EndIf
+EndIf
+
+If lContinua .And. SCR->CR_STATUS$"01"
+	Aviso("A097BLQ",STR0083,{STR0031}) //Esta operação não poderá ser realizada pois este registro se encontra bloqueado pelo sistema (aguardando outros niveis)"
+	lContinua := .F.
+EndIf
+
+If lContinua .And. ExistBlock("MT097EOK")
+	lContinua := ExecBlock("MT097EOK",.F.,.F.)
+	If ValType(lContinua) # 'L'
+		lContinua := .T.
+	Endif
+EndIf
+
+If lContinua
+	
+	nOpc := IIF(IsBlind(),2,Aviso(STR0038,STR0051,{STR0052,STR0053},2)) //"Atencao!"###"Esta operacao estorna todos os niveis e aprovacoes anteriores e cria todo o processo de aprovacao do pedido de compras novamente. Todas as Aprovacoes efetuadas serao perdidas. Confirma o estorno ? "###"Cancelar"###"Confirma"
+
+	If nOpc == 2
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ-Ä¿
+		//Retorna valor original do Cr_total da SC7 ou SC1 quando Moeda de nota e aprovador são diferentes  ³
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ-Ä¿
+		If SCR->CR_TIPO $ "PC|IP|SC" .AND. aSaldo[2] <> SCR->CR_MOEDA
+			cAliasSC := GetNextAlias()
+			cQuery := "SELECT SUM("+cDbCrTipo+"_TOTAL) AS TOTAL FROM  " +RetSqlname("S"+cDbCrTipo)+ "  WHERE "+cDbCrTipo+"_NUM ="+"'" + SCR->CR_NUM+"'" + "AND "+cDbCrTipo+"_FILIAL ="+"'"+SCR->CR_FILIAL+"'"+" AND D_E_L_E_T_ <> '*' "
+			cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSC,.T.,.T.)	
+			dbSelectArea(cAliasSC)			
+			nCrTotal := (cAliasSC)->TOTAL
+			dbCloseArea()
+		EndIf
+		
+		If ExistBlock("MT097EST")
+			ExecBlock("MT097EST",.F.,.F.)
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Efetua a gravacao do arquivo SCR                 ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		dbSelectArea(cAlias)
+		MsSeek(xFilial(cAlias)+cChave)
+		cNumero := cChave
+		SCR->(dbClearFilter())
+		SCR->(dbGoTo(nReg))
+		
+		If cTipo == "CT" .AND. !Empty(SCR->CR_NUM)	//Recebe o Num. Documento qdo e do tipo Contrato
+			cNumero := SCR->CR_NUM
+		EndIf
+		
+		lLibOk := A097Lock(cNumero,SCR->CR_TIPO)
+		If lLibOk
+			PcoIniLan("000055")
+			Begin Transaction
+				PcoDetLan("000055","02","MATA097",.T.)
+				If cTipo == "NF"
+					lEstorna := MaAlcDoc({SCR->CR_NUM,"NF",0,SCR->CR_LIBAPRO,,SF1->F1_APROV},SF1->F1_EMISSAO,5)
+					dbSelectArea("SF1")
+					Reclock("SF1",.F.)
+					SF1->F1_STATUS := "B"
+					MsUnlock()
+				ElseIf cTipo == "PC" .Or. cTipo == "AE"					
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,SC7->C7_APROV},SC7->C7_EMISSAO,5)
+					dbSelectArea("SC7")
+					MsSeek(xFilial("SC7")+cNumero)
+					If SuperGetMv("MV_EASY")=="S" .And. !EMPTY(SC7->C7_PO_EIC)
+						If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. !Empty(SW2->W2_CONAPRO)
+							Reclock("SW2",.F.)
+							SW2->W2_CONAPRO := "B"
+							MsUnlock()
+						EndIf
+					EndIf
+					dbSelectArea("SC7") 
+
+					While !Eof() .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == xFilial("SC7")+cNumero
+						Reclock("SC7",.F.)
+						SC7->C7_CONAPRO := "B"
+						MsUnlock()
+						//Caio.Santos - 11/01/13 - Req.72
+						If lLog
+							RSTSCLOG("LIB",3,/*cUser*/)
+						Endif
+						PcoDetLan("000055","01","MATA097",.T.)
+						dbSkip()
+					EndDo
+                        // bloqueia os titulos PA do financeiro						
+					If lBlqPA 				
+						cAliasFIE := GetNextAlias()  
+						cQry := "SELECT FIE_FILIAL , FIE_PEDIDO , FIE_NUM , FIE_FORNEC, FIE_PREFIX FROM " +RetSqlname("FIE")+ "  WHERE FIE_PEDIDO ='" + cNumero + "' AND FIE_TIPO = 'PA' AND D_E_L_E_T_ <> '*' "  	 
+						cQry := ChangeQuery(cQry)
+						dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),cAliasFIE,.T.,.T.)							
+						dbSelectArea(cAliasFIE)
+						
+						Do While ( !Eof() .And. FIE_FILIAL == cFilFIE .And. FIE_PEDIDO == cNumero )							
+								cQry:= "UPDATE "+RetSqlname("SE2")		
+								cQry += " SET E2_STATLIB = '01', E2_DATALIB = '', E2_USUALIB = '' "
+								cQry += " WHERE E2_FILIAL ='"+cFilSE2+"' AND "
+								cQry += " E2_NUM='"+FIE_NUM+"' AND "
+								cQry += " E2_FORNECE ='" +  FIE_FORNEC+"' AND"
+								cQry += " E2_PREFIXO ='" +  FIE_PREFIX+"' AND"
+								cQry += " D_E_L_E_T_ = ' ' "
+								TcSqlExec(cQry)									
+								dbSkip()
+						EndDo
+						Endif
+
+				ElseIf cTipo == "CP"
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,SC3->C3_APROV},SC3->C3_EMISSAO,5)
+					dbSelectArea("SC3")
+					MsSeek(xFilial("SC3")+cNumero)
+					While !Eof() .And. SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) == xFilial("SC3")+cNumero
+						Reclock("SC3",.F.)
+						SC3->C3_CONAPRO := "B"
+						MsUnlock()
+						dbSkip()
+					EndDo
+				ElseIf cTipo == "MD"
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,CND->CND_APROV},CND->CND_DTINIC,5)
+					dbSelectArea("CND")
+					dbSetOrder(4)
+					If MsSeek(xFilial("CND")+cNumero)
+						Reclock("CND",.F.)
+						CND->CND_ALCAPR := "B"
+						MsUnlock()
+					EndIf
+				ElseIf cTipo == "CT"
+					dbSelectArea("CN9")
+					CN9->(DbSetOrder(1))
+
+					If CN9->(MsSeek(xFilial("CN9")+cNumero))
+
+						If CN9->CN9_SITUAC $ "05/07/08/09/10"	//Vigente/Sol.Final./Finalizado/Em Revisão/Revisado
+							Aviso("A097ESTCTR",STR0096,{"Ok"})	//"Nao é possivel estornar o documento. O estorno é permitido apenas para documentos gerados a partir de contratos com a situação Em Aprovação."
+						Else
+							lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,},,5)
+
+							Reclock("CN9",.F.)
+						   	CN9->CN9_SITUAC := "02"	//Em Elaboracao
+							MsUnlock()
+					    EndIf
+
+					EndIf
+				ElseIf cTipo == "SC" // Solicitação de Compras(SIGACOM)					
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,SCR->CR_GRUPO},SC1->C1_EMISSAO,5,,,SCR->CR_ITGRP)
+					dbSelectArea("SCR")
+					SC1->(dbSetOrder(1))
+					DBM->(dbSetOrder(3))
+					SCR->(dbSetOrder(1))
+					dbSeek(SCR->(SCR->CR_FILIAL+SCR->CR_TIPO+SCR->CR_NUM))//Seek para posicionar no primeiro registro da SCR e realizar estorno de todos os grupos
+					DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM)))
+					While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM)
+	 					If SC1->(dbSeek(xFilial("SC1")+DBM->(PadR(DBM_NUM,TamSX3("C1_NUM")[1])+PadR(DBM_ITEM,TamSX3("C1_ITEM")[1]))))
+							Reclock("SC1",.F.)
+							SC1->C1_APROV := "B"
+							SC1->(MsUnlock())
+						EndIf
+						//Tratamento para estorna o saldo da tabela SB2 ao realizar a aprovação da SC com o parâmetro MV_SCSLDBL estiver ativo 
+						If lSCSldBl
+							dbSelectArea("SB2")
+							dbSetOrder(1)
+							If ( MsSeek(xFilial("SC1")+SC1->C1_PRODUTO+SC1->C1_LOCAL) )
+								GravaB2Pre("-",SC1->C1_QUANT-SC1->C1_QUJE,SC1->C1_TPOP,SC1->C1_QTSEGUM-SC1->C1_QUJE2)
+							EndIf
+						EndIf
+
+						DBM->(dbSkip())
+					End				                                        
+				ElseIf cTipo == "SA"	// Solicitação ao Armazém(SIGAEST)
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,SCR->CR_GRUPO},SCP->CP_EMISSAO,5,,,SCR->CR_ITGRP)
+					SCP->(dbSetOrder(1))
+					DBM->(dbSetOrder(3))
+					DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+					While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+	 					If SCP->(dbSeek(xFilial("SCP")+DBM->(PadR(DBM_NUM,TamSX3("CP_NUM")[1])+PadR(DBM_ITEM,TamSX3("CP_ITEM")[1]))))
+							Reclock("SCP",.F.)
+							SCP->CP_STATSA := "B"
+							SCP->(MsUnlock())
+						EndIf
+						DBM->(dbSkip())
+					End
+				ElseIf cTipo == "IP" // Item de Pedido
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nCrTotal,SCR->CR_LIBAPRO,,SCR->CR_GRUPO},SC7->C7_EMISSAO,5,,,SCR->CR_ITGRP)
+
+					//MFR DTRADE-1271 18/01/2019
+                    dbSelectArea("SC7")
+					MsSeek(xFilial("SC7")+cNumero)
+					If SuperGetMv("MV_EASY")=="S" .And. !EMPTY(SC7->C7_PO_EIC)
+						If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. !Empty(SW2->W2_CONAPRO) .AND. lEstorna 
+							Reclock("SW2",.F.)
+							SW2->W2_CONAPRO := "B"
+							MsUnlock()
+						EndIf
+					EndIf
+
+					dbSelectArea("SC7")
+					dbSelectArea("SCR")
+					SC7->(dbSetOrder(1))
+					DBM->(dbSetOrder(3))
+					SCR->(dbSetOrder(1))
+					dbSeek(SCR->(SCR->CR_FILIAL+SCR->CR_TIPO+SCR->CR_NUM))//Seek para posicionar no primeiro registro da SCR e realizar estorno de todos os grupos
+					DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM)))	
+					While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM)
+						If SC7->(dbSeek(xFilial("SC7")+DBM->(PadR(DBM_NUM,TamSX3("C7_NUM")[1])+PadR(DBM_ITEM,TamSX3("C7_ITEM")[1]))))
+							Reclock("SC7",.F.)
+							SC7->C7_CONAPRO := "B"
+							SC7->(MsUnlock())								
+						EndIf
+						DBM->(dbSkip())
+					End
+					If ScrItComPai(SCR->CR_NUM,@nTotPC)
+							MaAlcDoc({SC7->C7_NUM,"PC",nTotPC,,,SC7->C7_APROV,,SC7->C7_MOEDA,SC7->C7_TXMOEDA,SC7->C7_EMISSAO},SC7->C7_EMISSAO,3)
+					EndIf
+				ElseIf cTipo == "ST"
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO	,nCrTotal	,SCR->CR_LIBAPRO,,SCR->CR_GRUPO},NNS->NNS_DATA,5)					
+					DbSelectArea("NNS")
+					Reclock("NNS",.F.)
+						NNS->NNS_STATUS := "3"
+					MsUnlock()	
+				ElseIf !Empty(aMTAlcDoc)
+					lEstorna := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO	,nCrTotal	,SCR->CR_LIBAPRO,,SCR->CR_GRUPO},SCR->CR_EMISSAO,5)					
+					dbSelectArea(aMTAlcDoc[2])
+					dbSetOrder(aMTAlcDoc[3])
+					MsSeek(xFilial(aMTAlcDoc[2])+Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))))
+					While !EOF() .And. &(aMTAlcDoc[4]) == Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4])))
+						Reclock(aMTAlcDoc[2],.F.)
+						(aMTAlcDoc[7,1]) := aMTAlcDoc[7,2]
+						MsUnlock()
+						(aMTAlcDoc[2])->(dbSkip())
+					End				
+				EndIf
+			End Transaction                               
+			PcoFinLan("000055")   
+			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Ponto de Entrada para execucoes complementares apos gravacao dos dados ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If ExistBlock("MT97EXPOS")
+				ExecBlock("MT97EXPOS",.F.,.F.)
+			EndIf
+			
+		Else
+			Help(" ",1,"A097LOCK")
+
+			If cTipo == "NF"
+				SF1->(MsUnlockAll())
+			ElseIf cTipo $ "PC|AE"
+				SC7->(MsUnlockAll())
+			ElseIf cTipo == "CP"
+				SC3->(MsUnlockAll())
+			ElseIf cTipo == "MD"
+				CND->(MsUnlockAll())
+			ElseIf cTipo == "ST"
+				NNS->(MsUnlockAll())	
+			ElseIf !Empty(aMTAlcDoc)
+				(aMTAlcDoc[2])->(MsUnLockAll())				
+			EndIf
+		Endif
+	EndIf
+EndIf
+
+RestArea(aAreaSCR)
+RestArea(aAreaSC7)
+RestArea(aArea)
+dbSelectArea("SCR")
+dbSetOrder(1)
+
+If Type("cXFiltraSCR") <> "U"
+	set filter to  &(cXFiltraSCR)
+EndIf
+
+Return Nil
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ A097Lock ³ Autor ³ Nereu Humberto Junior ³ Data ³ 01.09.04 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Verifica se o pedido de compra nao esta com lock           ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpL1 := A097Lock(ExpC1,ExpC2)                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Codigo do Documento                                ³±±
+±±³          ³ ExpC2 = Tipo do Documento                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ .T. / .F.                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³MATA097                                                     ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A097Lock(cNumero,cTipo)
+
+Local aArea    	:= GetArea()
+Local lRet     	:= .F.
+Local nTamC7Num	:= TamSx3("C7_NUM")[1]
+Local aAreaAgro := "" // Documentos do modulo Agro
+
+If cTipo == "NF"
+	aArea := SF1->(GetArea())
+	cNumero := Substr(cNumero,1,len(SF1->F1_DOC))
+	dbSelectArea("SF1")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SF1")+cNumero)
+		If Reclock("SF1")
+			lRet := .T.
+		Else
+			lRet := .F.
+		EndIf
+	EndIf
+ElseIf cTipo == "PC" .Or. cTipo == "AE" .Or. cTipo == "IP"
+	aArea := SC7->(GetArea())
+	cNumero := Substr(cNumero,1,len(SC7->C7_NUM))
+	dbSelectArea("SC7")
+	SC7->(dbSetOrder(1))
+	If SC7->(MsSeek(xFilial("SC7") + cNumero))
+		While SC7->(!Eof()) .And. SC7->C7_FILIAL + Padr(SC7->C7_NUM,nTamC7Num) == xFilial("SC7") + cNumero
+				If RecLock("SC7")
+					lRet := .T.
+				Else
+					lRet := .F.
+				Endif
+			SC7->(dbSkip())
+		EndDo
+	EndIf
+ElseIf cTipo == "CP"
+	aArea := SC3->(GetArea())
+	cNumero := Substr(cNumero,1,len(SC3->C3_NUM))
+	dbSelectArea("SC3")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC3")+cNumero)
+		While !Eof() .And. SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) == xFilial("SC3")+cNumero
+			If RecLock("SC3")
+				lRet := .T.
+			Else
+				lRet := .F.
+				Exit
+			Endif
+			dbSkip()
+		EndDo
+	EndIf
+ElseIf cTipo == "MD"
+	aArea := CND->(GetArea())
+	dbSelectArea("CND")
+	dbSetOrder(4)
+	If MsSeek(xFilial("CND")+cNumero)
+		If RecLock("CND")
+			lRet := .T.
+		Else
+			lRet := .F.
+		Endif
+	EndIf
+ElseIf cTipo == "IM"
+	aArea := CNE->(GetArea())
+	dbSelectArea("CNE")
+	dbSetOrder(4)
+	If MsSeek(xFilial("CNE")+cNumero)
+		If RecLock("CNE")
+			lRet := .T.
+		Else
+			lRet := .F.
+		Endif
+	EndIf
+ElseIf cTipo $ "CT|RV"
+	aArea := CN9->(GetArea())
+	dbSelectArea("CN9")
+	dbSetOrder(1)
+	If MsSeek(xFilial("CN9")+cNumero)
+		If RecLock("CN9")
+			lRet := .T.
+		Else
+			lRet := .F.
+		Endif
+	EndIf
+ElseIf cTipo == "IC"
+	aArea := CNB->(GetArea())
+	cNumero := Left(allTrim(cNumero),TamSx3('CNB_CONTRA')[1])+Right(allTrim(cNumero),TamSx3('CNB_NUMERO')[1])
+	dbSelectArea("CNB")
+	CNB->(dbSetOrder(3)) //CNB_FILIAL+CNB_CONTRA+CNB_NUMERO+CNB_ITEM+CNB_REVISA
+	If CNB->(MsSeek(xFilial("CNB")+cNumero))
+		While !Eof() .And. AllTrim(CNB->(CNB_FILIAL+CNB_CONTRA+CNB_NUMERO)) == AllTrim(xFilial("CNB")+cNumero)
+			If RecLock("CNB")
+				lRet := .T.
+			Else
+				lRet := .F.
+				Exit
+			Endif
+			CNB->(dbSkip())
+		EndDo
+	EndIf
+ElseIf cTipo == "IR"
+	aArea := CNB->(GetArea())
+	dbSelectArea("CNB")
+	dbSetOrder(1)
+	If MsSeek(xFilial("CNB")+AllTrim(cNumero))
+		While !Eof() .And. AllTrim(CNB->(CNB_FILIAL+CNB_CONTRA+CNB_REVISA)) == AllTrim(xFilial("CNB")+cNumero)
+			If RecLock("CNB")
+				lRet := .T.
+			Else
+				lRet := .F.
+				Exit
+			Endif
+			dbSkip()
+		EndDo
+	EndIf
+
+ElseIf cTipo == "GA" // Documento de Garantia (SIGAJURI)
+	aArea := NV3->(GetArea())
+	dbSelectArea("NV3")
+	dbSetOrder(1)
+	If MsSeek(xFilial("NV3")+Substr(AllTrim(SCR->CR_NUM),4,Len(AllTrim(SCR->CR_NUM))))				
+		If RecLock("NV3")
+			lRet := .T.
+		Else
+			lRet := .F.
+		Endif
+	EndIf
+ElseIf cTipo == "SC" // Solicitação de compra (SIGACOM)
+	aArea := SC1->(GetArea())
+	cNumero := Substr(cNumero,1,len(SC1->C1_NUM))
+	dbSelectArea("SC1")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SC1")+cNumero)
+		While !Eof() .And. SC1->C1_FILIAL+Substr(SC1->C1_NUM,1,len(SC1->C1_NUM)) == xFilial("SC1")+cNumero 
+			If RecLock("SC1")
+				lRet := .T.		
+			Else
+				lRet := .F.
+			EndIf
+			dbSkip()
+		End
+	EndIf
+ElseIf	cTipo == "SA" // Solicitação ao armazém (SIGAEST)
+	aArea := SCP->(GetArea())
+	dbSelectArea("SCP")
+	dbSetOrder(1)
+	If MsSeek(xFilial("SCP")+AllTrim(cNumero))
+		While !Eof() .And. SCP->CP_FILIAL+Substr(SCP->CP_NUM,1,len(SCP->CP_NUM)) == xFilial("SCP")+AllTrim(cNumero) 	
+			If RecLock("SCP")
+				lRet := .T.		
+			Else
+				lRet := .F.
+			EndIf
+			dbSkip()
+		End		
+	EndIf
+ElseIf	cTipo == "ST" // Solicitação de transferência (SIGAEST)	
+	aArea := NNS->(GetArea())
+	dbSelectArea("NNS")
+	dbSetOrder(1)
+	If MsSeek(xFilial("NNS")+cNumero)
+		If Reclock("NNS")
+			lRet := .T.
+		Else
+			lRet := .F.
+		EndIf
+	EndIf
+ElseIf cTipo >= "A1" .AND. cTipo <= "A9" // Documentos do modulo Agro
+	
+	If FindFunction("OGXUtlOrig") //Identifica que esta utilizando o sigaagr				
+		If OGXUtlOrig() .AND. FindFunction("OGX701AALC")	
+	
+			aAreaAgro := AGRXCOM2(SC1->C1_NUM,cTipo,SC1->(Recno()))
+			
+			aArea := (aAreaAgro[1])->(GetArea())
+			dbSelectArea(aAreaAgro[1])
+			dbSetOrder(aAreaAgro[2])
+			If MsSeek(xFilial(aAreaAgro[1])+cNumero)
+				If Reclock(aAreaAgro[1])
+					lRet := .T.
+				Else
+					lRet := .F.
+				EndIf
+			EndIf
+		EndIf
+	EndIf	
+ElseIf !Empty(aMTAlcDoc := MTGetAlcPE(SCR->CR_TIPO))
+	aArea := (aMTAlcDoc[2])->(GetArea())
+	dbSelectArea(aMTAlcDoc[2])
+	dbSetOrder(aMTAlcDoc[3])
+	If MsSeek(xFilial(aMTAlcDoc[2])+cNumero)
+		lRet := Reclock(aMTAlcDoc[2])
+	EndIf	
+EndIf
+
+RestArea(aArea)
+
+Return(lRet)
+
+
+    
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Ausente³Autor  ³Alexandre Inacio Lemes ³Data ³27/01/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Acessa as liberacoes dos Aprovadores que possuem o usuario  ³±±
+±±³          ³Logado cadastrado como Superior no cadastro de Aprovadores. ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                              	                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Ausente()
+
+Local aArea		:= GetArea()
+Local aCpos     := {"CR_NUM","CR_TIPO","CR_USER","CR_APROV","CR_STATUS","CR_TOTAL","CR_EMISSAO"}
+Local aHeadCpos := {}
+Local aHeadSize := {}
+Local aArraySCR	:= {}
+Local aCampos   := {}
+Local aCombo    := {}
+Local cAliasSCR := "SCR"
+Local cAprov    := ""
+Local cUserName := ""   
+Local cUsrApvSup:= "" 
+Local cUser     := RetCodUsr()
+Local nX        := 0
+Local nOpc      := 0
+Local nOk       := 0
+Local nRegSak   := 0
+
+Local oDlg
+Local oQual
+
+
+If Type("aIndexSCR") <> "U"	
+	dbClearFilter()
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta o Header com os titulos do TWBrowse             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SX3")
+dbSetOrder(2)
+For nx	:= 1 to Len(aCpos)
+	If MsSeek(aCpos[nx])
+		AADD(aHeadCpos,AllTrim(X3Titulo()))
+		AADD(aHeadSize,CalcFieldSize(SX3->X3_TIPO,SX3->X3_TAMANHO,SX3->X3_DECIMAL,SX3->X3_PICTURE,X3Titulo()))
+		AADD(aCampos,{SX3->X3_CAMPO,SX3->X3_TIPO,SX3->X3_CONTEXT,SX3->X3_PICTURE})
+	EndIf
+Next
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Apartir do codigo do usuario do sistema, obtem o codigo|
+//³da cadeia de aprovadores superiores e os aprovadores   ³
+//³ausentes												  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+dbSelectArea("SAK")
+dbSetOrder(2)
+dbSeek(xFilial("SAK")+cUser)
+While ( !Eof().And. SAK->AK_FILIAL == xFilial("SAK") .AND. SAK->AK_USER == cUser )
+	 nRegSak :=Recno()    
+     cUsrApvSup := SAK->AK_COD
+	 dbSetOrder(3) // AK_FILIAL+AK_APROSUP
+	 dbSeek(cSeek:=xFilial("SAK")+cUsrApvSup)
+     While ( !Eof().And. SAK->(AK_FILIAL+AK_APROSUP) == cSeek )
+		 AADD(aCombo,SAK->AK_COD+" - "+SAK->AK_NOME)
+	     SAK->(dbSkip())
+     EndDo
+	 dbSetOrder(2)
+     dbgoto(nRegSak)  
+  	 SAK->(dbSkip())
+EndDo                        
+               
+cUsrApvSup := ""
+
+If Len(aCombo) > 0
+	
+	A097Aprov(cAliasSCR,Substr(aCombo[1],1,6),@aArraySCR,aCampos,aCombo)
+	
+	DEFINE MSDIALOG oDlg FROM 000,000 TO 400,780 TITLE STR0076 PIXEL // "Transferencia por Ausencia Temporaria de Aprovadores"
+	@ 001,001  TO 050,425 LABEL "" OF oDlg PIXEL
+	
+	@ 012,006 Say STR0077 OF oDlg PIXEL SIZE 080,009 // "Aprovador Ausente "
+	@ 012,058 MSCOMBOBOX cAprov ITEMS aCombo SIZE 250,090 WHEN .T. VALID A097Aprov(cAliasSCR,cAprov,@aArraySCR,aCampos,aCombo,oQual) OF oDlg PIXEL
+	
+	@ 030,006 Say STR0078 OF oDlg PIXEL SIZE 080,009 // "Aprovador Superior" 
+	@ 030,058 MSGET cUserName : = (trim(A097UsuSup(cAprov))+If(Len(aCombo)>1,"   "+STR0086,"")) When .F. SIZE 250,009 OF oDlg PIXEL   
+	
+	oQual:= TWBrowse():New( 051,001,389,133,,aHeadCpos,aHeadSize,oDlg,,,,,,,,,,,,.F.,,.T.,,.F.,,,)
+	oQual:SetArray(aArraySCR)
+	oQual:bLine := { || aArraySCR[oQual:nAT] }
+	
+	@ 187,299 BUTTON STR0079 SIZE 040,011 FONT oDlg:oFont ACTION (nOpc:=1,oDlg:End())  OF oDlg PIXEL // "Transferir"
+	@ 187,340 BUTTON STR0080 SIZE 040,011 FONT oDlg:oFont ACTION (nOpc:=2,oDlg:End())  OF oDlg PIXEL // "Cancelar  "
+	
+	ACTIVATE MSDIALOG oDlg CENTERED
+
+	If nOpc == 1 
+		cUsrApvSup:=Substr(cUserName,1,6)
+
+	    If !Empty(aArraySCR[1][1])
+	 
+		    nOk := Aviso(STR0038,STR0075,{STR0052,STR0053},2) //"Atencao!"###"Ao confirmar este processo todas aprovações pendentes do aprovador serão transferidas ao aprovador superior. Confirma a Transferência ? "###"Cancelar"###"Confirma"
+	
+	        If  nOk == 2  // Confirma a transferencia
+	
+		        For nX := 1 To Len(aArraySCR)
+					dbSelectArea("SCR")                
+					dbGoTo(aTail(aArraySCR[nX]))
+			
+					Begin Transaction
+					MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,,cUsrApvSup,cUser,,,SCR->CR_MOEDA,SCR->CR_TXMOEDA,,STR0081},,2) // "Tranferido por Ausencia"
+					End Transaction	
+		        Next nX
+		
+	        EndIf 
+	        
+	 	Else
+			Aviso("A097NOSCR",STR0084,{STR0031}) //"Não existem registros para serem transferidos"         
+        EndIf
+        
+	EndIf	
+Else
+	Aviso("A097NOSUP",STR0082,{STR0031}) //"Para utilizar esta opção é necessario que exista no minimo um aprovador com um superior cadastrado"
+EndIf
+
+If Type("cXFiltraSCR") <> "U"
+	set filter to  &(cXFiltraSCR)
+EndIf
+
+RestArea(aArea)	
+	
+Return Nil
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097UsuSup ³Autor  ³Julio C.Guerato        ³Data ³11/02/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Retorna Dados do Usuario Superior apartir de um aprovador. ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A097UsuSup(ExpC1)				   			 			  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Cod.do Aprovador                                   ³±±
+±±³Retorno   ³ String com Codigo / Nome do Superiorr                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097UsuSup(cAprov)
+Local aAreaSAK   := SAK->( GetArea() )
+Local cUsr :=""    
+
+dbSelectArea("SAK")
+dbSetOrder(1)
+dbSeek(xFilial("SAK")+cAprov)
+dbSeek(xFilial("SAK")+SAK->AK_APROSUP)   
+cUsr = (SAK->AK_COD +" - "+UsrFullName(SAK->AK_USER))  
+
+RestArea( aAreaSAK) 
+return (cUsr)
+          
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A097UsuApr()
+Função que busca o codigo do usuario aprovador
+@author Leonardo Quintania
+@since 28/01/2013
+@version 1.0
+@return aReturn
+/*/
+//--------------------------------------------------------------------
+Function A097UsuApr(cAprov,nTipo)
+Local aAreaSAK	:= SAK->( GetArea() )  
+Local cUsr			:= ""
+Default nTipo		:= 1 // (1 - Retorna AK_USER, 2 - Retorna AK_COD)
+
+If nTipo == 1 	// Retorna AK_USER
+	SAK->(dbSetOrder(1))
+	If SAK->(dbSeek(xFilial("SAK")+cAprov))
+		cUsr = SAK->AK_USER
+	Endif
+Elseif nTipo == 2 // Retorna AK_COD
+	SAK->(dbSetOrder(2))
+	If SAK->(dbSeek(xFilial("SAK")+cAprov))
+		cUsr = SAK->AK_COD
+	Endif
+Endif
+
+RestArea(aAreaSAK) 
+
+Return cUsr
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097Aprov  ³Autor  ³Alexandre Inacio Lemes ³Data ³27/01/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Acessa as liberacoes dos Aprovadores que possuem o usuario  ³±±
+±±³          ³Logado cadastrado como Superior no cadastro de Aprovadores. ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A097Aprov(ExpC1,ExpC2,ExpA1,ExpA2,ExpA3,ExpO1)			  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpC1 = Alias do SCR                                       ³±±
+±±³          ³ ExpC2 = cod.do aprovador                                   ³±±
+±±³          ³ ExpA1 = array dos campos de SCR		                      ³±±
+±±³          ³ ExpA2 = array dos campos de SCR e outro(s)                 ³±±
+±±³          ³ ExpA3 =                                                    ³±±
+±±³          ³ ExpO1 = objeto do SCR                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum                                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097Aprov(cAliasSCR,cAprov,aArraySCR,aCampos,aCombo,oQual)
+
+Local aStruSCR  := {}
+Local cIndSCR	:= ""
+Local cQuery    := ""
+Local nX        := 0
+Local nOrderSCR := 0 
+Local lQuery    := .F.
+Local lMT097AUS	:= ExistBlock("MT097AUS")
+Local lContinua := .T.
+
+dbSelectArea("SCR")
+dbSetOrder(1)
+
+lQuery := .T.
+cAliasSCR := "QRYSCR"
+aStruSCR  := SCR->(dbStruct())
+cQuery := "SELECT * "
+cQuery += "FROM "+RetSqlName("SCR")+" "
+cQuery += "WHERE CR_FILIAL='"+xFilial("SCR")+"' AND "
+cQuery += "CR_APROV='"+Substr(cAprov,1,6)+"' AND ( CR_STATUS='02' OR CR_STATUS='04' ) AND "
+cQuery += "D_E_L_E_T_ = ' ' "
+cQuery += "ORDER BY "+SqlOrder(SCR->(IndexKey()))
+
+cQuery := ChangeQuery(cQuery)
+dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSCR)
+
+For nX := 1 To len(aStruSCR)
+			If aStruSCR[nX][2] <> "C" .And. FieldPos(aStruSCR[nX][1])<>0
+		TcSetField(cAliasSCR,aStruSCR[nX][1],aStruSCR[nX][2],aStruSCR[nX][3],aStruSCR[nX][4])
+	EndIf
+Next nX
+dbSelectArea(cAliasSCR)	
+
+If Eof()
+	aArraySCR := {{"","","","","",0,""}}
+Else
+	aArraySCR := {}
+EndIf
+
+While ( !(cAliasSCR)->(Eof()) .And. (cAliasSCR)->CR_FILIAL == xFilial("SCR") )
+	
+	If lMT097AUS
+		lContinua := If (ValType(lContinua:= ExecBlock("MT097AUS",.F.,.F.)) == "L",lContinua,.T.)
+	EndIf	
+	
+	If lContinua
+		Aadd(aArraySCR,Array(Len(aCampos)+1))
+		For nX := 1 to Len(aCampos)
+			If Substr(aCampos[nX][1],1,2) == "CR"
+				If aCampos[nX][2] == "N"
+					aArraySCR[Len(aArraySCR)][nX] := Transform((cAliasSCR)->(FieldGet(FieldPos(aCampos[nX][1]))),PesqPict("SCR",aCampos[nX][1]))
+				Else
+					aArraySCR[Len(aArraySCR)][nX] := (cAliasSCR)->(FieldGet(FieldPos(aCampos[nX][1])))
+				Endif
+			EndIf
+		Next nX
+		aTail(aTail(aArraySCR)) := (cAliasSCR)->R_E_C_N_O_
+	EndIf
+	
+	(cAliasSCR)->(dbSkip())
+	
+EndDo
+
+If Len(aArraySCR) == 0
+	aArraySCR := {{"","","","","",0,""}}
+EndIf
+
+If oQual <> Nil
+	oQual:SetArray(aArraySCR)
+	oQual:bLine := { || aArraySCR[oQual:nAT] }
+	oQual:Refresh()
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Apaga os arquivos de trabalho, cancela os filtros e restabelece as ordens originais.|
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lQuery
+	dbSelectArea(cAliasSCR)
+	dbCloseArea()
+Else
+  	dbSelectArea("SCR")
+	RetIndex("SCR")
+	dbClearFilter()
+	Ferase(cIndSCR+OrdBagExt())
+EndIf
+Return Nil
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³MATA097   ºAutor  ³Microsiga           º Data ³  08/09/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³                                                            º±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function ValidPcoLan(lLanPCO)
+Local lRet	   := .T.
+Local aArea    := GetArea()
+Local aAreaSC7 := SC7->(GetArea())
+
+Default lLanPCO := .T.
+
+If lLanPCO
+	If SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE"
+		dbSelectArea("SC7")
+		DbSetOrder(1)
+		DbSeek(xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM)))
+	Endif
+	If lRet	:=	PcoVldLan('000055','02','MATA097')
+		If SCR->CR_TIPO == "NF"
+			dbSelectArea("SF1")
+		ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE"
+			While lRet .And. !Eof() .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM))
+				lRet	:=	PcoVldLan("000055","01","MATA097")
+				dbSelectArea("SC7")
+				dbSkip()
+			EndDo
+		ElseIf SCR->CR_TIPO == "CP"
+			dbSelectArea("SC3")
+			//-- While !Eof() .And. SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) == xFilial("SC3")+Substr(SCR->CR_NUM,1,len(SC3->C3_NUM))
+			//-- 	dbSkip()
+			//-- EndDo
+		EndIf
+	Endif
+	If !lRet
+		PcoFreeBlq("000055")
+	Endif
+EndIf
+
+RestArea(aAreaSC7)
+RestArea(aArea)
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A097VALOBS ³Autor  ³Julio C.Guerato        ³Data ³13/08/2009³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Efetua validação do Campo Observações 				      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Campo Observações                  	                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Valor Lógico                                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Generico                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Function A097VALOBS(cObs)
+Local lObs:= .T.
+
+If ExistBlock("MT097OBS")
+      lObs := ExecBlock("MT097OBS",.F.,.F.,{cOBS})
+	  If Valtype(lObs)<>"L"
+	    lObs := .T.
+	  EndIf
+Endif 
+
+Return (lObs)
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A097ProcLib()
+Realiza o processamento da liberação de documentos.
+@author Leonardo Quintania
+@since 28/01/2013
+@version 1.0
+@return aReturn
+/*/
+//--------------------------------------------------------------------
+Function A097ProcLib(nReg,nOpc,nTotal,cCodLiber,cGrupo,cObs,dRefer,oModelCT)
+Local lLog			:= GetNewPar("MV_HABLOG",.F.)
+Local lMta097		:= ExistBlock("MTA097")
+Local lA097PCO		:= ExistBlock("A097PCO")
+Local lLanPCO		:= .T.	//-- Podera ser modificada pelo PE A097PCO
+Local ca097User 	:= RetCodUsr()
+Local cName   		:= UsrRetName(ca097User)
+Local lLiberou		:= .F.
+Local cPCLib		:= ""
+Local cPCUser		:= ""
+
+Local cEnvPed		:= SuperGetMV("MV_ENVPED",.F.,"0")                                                                                                    
+Local aMail			:= {}
+Local aPedCom		:= {}
+Local nOpMail		:= 0
+Local cTit			:= ""
+Local cNomeEmp		:= FWEmpName(cEmpAnt)
+Local cNomeFil		:= Alltrim(FWFilialName())
+Local cBody 		:= ""
+Local lRet			:= .T.
+Local lLibOk		:= .F.
+Local cScrNum		:= SCR->CR_NUM
+Local aMTAlcDoc 	:= MTGetAlcPE(SCR->CR_TIPO)
+Local cEventID   	:= 0        // Variavel usada para armazenar o ID do EventViewer
+Local cMensagem  	:= " "     // Variavel para armazenar a mensagem utilizada no eventviewer
+Local aItens		:= {}
+Local lBlqPA      	:= SuperGetMv("MV_BLQPAPC",.F.,.F.)
+Local cAliasFIE   	:= ''
+Local cQuery     	:= ""
+Local lSCSldBl		:= SuperGetMv("MV_SCSLDBL",.F.,.F.)
+
+Local lDtRefPed		:= GetNewPar("MV_DTLIMPC",.F.)
+Local lTdsLiberados := .F.
+Local lIpAprEC		:= SuperGetMv("MV_IPAPREC",.F.,.F.) // Liberação/Rejeição por grupo de aprovação
+Local cAprIPPC		:= SuperGetMv("MV_APRIPPC",.F.,'2') // Aprovação Item de Pedido em 2 etapas (IP+PC) 1-S 2-N
+Local nTamNumPc 	:= TamSX3("C7_NUM")[1]
+Local nTamItemPc	:= TamSX3("C7_ITEM")[1]
+Local nTamNumSc 	:= TamSX3("C1_NUM")[1]
+Local nTamItemSc	:= TamSX3("C1_ITEM")[1]
+Local nTamNumSa 	:= TamSX3("CP_NUM")[1]
+Local nTamItemSa	:= TamSX3("CP_ITEM")[1]
+Local cFilialSC1	:= xFilial("SC1")
+Local cFilialSC7	:= xFilial("SC7")
+Local cFilialSCP	:= xFilial("SCP")
+Local cFilialSC3	:= xFilial("SC3")
+Local cFilialFIE	:= xFilial("FIE")
+Local cFilialSE2	:= xFilial("SE2")
+Local cBkpUsr		:= ""
+Local lPosCrTipo    := SCR->(FieldPos("CR_TIPCOM")) > 0
+Local cCompTipCom   := ""
+
+SCR->(dbClearFilter())
+If ( Select("SCR") > 0 )
+	SCR->(dbCloseArea())
+EndIf
+
+dbSelectArea("SCR")
+SCR->(dbSetOrder(1))
+SCR->(dbGoTo(nReg))
+
+Default nTotal	:= SCR->CR_TOTAL
+Default cCodLiber	:= SCR->CR_APROV
+Default cGrupo 	:= SCR->CR_GRUPO
+Default cObs		:= SCR->CR_OBS
+Default dRefer	:= SCR->CR_DATALIB
+Default oModelCT	:= NIL
+
+If Empty(cGrupo)
+	cGrupo := SCR->CR_GRUPO
+Endif
+
+
+If ( SCR->CR_TIPO == "NF" )
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE" .Or. SCR->CR_TIPO == "IP"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SC7->C7_NUM)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "CP"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SC3->C3_NUM)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "MD"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,TAMSX3("CND_NUMMED")[1]),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "IM"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,TAMSX3("CNE_NUMMED")[1]),"MD")
+ElseIf SCR->CR_TIPO == "CT"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,TAMSX3("CN9_NUMERO")[1]),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "IC"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,TAMSX3("CN9_NUMERO")[1] + TAMSX3("CN9_REVISA")[1]+ TAMSX3("CNB_NUMERO")[1]),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "GA" // Documento de Garantia (SIGAJURI)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)			
+ElseIf SCR->CR_TIPO == "SC" // Solicitação de Compras (SIGACOM)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)
+ElseIf	SCR->CR_TIPO == "SA" // Solicitação ao Armazém (SIGAEST)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)
+ElseIf	SCR->CR_TIPO == "ST" // Solicitação de transferência (SIGAEST)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)	
+ElseIf SCR->CR_TIPO $ "RV|IR"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,TAMSX3("CN9_NUMERO")[1] + TAMSX3("CN9_REVISA")[1]),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO >= "A1" .AND. SCR->CR_TIPO <= "A9"  // Documentos do modulo Agro
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)	
+ElseIf !Empty(aMTAlcDoc)
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))),SCR->CR_TIPO)
+EndIf
+If lLibOk
+	Begin Transaction
+		If lMta097 .And. nOpc == 2
+			If lDtRefPed
+				If dRefer < SCR->CR_EMISSAO .And. (SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "IP")
+					Help(" ",1,"A097DREF")
+				Else
+					lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,,cGrupo,,,,,cObs},dRefer,If(nOpc==2,4,6),,,SCR->CR_ITGRP)
+				EndIf
+			Else
+				If ExecBlock("MTA097",.F.,.F.)
+					lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,,cGrupo,,,,,cObs},dRefer,If(nOpc==2,4,6),,,SCR->CR_ITGRP)
+				Endif
+			EndIf	
+		Else
+			If lDtRefPed
+					If dRefer < SCR->CR_EMISSAO .And. (SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "IP")
+						Help(" ",1,"A097DREF")
+					Else
+						lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,,cGrupo,,,,,cObs},dRefer,If(nOpc==2,4,6),,,SCR->CR_ITGRP)
+					EndIf
+			Else
+				lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,,cGrupo,,,,,cObs},dRefer,If(nOpc==2,4,6),,,SCR->CR_ITGRP)
+			EndIf
+		EndIf
+		
+		If lA097PCO
+			lLanPCO := ExecBlock("A097PCO",.F.,.F.,{SC7->C7_NUM,cName,lLanPCO})
+		Endif
+		
+		//-- Apenas o PE A097PCO pode alterar o valor de lA097PCO
+		//-- Se ele nao existir ela devera seguir o valor da liberacao (lLiberou)
+		If !lA097PCO
+			lLanPCO := lLiberou
+		EndIf
+
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Envia e-mail ao comprador ref. Liberacao do pedido para compra- 034³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ  
+		If lLiberou .And. (SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE" .Or. SCR->CR_TIPO == "IP")
+			If IsInCallStack("U_MTFlgLbDoc") .Or. IsInCallStack("MTFlgLbDoc") .Or. IsInCallStack("PUT_APPROVALORDERPC")
+				SC7->(dbSetOrder(1))
+				SC7->(dbSeek(cFilialSC7 + Padr(cScrNum,nTamNumPc) ))
+			Endif
+			cPCLib  := SC7->C7_NUM
+			cPCUser := SC7->C7_USER	
+			dbSelectarea("SXI")
+			SXI->(dbsetorder(2))
+			cEventID  := "034"
+			If msSeek('002' + '001' + cEventID)
+				cMensagem:=STR0101+" - "+SC7->C7_NUM+" - "+STR0102+" - "+cUsername
+				cBkpUsr		:= __cUserId
+				__cUserId	:= cPCUser
+				EventInsert(FW_EV_CHANEL_ENVIRONMENT, FW_EV_CATEGORY_MODULES, cEventID,FW_EV_LEVEL_INFO,""/*cCargo*/,STR0103,cMensagem,.F./*lPublic*/)
+				__cUserId	:= cBkpUsr
+			Else	
+				MEnviaMail("034",{cPCLib,SCR->CR_TIPO},cPCUser) 				
+			Endif
+		EndIf
+			
+		If lLiberou .or. lLanPCO
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If lLanPCO
+				PcoDetLan("000055","02","MATA097")
+			EndIf
+
+			If lLiberou .and. (SCR->CR_TIPO == "NF")
+				dbSelectArea("SF1")
+				Reclock("SF1",.F.)
+				SF1->F1_STATUS := If(SF1->F1_STATUS=="B"," ",SF1->F1_STATUS)
+				MsUnlock()
+			ElseIf (SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE")
+				If lLiberou .And. SuperGetMv("MV_EASY")=="S" .And. !Empty(SC7->C7_PO_EIC)
+					If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. !Empty(SW2->W2_CONAPRO)
+						Reclock("SW2",.F.)
+						SW2->W2_CONAPRO := "L"
+						MsUnlock()
+						TPO_NUM := SW2->W2_PO_NUM
+						EICFI400("ANT_GRV_PO","E")
+              		    EICFI400("POS_GRV_PO","E")
+					EndIf
+				EndIf
+				dbSelectArea("SC7")
+				DbSetOrder(1)
+				MsSeek(cFilialSC7 + Alltrim(SCR->CR_NUM))
+				cPCLib := SC7->C7_NUM
+				cPCUser:= SC7->C7_USER
+				While !SC7->(Eof()) .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == cFilialSC7+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM))
+					If lLiberou
+						Reclock("SC7",.F.)
+						SC7->C7_CONAPRO := "L"
+						MsUnlock()
+						If lBlqPA  // Libera os titulos do financeiro
+						
+							cAliasFIE := GetNextAlias()  
+							cQuery := "SELECT FIE_FILIAL , FIE_PEDIDO , FIE_NUM , FIE_FORNEC, FIE_PREFIX FROM " +RetSqlname("FIE")+ "  WHERE FIE_PEDIDO ='" + SC7->C7_NUM + "' AND FIE_TIPO = 'PA' AND D_E_L_E_T_ <> '*' "  	 
+							cQuery := ChangeQuery(cQuery)
+							dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasFIE,.T.,.T.)							
+							dbSelectArea(cAliasFIE)
+							
+							Do While ( !Eof() .And. FIE_FILIAL == cFilialFIE .And. FIE_PEDIDO == SC7->C7_NUM )							
+									cQuery := "UPDATE "+RetSqlname("SE2")		
+									cQuery += " SET E2_STATLIB = '02' , E2_USUALIB = '"+cPCUser+"'"+", E2_DATALIB = '" + Dtos(dDataBase) + "'"
+									cQuery += " WHERE E2_FILIAL ='"+cFilialSE2+"' AND "
+									cQuery += " E2_NUM='"+FIE_NUM+"' AND "
+									cQuery += " E2_FORNECE ='" +  FIE_FORNEC+"' AND"
+									cQuery += " E2_PREFIXO ='" +  FIE_PREFIX+"'"
+									TcSqlExec(cQuery)									
+									dbSkip()
+							EndDo
+						Endif
+						//Caio.Santos - 11/01/13 - Req.72
+						If lLog
+							RSTSCLOG("LIB",1,/*cUsrWF*/)
+						EndIf
+						If ExistBlock("MT097APR")
+							ExecBlock("MT097APR",.F.,.F.)      
+						EndIf
+						
+						//Alimenta array para envio de email
+						If cEnvPed == "2"
+							aMail	:= {AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_EMAIL'))}
+							If !(Empty(aMail[1]))
+								If Empty(Len(aPedCom))
+									Aadd(aPedCom,SC7->C7_NUM)
+									Aadd(aPedCom,AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_NOME')) + " - " + AllTrim(SC7->C7_FORNECE) + "/" + SC7->C7_LOJA)
+									Aadd(aPedCom,cNomeEmp + " - " + cNomeFil)
+									Aadd(aPedCom,C7_CONTATO)
+									Aadd(aPedCom,{})
+								EndIf
+								Aadd(aPedCom[5],{	SC7->C7_ITEM,;
+													SC7->C7_PRODUTO,;
+													POSICIONE('SB1', 1, xFilial('SB1') + SC7->C7_PRODUTO, 'B1_DESC'),;
+													SC7->C7_UM,;
+													SC7->C7_QUANT,;
+													SC7->C7_PRECO,;
+													SC7->C7_TOTAL,;
+													SC7->C7_DATPRF;
+												})
+							EndIf
+						EndIf
+						
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If lLanPCO
+						PcoDetLan("000055","01","MATA097")
+					EndIf
+					SC7->(dbSkip())
+				EndDo
+				
+			ElseIf lLiberou .and. SCR->CR_TIPO == "CP"
+				dbSelectArea("SC3")
+				While !SC3->(Eof()) .And. SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) == cFilialSC3+Substr(SCR->CR_NUM,1,len(SC3->C3_NUM))
+					Reclock("SC3",.F.)
+					SC3->C3_CONAPRO := "L"
+					MsUnlock()
+					dbSkip()
+				EndDo
+			ElseIf lLiberou .and. SCR->CR_TIPO $ "MD|IM"			
+				If PosMdRevAt(Left(SCR->CR_NUM, Len(CND->CND_NUMMED)))//Se posiciona na CND de acordo com a revisao atual do contrato
+					Reclock("CND",.F.)
+					CND->CND_ALCAPR := "L"
+					CND->CND_SITUAC := "A"
+					MsUnlock()
+					If ExistBlock("MT097APR")
+						ExecBlock("MT097APR",.F.,.F.)
+					EndIf
+				EndIf
+			ElseIf lLiberou .and. SCR->CR_TIPO $ "CT|IC"
+				dbSelectArea("CN9")
+				dbSetOrder(1)
+				If dbSeek(xFilial("CN9")+Left(SCR->CR_NUM,Len(CN9->CN9_NUMERO)))
+					Reclock("CN9",.F.)
+					CN9->CN9_SITUAC := "05" //Vigente 
+					CN9->CN9_DTASSI := dDataBase
+					MsUnlock()
+				EndIf
+			ElseIf lLiberou .and. SCR->CR_TIPO == "GA" // Documento de Garantia (SIGAJURI)
+				dbSelectArea("NV3")
+				dbSetOrder(1)												
+				If dbSeek(xFilial("NV3")+Substr(AllTrim(SCR->CR_NUM),4,Len(AllTrim(SCR->CR_NUM))))				
+					If !JurGerPag(3,'NT2',SCR->CR_TOTAL,NV3->NV3_CAJURI,NV3->NV3_CODLAN,'2','NV3',1)
+						DisarmTransaction()  // Problema ao gerar Contas a Pagar
+					EndIf										
+				EndIf
+				
+			ElseIf lLiberou .And. SCR->CR_TIPO == "SC" // Solicitação de Compras(SIGACOM)
+              	SC1->(dbSetOrder(1))            			
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+				    cCompTipCom   := If(lPosCrTipo .and. !Empty(SCR->CR_TIPCOM) ,"DBM->DBM_TIPCOM == SCR->CR_TIPCOM", "1==1")
+	        		If SC1->(dbSeek(cFilialSC1+DBM->(PadR(DBM_NUM,nTamNumSc)+PadR(DBM_ITEM,nTamItemSc)))) .AND. &cCompTipCom
+							If (SC1->C1_RATEIO == '1' .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA))  ;//-- Verifica se é o ultimo item de aprovação
+							.Or. (SC1->C1_RATEIO <> '1' .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA,DBM->DBM_GRUPO,DBM->DBM_ITGRP,DBM->DBM_TIPCOM)) 
+								//Validação para deixar o campo C1_APROV == L somente quando não houver eliminação de resíduo.
+								If C1_RESIDUO  $ 'N| '	
+									Reclock("SC1",.F.)
+									SC1->C1_APROV := "L"
+									SC1->C1_NOMAPRO := FwSFAllUsers({DBM->DBM_USER}, {"USR_NOME"})[1][3]
+									SC1->(MsUnlock()) 
+								EndIf
+							EndIf
+						EndIf
+						//Tratamento para atualizar o saldo da tabela SB2 ao realizar a aprovação da SC com o parâmetro MV_SCSLDBL estiver ativo 
+						If lSCSldBl
+							dbSelectArea("SB2")
+							dbSetOrder(1)
+							If ( MsSeek(xFilial("SC1")+SC1->C1_PRODUTO+SC1->C1_LOCAL) )
+								GravaB2Pre("+",SC1->C1_QUANT-SC1->C1_QUJE,SC1->C1_TPOP,SC1->C1_QTSEGUM-SC1->C1_QUJE2)
+							EndIf
+						EndIf
+					DBM->(dbSkip())
+				EndDo				
+                                        
+			ElseIf lLiberou .And. SCR->CR_TIPO == "SA"	// Solicitação ao Armazém(SIGAEST)
+				SCP->(dbSetOrder(1))
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+	            	If SCP->(dbSeek(cFilialSCP+DBM->(PadR(DBM_NUM,nTamNumSa)+PadR(DBM_ITEM,nTamItemSa))))
+						If (SCP->CP_RATEIO == '1' .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA)) ; //-- Verifica se é o ultimo item de aprovação
+                     	.Or. (SCP->CP_RATEIO <> '1' .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA,DBM->DBM_GRUPO,DBM->DBM_ITGRP))
+							While SCP->(!EoF()) .And. PadR(DBM->DBM_NUM,nTamNumSa) == PadR(SCP->CP_NUM,nTamNumSa) .And. PadR(SCP->CP_ITEM,nTamItemSa) == PadR(DBM->DBM_ITEM,nTamItemSa)
+             					Reclock("SCP",.F.)
+                    			SCP->CP_STATSA := "L"
+                    			SCP->(MsUnlock())
+                    			SCP->(DbSkip())
+                			EndDo
+						Endif
+                 	EndIf
+              		DBM->(dbSkip())
+				EndDo
+                
+			ElseIf lLiberou .And. SCR->CR_TIPO == "IP" // Item do Pedido (SIGACOM)
+				SC7->(dbSetOrder(1))
+				SC7->(dbSeek(cFilialSC7 + Padr(cScrNum,nTamNumPc) ))
+				cPCLib  := SC7->C7_NUM
+				cPCUser := SC7->C7_USER	
+
+				If Empty(SC7->C7_APROV) .Or. cAprIPPC <> '1'							
+					DBM->(dbSetOrder(3)) 
+					If lIpAprEc 
+						DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP)))
+						While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP) == ;
+												  SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP)
+							cCompTipCom   := If(lPosCrTipo .and. !Empty(SCR->CR_TIPCOM) ,"DBM->DBM_TIPCOM == SCR->CR_TIPCOM", "1==1")
+				          	If SC7->(dbSeek(cFilialSC7 + cPCLib + PadR(DBM->DBM_ITEM,nTamItemPc))) .AND. &cCompTipCom
+								If (SC7->C7_RATEIO <> "1" .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA,DBM->DBM_GRUPO,DBM->DBM_ITGRP)) .Or.;//-- Verifica se é o ultimo item de aprovação
+			              	   		(SC7->C7_RATEIO == "1" .And. MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA))
+									While SC7->(!EoF()) .And. PadR(DBM->DBM_NUM,nTamNumPc) == PadR(SC7->C7_NUM,nTamNumPc) .And. PadR(SC7->C7_ITEM,nTamItemPc) == PadR(DBM->DBM_ITEM,nTamItemPc)
+										Reclock("SC7",.F.)
+										SC7->C7_CONAPRO := "L"
+										SC7->(MsUnlock())
+										SC7->(DbSkip())		                 		
+									EndDo
+								Endif 
+		                   EndIf
+		              	   DBM->(dbSkip())
+		              	EndDo
+	              	Else
+	              		DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+						While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == ;
+													SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+				          	If MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM,DBM->DBM_ITEMRA) .And.;//-- Verifica se é o ultimo item de aprovação
+			              	   SC7->(dbSeek(cFilialSC7 + cPCLib))
+		                 	   While SC7->(!EoF()) .And. PadR(DBM->DBM_NUM,nTamNumPc) == PadR(SC7->C7_NUM,nTamNumPc)
+		                 	   		//Validação para deixar o campo C7_CONAPRO == L somente quando não houver eliminação de resíduo.
+		                 	   		If SC7->C7_RESIDUO  $ "N| "	
+		                 	   		    Reclock("SC7",.F.)             	   				                 	   				                 	   			                 	   	                 	   	
+		                 	   			SC7->C7_CONAPRO := "L"
+		                 	   			SC7->(MsUnlock())		                 				               	          		                 			                 	   		
+			                 		Endif
+			                 		SC7->(DbSkip())		                 		
+		                      EndDo	
+		                   EndIf
+		              	   DBM->(dbSkip())
+		              	EndDo
+	              	Endif
+                     // MFR DTRADE-1271 18/01/2019
+					 //verifica se todos os itens estão liberados para gerar  o financeiro
+					lTdsLiberados := .T. 
+					dbSelectArea("SC7")
+				    DbSetOrder(1)
+				    MsSeek(cFilialSC7 + cPCLib)
+				    While !SC7->(Eof()) .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == cFilialSC7+cPCLib
+					    If SC7->C7_CONAPRO <> "L"
+						   lTdsLiberados := .F. 
+						   Exit
+						EndIf  
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						If lLanPCO
+							PcoDetLan("000055","01","MATA097")
+						EndIf 
+					    SC7->(DbSkip())
+					EndDo
+                    MsSeek(cFilialSC7 + cPCLib)
+					If lLiberou .And. SuperGetMv("MV_EASY")=="S" .And. !Empty(SC7->C7_PO_EIC) .AND. lTdsLiberados
+					   If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. !Empty(SW2->W2_CONAPRO)
+						   Reclock("SW2",.F.)
+						   SW2->W2_CONAPRO := "L"
+						   MsUnlock()
+						   TPO_NUM := SW2->W2_PO_NUM
+						   EICFI400("ANT_GRV_PO","E")
+              		       EICFI400("POS_GRV_PO","E")
+					   EndIf
+				    EndIf
+				Elseif MtGLastDBM(SCR->CR_TIPO,SCR->CR_NUM) .And. cAprIPPC == '1'
+					aItens := MaRetItDoc(SC7->C7_NUM,xFilial("SC7"),"SC7","PC")
+					If (lRet := MaAlcDoc({SC7->C7_NUM,"PC",A097TotPC(SC7->C7_NUM),,,SC7->C7_APROV,,SC7->C7_MOEDA,SC7->C7_TXMOEDA,SC7->C7_EMISSAO},SC7->C7_EMISSAO,1,,,,aItens))
+						While SC7->(!EOF()) .And. SC7->(C7_FILIAL+C7_NUM) == xFilial("SC7")+cPCLib
+							Reclock("SC7",.F.)
+	                 		SC7->C7_CONAPRO := "L"
+	                 		SC7->(MsUnlock())
+									
+	                 		If cEnvPed == "2"
+								aMail	:= {AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_EMAIL'))}
+								If !(Empty(aMail[1]))
+										If Empty(Len(aPedCom))
+											Aadd(aPedCom,SC7->C7_NUM)
+										Aadd(aPedCom,AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_NOME')) + " - " + AllTrim(SC7->C7_FORNECE) + "/" + SC7->C7_LOJA)
+											Aadd(aPedCom,cNomeEmp + " - " + cNomeFil)
+											Aadd(aPedCom,SC7->C7_CONTATO)
+											Aadd(aPedCom,{})
+										EndIf
+										Aadd(aPedCom[5],{	SC7->C7_ITEM,;
+															SC7->C7_PRODUTO,;
+															POSICIONE('SB1', 1, xFilial('SB1') + SC7->C7_PRODUTO, 'B1_DESC'),;
+															SC7->C7_UM,;
+															SC7->C7_QUANT,;
+															SC7->C7_PRECO,;
+															SC7->C7_TOTAL,;
+														SC7->C7_DATPRF  })
+									EndIf
+								EndIf
+							SC7->(DbSkip())
+						EndDo
+					EndIf
+				EndIf
+				
+			Elseif lLiberou .And. SCR->CR_TIPO == "ST"
+				Reclock("NNS",.F.)
+					NNS->NNS_STATUS := "1"
+				NNS->(MsUnlock())
+				
+			ElseIf lLiberou .and. SCR->CR_TIPO $ "RV|IR" .And. oModelCT <> Nil .And. oModelCT:GetId() $ "CNTA300|CNTA301"
+				//-- Inicializa lançamento do PCO
+				PcoIniLan("000354")
+				PcoIniLan("000357")
+				//- Verifica qual tipo de revisão está sendo aprovada.
+
+				If A300GATpRv() ==  "5" //DEF_REV_PARAL - Paralisação
+					oModelCT:LoadValue('CN9MASTER','CN9_SITUAC','06') //DEF_SPARA - Paralisado
+				Else
+					oModelCT:LoadValue('CN9MASTER','CN9_SITUAC','05') //DEF_SVIGE - Vigente
+				EndIf
+
+				If oModelCT:VldData()
+					oModelCT:CommitData()	
+					oModelCT:DeActivate()
+				Else
+					lLiberou := .F.		
+				EndIf
+
+				//-- Finaliza lancamentos do PCO
+				PcoFinLan("000357")
+				PcoFreeBlq("000357")
+
+				PcoFinLan("000354")
+				PcoFreeBlq("000354")
+
+			ElseIf lLiberou .And. !Empty(aMTAlcDoc)
+				dbSelectArea(aMTAlcDoc[2])
+				dbSetOrder(aMTAlcDoc[3])
+				MsSeek(xFilial(aMTAlcDoc[2])+Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))))
+				While !EOF() .And. &(aMTAlcDoc[4]) == Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4])))
+					RecLock(aMTAlcDoc[2],.F.)
+					&(aMTAlcDoc[7,1]) := aMTAlcDoc[7,3]
+					MsUnLock()
+					(aMTAlcDoc[2])->(dbSkip())
+				End
+			Elseif lLiberou .And. SCR->CR_TIPO >= "A1" .AND. SCR->CR_TIPO <= "A9" // Documentos do modulo Agro
+				If FindFunction("OGXUtlOrig") //Identifica que esta utilizando o sigaagr				
+					If OGXUtlOrig() .AND. FindFunction("OGX701AALC")												
+						If !AGRXCOM8( SCR->CR_NUM, SCR->CR_TIPO, SCR->(Recno()),"999")						
+							DisarmTransaction() 
+							lLiberou := .F.
+						EndIf						
+					EndIF
+				Endif	
+			EndIf
+			
+			If ExistBlock("MT097APR")
+				ExecBlock("MT097APR",.F.,.F.)
+			EndIf
+				
+		EndIf
+
+		//Envia email para fornecedor.
+		If cEnvPed == "2" .And. lRet .And. Len(aMail) > 0 .And. !(Empty(aMail[1]))
+			nOpMail := 2
+			cTit 	:= cNomeEmp + " - " + cNomeFil + " - Pedido de Compra " + aPedCom[1]
+			cBody 	:= A120GerMail(aPedCom,nOpMail)
+				
+			MTSendMail(aMail,cTit,cBody)
+
+		EndIf
+		
+	End Transaction
+Else
+	Help(" ",1,"A097LOCK")
+Endif
+If SCR->CR_TIPO == "NF"
+	SF1->(MsUnlockAll())
+ElseIf SCR->CR_TIPO $ "PC|IP|AE"
+	SC7->(MsUnlockAll())
+ElseIf SCR->CR_TIPO == "SC"
+	SC1->(MsUnlockAll())
+ElseIf SCR->CR_TIPO == "SA"
+	SCP->(MsUnlockAll())
+ElseIf SCR->CR_TIPO == "CP"
+	SC3->(MsUnlockAll())
+ElseIf SCR->CR_TIPO == "MD"
+	CND->(MsUnlockAll())
+ElseIf SCR->CR_TIPO == "IM"
+	CNE->(MsUnlockAll())
+ElseIf SCR->CR_TIPO $ "CT|RV"
+	CN9->(MsUnlockAll())
+ElseIf SCR->CR_TIPO $ "IC|IR"
+	CNB->(MsUnlockAll())
+ElseIf !Empty(aMTAlcDoc)
+	(aMTAlcDoc[2])->(MsUnLockAll())
+EndIf
+
+Return lLiberou
+
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A097ProcSup()
+Realiza o processamento do superior
+@author Leonardo Quintania
+@since 28/01/2013
+@version 1.0
+@return lLiberou
+/*/
+//--------------------------------------------------------------------
+
+Function A097ProcSup(nReg,nOpc,nTotal,cAprovS,cGrupo,cObs,cSavAprov,dRefer,oModelCT)
+Local lLog  := GetNewPar("MV_HABLOG",.F.)
+Local lMta097		:= ExistBlock("MTA097")
+Local lLiberou	:= .F.
+Local lLibOk		:= .T.
+Local cEnvPed		:= SuperGetMV("MV_ENVPED",.F.,"0")                                                                                                    
+Local aMail		:= {}
+Local aPedCom		:= {}
+Local nOpMail		:= 0
+Local cTit			:= ""
+Local cNomeEmp	:= FWEmpName(cEmpAnt)
+Local cNomeFil	:= Alltrim(FWFilialName())
+Local cBody 		:= ""				
+Local aMTAlcDoc 	:= MTGetAlcPE(SCR->CR_TIPO)
+Local lAprovSup		:= .T.
+Local cEventID		:= ""
+Local cBkpUsr		:= ""	
+
+Default nTotal	:= SCR->CR_TOTAL
+Default cAprovS	:= SAK->AK_APROSUP
+Default cGrupo 	:= SCR->CR_GRUPO
+Default cObs		:= SCR->CR_OBS
+Default cSavAprov	:= SCR->CR_APROV
+Default dRefer	:= SCR->CR_DATALIB
+Default oModelCT := NIL
+
+SCR->(dbClearFilter())
+SCR->(dbGoTo(nReg))
+
+If ( SCR->CR_TIPO == "NF" )
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE" .Or. SCR->CR_TIPO == "IP"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SC7->C7_NUM)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "CP"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(SC3->C3_NUM)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "MD"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(CND->CND_NUMMED)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "IM"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(CNE->CNE_NUMMED)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "CT"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(CN9->CN9_NUMERO)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "IC"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(CN9->CN9_NUMERO + CN9->CN9_REVISA + CNB->CNB_NUMERO)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO $ "RV|IR"
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(CN9->CN9_NUMERO + CN9->CN9_REVISA)),SCR->CR_TIPO)
+ElseIf SCR->CR_TIPO == "SC" // Solicitação de Compras (SIGACOM)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)
+ElseIf	SCR->CR_TIPO == "SA" // Solicitação ao Armazém (SIGAEST)
+	lLibOk := A097Lock(SCR->CR_NUM,SCR->CR_TIPO)
+ElseIf !Empty(aMTAlcDoc)
+	lLibOk := A097Lock(Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))),SCR->CR_TIPO)
+EndIf
+
+If lLibOk
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Inicializa a gravacao dos lancamentos do SIGAPCO          ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PcoIniLan("000055")
+	Begin Transaction
+		If lMta097 .And. nOpc == 2
+			If ExecBlock("MTA097S",.F.,.F.)
+				Processa({|lEnd| lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cAprovS,,cGrupo,,,,,cObs,cSavAprov},dRefer,If(nOpc==2,4,6),,,,,,,,lAprovSup)})
+			EndIf
+		Else
+			Processa({|lEnd| lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cAprovS,,cGrupo,,,,,cObs,cSavAprov},dRefer,If(nOpc==2,4,6),,,,,,,,lAprovSup)})
+		EndIf
+
+		If lLiberou
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			PcoDetLan("000055","02","MATA097")
+
+			If SCR->CR_TIPO == "NF"
+				dbSelectArea("SF1")
+				Reclock("SF1",.F.)
+				SF1->F1_STATUS := If(SF1->F1_STATUS=="B"," ",SF1->F1_STATUS)
+				MsUnlock()
+			ElseIf SCR->CR_TIPO == "PC" .Or. SCR->CR_TIPO == "AE"
+				If SuperGetMv("MV_EASY")=="S" .And. !Empty(SC7->C7_PO_EIC)
+					If SW2->(MsSeek(xFilial("SW2")+SC7->C7_PO_EIC)) .AND. !Empty(SW2->W2_CONAPRO)
+						Reclock("SW2",.F.)
+						SW2->W2_CONAPRO := "L"
+						MsUnlock()
+						TPO_NUM := SW2->W2_PO_NUM 
+						EICFI400("ANT_GRV_PO","E")
+              		EICFI400("POS_GRV_PO","E")
+					EndIf
+				EndIf
+
+				dbSelectArea("SC7")
+				cPCLib := SC7->C7_NUM
+				cPCUser:= SC7->C7_USER
+				While !Eof() .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM))
+					Reclock("SC7",.F.)
+					SC7->C7_CONAPRO := "L"
+					MsUnlock()
+					//Caio.Santos - 11/01/13 - Req.72
+					
+					//Alimenta array para envio de email
+					If cEnvPed $ "1|2"
+						aMail	:= {AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_EMAIL'))}
+						If !(Empty(aMail[1]))
+							If Empty(Len(aPedCom))
+								Aadd(aPedCom,SC7->C7_NUM)
+								Aadd(aPedCom,AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_NOME')) + " - " + AllTrim(SC7->C7_FORNECE) + "/" + SC7->C7_LOJA)
+								Aadd(aPedCom,cNomeEmp + " - " + cNomeFil)
+								Aadd(aPedCom,C7_CONTATO)
+								Aadd(aPedCom,{})
+							EndIf
+							Aadd(aPedCom[5],{	SC7->C7_ITEM,;
+												SC7->C7_PRODUTO,;
+												POSICIONE('SB1', 1, xFilial('SB1') + SC7->C7_PRODUTO, 'B1_DESC'),;
+												SC7->C7_UM,;
+												SC7->C7_QUANT,;
+												SC7->C7_PRECO,;
+												SC7->C7_TOTAL,;
+												SC7->C7_DATPRF;
+											})
+						EndIf
+					EndIf
+					
+					If lLog
+						RSTSCLOG("LIB",1,/*cUsrWF*/)
+					EndIf
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Grava os lancamentos nas contas orcamentarias SIGAPCO    ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					PcoDetLan("000055","01","MATA097")
+					dbSkip()
+				EndDo
+
+			   	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		    	//³ Envia e-mail ao comprador ref. Liberacao do pedido para compra- 034³
+			   	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				dbSelectarea("SXI")
+				SXI->(dbsetorder(2))
+				cEventID  := "034"
+				If msSeek('002' + '001' + cEventID)
+					cMensagem:=STR0101+" - "+cPCLib+" - "+STR0102+" - "+cUsername
+					cBkpUsr		:= __cUserId
+					__cUserId	:= cPCUser
+					EventInsert(FW_EV_CHANEL_ENVIRONMENT, FW_EV_CATEGORY_MODULES, cEventID,FW_EV_LEVEL_INFO,""/*cCargo*/,STR0103,cMensagem,.F./*lPublic*/)
+					__cUserId	:= cBkpUsr
+				Else	
+					MEnviaMail("034",{cPCLib,SCR->CR_TIPO},cPCUser) 				
+				Endif
+			ElseIf SCR->CR_TIPO == "CP"
+				dbSelectArea("SC3")
+				While !Eof() .And. SC3->C3_FILIAL+Substr(SC3->C3_NUM,1,len(SC3->C3_NUM)) == xFilial("SC3")+Substr(SCR->CR_NUM,1,len(SC3->C3_NUM))
+					Reclock("SC3",.F.)
+					SC3->C3_CONAPRO := "L"
+					MsUnlock()
+					dbSkip()
+				EndDo			
+			ElseIf SCR->CR_TIPO == "MD"
+				dbSelectArea("CND")
+				dbSetOrder(4)
+				If dbSeek(xFilial("CND")+CND->CND_NUMMED)
+					Reclock("CND",.F.)
+					CND->CND_ALCAPR := "L"
+					CND->CND_SITUAC := "A"
+					MsUnlock()
+				EndIf				
+
+			ElseIf SCR->CR_TIPO == "IM" // Item da Medição
+				CND->(dbSetOrder(4))
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+	             	If MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM) //-- Verifica se é o ultimo item de aprovação
+                 		If CND->(dbSeek(xFilial("CND")+DBM->(PadR(DBM_NUM,TamSX3("CND_NUMMED")[1])))) .AND. Empty(CND->CND_APROV)
+                    		Reclock("CND",.F.)
+                    		CND->CND_ALCAPR := "L"
+                    		CND->CND_SITUAC := "A"
+                    		CND->(MsUnlock())
+                    	EndIf
+                 	EndIf
+              	DBM->(dbSkip())
+				End
+				If MtGLastDBM(SCR->CR_TIPO,SCR->CR_NUM)
+					If CND->(dbSeek(xFilial("CND")+DBM->(PadR(DBM_NUM,TamSX3("CND_NUMMED")[1])))) .AND. !Empty(CND->CND_APROV)
+						If !(MaAlcDoc({CND->CND_NUMMED,"MD",CND->CND_VLTOT,,,CND->CND_APROV,,CND->CND_MOEDA,,CND->CND_DTINIC},,3))
+							Reclock("CND",.F.)
+                    		CND->CND_ALCAPR := "L"
+                    		CND->CND_SITUAC := "A"
+                    		CND->(MsUnlock())
+                    	EndIf
+					EndIf
+				EndIf
+			ElseIf lLiberou .and. SCR->CR_TIPO $ "CT|IC"
+				dbSelectArea("CN9")
+				dbSetOrder(1)
+				If dbSeek(xFilial("CN9")+Left(SCR->CR_NUM,Len(CN9->CN9_NUMERO)))
+					Reclock("CN9",.F.)
+					CN9->CN9_SITUAC := "05" //Vigente 
+					CN9->CN9_DTASSI := dDataBase
+					MsUnlock()
+				EndIf
+			ElseIf lLiberou .and. SCR->CR_TIPO $ "RV|IR" .And. oModelCT <> Nil .And. oModelCT:GetId() $ "CNTA300|CNTA301"
+				//-- Inicializa lançamento do PCO
+				PcoIniLan("000354")
+				PcoIniLan("000357")
+				//- Verifica qual tipo de revisão está sendo aprovada.
+
+				If A300GATpRv() ==  "5" //DEF_REV_PARAL - Paralisação
+					oModelCT:LoadValue('CN9MASTER','CN9_SITUAC','06') //DEF_SPARA - Paralisado
+				Else
+					oModelCT:LoadValue('CN9MASTER','CN9_SITUAC','05') //DEF_SVIGE - Vigente
+				EndIf
+
+				If oModelCT:VldData()
+					oModelCT:CommitData()	
+					oModelCT:DeActivate()
+				Else
+					lLiberou := .F.		
+				EndIf
+
+				//-- Finaliza lancamentos do PCO
+				PcoFinLan("000357")
+				PcoFreeBlq("000357")
+
+				PcoFinLan("000354")
+				PcoFreeBlq("000354")
+			ElseIf SCR->CR_TIPO == "SC" // Solicitação de Compras(SIGACOM)
+				SC1->(dbSetOrder(1)) 			
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+	            	If 	MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM) //-- Verifica se é o ultimo item de aprovação
+						If SC1->(dbSeek(xFilial("SC1")+DBM->(PadR(DBM_NUM,TamSX3("C1_NUM")[1])+PadR(DBM_ITEM,TamSX3("C1_ITEM")[1]))))
+							Reclock("SC1",.F.)
+							SC1->C1_APROV := "L"
+							SC1->(MsUnlock())
+						EndIf
+					EndIf
+					DBM->(dbSkip())
+				EndDo                                        
+			ElseIf SCR->CR_TIPO == "SA"	// Solicitação ao Armazém(SIGAEST)
+				SCP->(dbSetOrder(1))            	
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+              	If MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM) //-- Verifica se é o último item de aprovação
+						If SCP->(dbSeek(xFilial("SCP")+DBM->(PadR(DBM_NUM,TamSX3("CP_NUM")[1])+PadR(DBM_ITEM,TamSX3("CP_ITEM")[1]))))
+                    		Reclock("SCP",.F.)
+                    		SCP->CP_STATSA := "L"
+                    		SCP->(MsUnlock())
+						EndIf
+					EndIf
+					DBM->(dbSkip())
+				EndDo
+			ElseIf SCR->CR_TIPO == "IP" // Item do Pedido (SIGACOM)
+				SC7->(dbSetOrder(1))
+				DBM->(dbSetOrder(3))
+				DBM->(dbSeek(xFilial("DBM")+SCR->(CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)))
+				While DBM->(!EOF()) .And. DBM->(DBM_FILIAL+DBM_TIPO+DBM_NUM+DBM_GRUPO+DBM_ITGRP+DBM_USAPRO+DBM_USAPOR) == SCR->(CR_FILIAL+CR_TIPO+CR_NUM+CR_GRUPO+CR_ITGRP+CR_APROV+CR_APRORI)
+	             	If 	MtGLastDBM(SCR->CR_TIPO,DBM->DBM_NUM,DBM->DBM_ITEM) //-- Verifica se é o ultimo item de aprovação
+                    	If SC7->(dbSeek(xFilial("SC7")+DBM->(PadR(DBM_NUM,TamSX3("C7_NUM")[1])+PadR(DBM_ITEM,TamSX3("C7_ITEM")[1])))) .And. Empty(SC7->C7_APROV)
+                    		Reclock("SC7",.F.)
+                    		SC7->C7_CONAPRO := "L"
+                    		SC7->(MsUnlock())
+                    		
+                    	EndIf
+                  EndIf
+                  DBM->(dbSkip())
+				EndDo
+				If MtGLastDBM(SCR->CR_TIPO,SCR->CR_NUM) .And. !Empty(SC7->C7_APROV)
+					IF !Empty(SC7->C7_APROV) 
+						lRet := MaAlcDoc({SC7->C7_NUM,"PC",A097TotPC(SC7->C7_NUM),,,SC7->C7_APROV,,SC7->C7_MOEDA,SC7->C7_TXMOEDA,SC7->C7_EMISSAO},SC7->C7_EMISSAO,1)
+					EndIf
+					If lRet
+						//Alimenta array para envio de email
+						While SC7->(dbSeek(xFilial("SC7")+DBM->(PadR(DBM_NUM,TamSX3("C7_NUM")[1])))) .And. !(SC7->(EoF()))
+							If cEnvPed $ "1|2" .And. !Empty(SC7->C7_APROV)
+								aMail	:= {AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_EMAIL'))}
+								If !(Empty(aMail[1]))
+									If Empty(Len(aPedCom))
+										Aadd(aPedCom,SC7->C7_NUM)
+										Aadd(aPedCom,AllTrim(POSICIONE('SA2', 1, xFilial('SA2') + SC7->(C7_FORNECE+C7_LOJA), 'A2_NOME')) + " - " + AllTrim(SC7->C7_FORNECE) + "/" + SC7->C7_LOJA)
+										Aadd(aPedCom,cNomeEmp + " - " + cNomeFil)
+										Aadd(aPedCom,C7_CONTATO)
+										Aadd(aPedCom,{})
+									EndIf
+								EndIf
+								Aadd(aPedCom[5],{	SC7->C7_ITEM,;
+													SC7->C7_PRODUTO,;
+													POSICIONE('SB1', 1, xFilial('SB1') + SC7->C7_PRODUTO, 'B1_DESC'),;
+													SC7->C7_UM,;
+													SC7->C7_QUANT,;
+													SC7->C7_PRECO,;
+													SC7->C7_TOTAL,;
+													SC7->C7_DATPRF;
+												})
+							EndIf
+						EndDo
+						SC7->(DbSkip())
+					EndIf
+				EndIf
+				
+				ElseIf !Empty(aMTAlcDoc)
+					dbSelectArea(aMTAlcDoc[2])
+					dbSetOrder(aMTAlcDoc[3])
+					MsSeek(xFilial(aMTAlcDoc[2])+Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4]))))
+					While !EOF() .And. &(aMTAlcDoc[4]) == Substr(SCR->CR_NUM,1,Len(&(aMTAlcDoc[4])))
+						RecLock(aMTAlcDoc[2],.F.)
+						&(aMTAlcDoc[7,1]) := aMTAlcDoc[7,3]
+						MsUnLock()
+						(aMTAlcDoc[2])->(dbSkip())
+					End
+				EndIf
+			EndIf			
+		
+		//Envia email para fornecedor.
+		If cEnvPed $ "1|2" .And. Len(aMail) > 0 .And. !(Empty(aMail[1]))
+			nOpMail := 2
+			cTit 	:= cNomeEmp + " - " + cNomeFil + " - Pedido de Compra " + aPedCom[1]
+			cBody 	:= A120GerMail(aPedCom,nOpMail)
+				
+			MTSendMail(aMail,cTit,cBody)
+
+		EndIf
+		
+	End Transaction
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Finaliza a gravacao dos lancamentos do SIGAPCO            ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	PcoFinLan("000055")
+Else
+	Help(" ",1,"A097LOCK")
+
+	If cTipo == "NF"
+		SF1->(MsUnlockAll())
+	ElseIf cTipo $ "PC|AE|IP"
+		SC7->(MsUnlockAll())
+	ElseIf cTipo == "CP"
+		SC3->(MsUnlockAll())
+	ElseIf cTipo == "MD"
+		CND->(MsUnlockAll())
+	ElseIf cTipo == "IM"
+		CNE->(MsUnlockAll())
+	ElseIf SCR->CR_TIPO $ "CT|RV"
+		CN9->(MsUnlockAll())
+	ElseIf SCR->CR_TIPO $ "IC|IR"
+		CNB->(MsUnlockAll())
+	ElseIf cTipo == "SC"
+		SC1->(MsUnlockAll())
+	ElseIf cTipo == "SA"
+		SCP->(MsUnlockAll())
+	ElseIf !Empty(aMTAlcDoc)
+		(aMTAlcDoc[2])->(MsUnLockAll())
+	EndIf
+Endif
+Return lLiberou
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A097ProcTf()
+Realiza transferencia para superior
+@author Leonardo Quintania
+@since 28/01/2013
+@version 1.0
+@return aReturn
+/*/
+//--------------------------------------------------------------------
+Function A097ProcTf(nReg,nOpc,cAprovS,cObs,dRefer)
+Local lMta097    := ExistBlock("MTA097S")
+
+Default cAprovS	:= SAK->AK_APROSUP
+Default cObs		:= SCR->CR_OBS
+Default dRefer	:= SCR->CR_DATALIB
+
+Begin Transaction
+	If lMta097
+		If ExecBlock("MTA097S",.F.,.F.)
+			Processa({|lEnd| lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,,cAprovS,,,,,,,cObs},dRefer,2)})
+		EndIf
+	Else
+		Processa({|lEnd| lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,,cAprovS,,,,,,,cObs},dRefer,2)})
+	EndIf
+End Transaction
+
+Return .T.
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} ScrItComPai
+Retorna se o item possui documento gerador.
+@param cDoc:	Documento a ser verificado.
+		nTot:	Valor total do Pai do item (variavel para retorno).
+		cTipo: Tipo do documento de aprovação.
+
+@author Israel Escorizza
+@since 13/05/2015
+@version 1.0
+@return lRet
+/*/
+//--------------------------------------------------------------------
+Static Function ScrItComPai(cDoc,nTot,cTipo)
+Local aAreaSCR   := SCR->( GetArea() )
+Local lRet 	     := .F.
+
+Default cTipo := "PC"
+
+SCR->(dbSetOrder(1))
+If (lRet :=  SCR->(dbSeek(xFilial("SCR")+cTipo+cDoc)))
+	nTot := SCR->CR_TOTAL
+EndIf
+
+RestArea( aAreaSCR )
+
+Return lRet
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} A097TotPC()
+Retorna se o valor total do documento 
+@author Leonardo Quintania
+@since 04/09/2013
+@version 1.0
+@return aReturn
+/*/
+//--------------------------------------------------------------------
+Static Function A097TotPC(cPedido)
+Local aArea := GetArea()
+
+BeginSQL Alias "TMPSC7"
+	SELECT SUM(C7_TOTAL + C7_VALFRE + C7_SEGURO + C7_DESPESA - C7_VLDESC) TOTPED
+	FROM %Table:SC7%
+	WHERE %NotDel% AND
+	      C7_FILIAL = %xFilial:SC7% AND
+	      C7_RESIDUO <> 'S' AND
+	      C7_NUM = %Exp:cPedido%
+EndSQL
+	
+nRet := TMPSC7->TOTPED
+TMPSC7->(dbCloseArea())
+RestArea(aArea)
+
+Return nRet
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A097FstNiv()
+Funcao que retorna o primeiro nivel do Grupo de Aprovação
+
+@param cGrAprov
+
+@author rafael.duram
+@since 21/08/2015
+@version 1.0
+@return cNivel 
+/*/
+//-------------------------------------------------------------------
+
+Function A097FstNiv(cGrAprov,cTipoDoc,cNumDoc)
+Local cNivel 	:= ""
+Local aAreaAnt	:= GetArea()	
+Local aAreaSAL	:= {}
+Local cAliasTemp	:= ""
+
+// Verifica o menor nivel que foi gerado alçada
+If cTipoDoc <> NIL
+
+	cAliasTemp	:= GetNextAlias()
+
+	BeginSQL Alias cAliasTemp
+
+	SELECT DISTINCT SCR.CR_NIVEL
+	FROM %Table:SCR% SCR
+	WHERE SCR.%NotDel% AND
+	SCR.CR_FILIAL = %xFilial:SCR% AND
+	SCR.CR_NUM = %Exp:cNumDoc% AND
+	SCR.CR_TIPO = %Exp:cTipoDoc%
+
+	EndSQL
+
+	While !(cAliasTemp)->(Eof())
+		If Empty(cNivel) .Or. (cAliasTemp)->CR_NIVEL < cNivel
+			cNivel := (cAliasTemp)->CR_NIVEL
+		Endif
+		(cAliasTemp)->(DbSkip())
+	EndDo
+	DbCloseArea(cAliasTemp)
+
+Else // Verifica o menor nivel do grupo de aprovação
+
+	aAreaSAL	:= SAL->(GetArea())
+	DbSelectArea('SAL')
+	SAL->(DbSetOrder(1))
+	SAL->(MsSeek(xFilial('SAL')+cGrAprov))
+
+	While SAL->(!Eof()) .And. xFilial('SAL')+cGrAprov == SAL->(AL_FILIAL+AL_COD)
+	If Empty(cNivel) .Or. SAL->AL_NIVEL < cNivel
+		cNivel := SAL->AL_NIVEL
+	Endif
+	SAL->(dbSkip())
+	EndDo
+
+	RestArea(aAreaSAL)
+
+Endif
+
+RestArea(aAreaAnt)
+
+Return cNivel
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A097LibVal()
+Funcao que retorna se a liberação do processo podera ser realizada
+
+@param cRotina
+
+@author rafael.duram
+@since 24/09/2015
+@version 1.0
+@return lLibera
+/*/
+//-------------------------------------------------------------------
+
+Function A097LibVal(cRotina)
+Local lLibera 		:= .T.
+Local cCodRot		:= Substr(cRotina,5,3) // Ex: "097", "094"
+Local lA097AprFlg	:= ExistBlock('A097AprFlg')
+Local lFA097AprFlg	:= FindFunction('A097AprFlg') .And. GetRPORelease() < "12.1.033"
+
+If !Empty(SCR->CR_DATALIB) .And. SCR->CR_STATUS $ "03#05#06"
+	Help(" ",1,"A097LIB")  // "Problema: Este documento já foi liberado. ## "Solução: Escolha outro item que não foi liberado."
+	lLibera := .F.
+ElseIf SCR->CR_STATUS $ "01"
+	Aviso("A"+cCodRot+"BLQ",STR0083,{STR0031}) // "Esta operação não poderá ser realizada pois este registro se encontra bloqueado pelo sistema (aguardando outros niveis)"
+	lLibera := .F.
+ElseIf !Empty(SCR->CR_FLUIG) .And. ;
+(lA097AprFlg .And. ExecBlock("A097AprFlg", .F., .F., {SCR->CR_TIPO})) ;
+.Or. (!lA097AprFlg .And. lFA097AprFlg .And. A097AprFlg(SCR->CR_TIPO))
+	Aviso("A"+cCodRot+"FLG",STR0100,{STR0031}) // "Esta operação deve ser realizada somente através do Fluig, conforme definição no Gerador de Processos."
+	lLibera := .F.
+EndIf
+
+Return lLibera
+
+//----------------------------------------------------------------------
+/*/{Protheus.doc} A097CclVda()
+Informa a validade de descontinuação da rotina
+@author Romulo Batista
+@since 11/04/2019
+@version 1.0
+@return .T.
+/*/
+//----------------------------------------------------------------------
+Function A097CclVda()
+
+Local cRelease := GetRpoRelease()
+Local cRelCut  := "12.1.025"
+Local dData	   := DDataBase
+Local dDtCut   := cTod("01/07/2019")
+Local lRet     := .T.
+
+//Aviso Ciclo de Vida
+Help( NIL, NIL, STR0105, NIL, + Chr(13) + Chr(10) + STR0106, 1, 0,NIL, NIL, NIL, NIL, NIL,;
+ 	{+ Chr(13) + Chr(10) + STR0107 + Chr(13) + Chr(10) + STR0108 + Chr(13) + Chr(10) + Chr(13) + Chr(10) +  STR0109})
+ 	
+//Verificação Release e data de corte	
+If cRelease >= cRelCut .And. dData >= dDtCut
+	lRet := .F.
+ElseIf cRelease < cRelCut .And. dData >= dDtCut
+	lRet := .F.
+ElseIf cRelease >= cRelCut .And. dData < dDtCut
+	lRet := .F.
+EndIf	
+
+Return lRet
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} SCCotAnd()
+Verifica se a SC possui Cotação em andamento
+
+@author rd.santos
+@since 25/06/2020
+@version 1.0
+@return NIL
+/*/
+//--------------------------------------------------------------------
+Function SCCotAnd()
+Local lRet 		:= .T.
+Local cSolic	:= Padr(SCR->CR_NUM,TamSX3("C1_NUM")[1])
+Local cAliasAux	:= GetNextAlias()
+
+
+BeginSQL Alias cAliasAux
+	SELECT 	COUNT(SC8.R_E_C_N_O_) AS CNTREC
+	FROM 	%Table:SC8% SC8
+	INNER JOIN %table:SC1% SC1  ON
+    SC1.C1_FILIAL  = %xFilial:SC1% AND 
+    SC1.C1_COTACAO = SC8.C8_NUM
+	WHERE 	SC8.C8_FILIAL 	  = %xFilial:SC8%
+			AND SC8.C8_NUMSC  = %Exp:cSolic%
+			AND SC8.%NotDel%
+			AND SC1.%NotDel%
+EndSQL
+	
+
+lRet := (cAliasAux)->CNTREC = 0 //Se for igual a zero não possui cotação em aberto
+
+(cAliasAux)->(DbCloseArea())
+
+// Possui cotação em aberto, abortar o processo e mostrar Help
+If !lRet
+	Help("",1,"SCCOTAND",,STR0113 + " " + cSolic + STR0114,; // "Solicitação de Compra" # " com Cotação em andamento."
+	1 , 0 ,NIL, NIL, NIL, NIL, NIL,{STR0115}) // "Para prosseguir é necessário cancelar o processo de cotação."
+Endif
+
+
+Return lRet
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} SCContrAss()
+Verifica se a SC possui Contrato (GCT) associado
+
+@author rd.santos
+@since 09/07/2020
+@version 1.0
+@return NIL
+/*/
+//--------------------------------------------------------------------
+Function SCContrAss()
+Local lRet 		:= .T.
+Local cSolic	:= Padr(SCR->CR_NUM,TamSX3("C1_NUM")[1])
+Local cAliasAux	:= GetNextAlias()
+
+
+BeginSQL Alias cAliasAux
+	SELECT 	COUNT(CNB.R_E_C_N_O_) AS CNTREC
+	FROM 	%Table:CNB% CNB
+	INNER JOIN %table:SC1% SC1  ON
+    SC1.C1_FILIAL = %xFilial:SC1% AND 
+    SC1.C1_NUM    = CNB.CNB_NUMSC
+	WHERE 	CNB.CNB_FILIAL 	  = %xFilial:CNB%
+			AND CNB.CNB_NUMSC = %Exp:cSolic%
+			AND CNB.%NotDel%
+			AND SC1.%NotDel%
+EndSQL
+	
+
+lRet := (cAliasAux)->CNTREC = 0 //Se for igual a zero não possui cotação em aberto
+
+(cAliasAux)->(DbCloseArea())
+
+// Possui cotação em aberto, abortar o processo e mostrar Help
+If !lRet
+	Help("",1,"SCCONTRASS",,STR0113 + " " + cSolic + STR0116,; // "Solicitação de Compra" # " com Contrato associado."
+	1 , 0 ,NIL, NIL, NIL, NIL, NIL,{STR0117}) // "Para prosseguir é necessário desvincular a Solicitação do Contrato."
+Endif
+
+
+Return lRet
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} A097AprFlg()
+Funcao que retorna se a aprovação do processo devera ocorrer apenas pelo Fluig
+
+@param cTpAprov
+
+@author rafael.duram
+@since 23/09/2015
+@version 1.0
+@return lAprovFlg
+/*/
+//-------------------------------------------------------------------
+
+Function A097AprFlg(cTpAprov)
+Local lAprovFlg 	:= .F.
+Local aAreaAnt	:= GetArea()
+Local aAreaCPF	:= CPF->(GetArea())
+
+dbSelectArea("CPF")
+dbSetOrder(1)
+
+If CPF->(DbSeek(xFilial('CPF')+cTpAprov)) .And. CPF->CPF_AFLUIG == "1"
+	lAprovFlg := .T.
+Endif
+
+RestArea(aAreaCPF)
+RestArea(aAreaAnt)
+
+Return lAprovFlg

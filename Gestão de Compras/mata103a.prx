@@ -1,0 +1,2232 @@
+#INCLUDE "protheus.ch"
+#INCLUDE "mata103a.ch"
+#INCLUDE "FWADAPTEREAI.CH" 
+#INCLUDE "COVERAGE.CH"
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³NfeDocVin ³ Autor ³Eduardo Riera          ³ Data ³23.07.2004	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Inclusao de vinculo do documento de cobertura                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Processamento Ok.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias da Tabela                                      	³±±
+±±³          ³ExpN2: Numero do Registro da Tabela                         	³±±
+±±³          ³ExpN3: Opcao do aRotina                                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeDocVin(cAlias,nReg,nOpc,xPar,xAutoCab) 
+
+Local aArea     := GetArea()
+Local aObjects  := {} 
+Local aPosObj   := {} 
+Local aPosGet   := {}
+Local aSizeAut  := MsAdvSize(,.f.,400)
+Local aCols	    := {}
+Local aHeader	:= {}
+Local lGravou	:= .F.
+Local lVisual   := nOpc == 1
+Local lExclui   := nOpc == 3
+Local lAchou	:= .F.
+Local lTravas   := IIf(lVisual,.f.,SoftLock("SF1"))
+Local nOpcA		:= 0      
+Local nPIdentNf := 0
+Local nSaveSx8  := GetSx8Len()
+Local nGetDad   := IIf(nOpc==2,GD_UPDATE,0)
+Local oDlg  
+Local lSubSerie  := cPaisLoc == "BRA" .And. SF1->(ColumnPos("F1_SUBSERI")) > 0 .And. SuperGetMv("MV_SUBSERI",.F.,.F.) 
+
+PRIVATE oGetD
+PRIVATE cFormul    := SF1->F1_FORMUL
+PRIVATE cNFiscal   := SF1->F1_DOC
+PRIVATE cNFiscal2  := SF1->F1_DOC
+PRIVATE cSerie	   := SF1->F1_SERIE
+Private cSubSerie  := ""
+PRIVATE cA100For   := SF1->F1_FORNECE
+PRIVATE cLoja      := SF1->F1_LOJA
+PRIVATE cEspecie   := SF1->F1_ESPECIE
+PRIVATE dDEmissao  := SF1->F1_EMISSAO
+PRIVATE cTipo      := SF1->F1_TIPO
+PRIVATE aTESEnv    := {}
+PRIVATE aButtons   := {}
+PRIVATE l103AAuto	 := xAutoCab <> NIL
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta aHeader e aCols utilizando a funcao FillGetDados   ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Sintaxe da FillGetDados( nOpcx, cAlias, nOrder, cSeekKey, bSeekWhile, uSeekFor, aNoFields, aYesFields, lOnlyYes, cQuery, bMontCols, lEmpty, aHeaderAux, aColsAux, bAfterCols, bBeforeCols, bAfterHeader, cAliasQry ) |
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !l103AAuto
+	FillGetDados(nOpc,"SDH",1,,,,,,,,{|aColsX| A103aMontC(aHeader,@aColsX,@lAchou,nPIdentNf) }/*bMontCols*/,,aHeader,aCols,,, {|aHeaderX| A103aAfteH(aHeaderX,@nPIdentNf)}/*bAfterHeader*/  )
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem de interface                                                   ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	AAdd( aObjects, { 0,    41, .T., .F. } )
+	AAdd( aObjects, { 100, 100, .T., .T. } )  
+	Aadd( aButtons, {'NfeDupLin' , {||NfeDupLin()}, "  ", "Duplicar Item" } )
+
+
+	aInfo := { aSizeAut[ 1 ], aSizeAut[ 2 ], aSizeAut[ 3 ], aSizeAut[ 4 ], 3, 3 }
+	aPosObj := MsObjSize( aInfo, aObjects )
+	aPosGet := MsObjGetPos(aSizeAut[3]-aSizeAut[1],310,;
+				{If(lSubSerie,{8,30,72,92,130,150,180,200,235,250,275,295},{8,35,75,100,140,165,194,220,260,280}),;
+				{8,35,75,108,150,174,227,260,286},;
+				{5,70,160,205,295},;
+				{6,34,200,215},;
+				{6,34,80,113,160,175},;
+				{6,34,245,268,260},;
+				{11,50,150,190},;
+				{273,130,190,293,205}})
+
+	If ( (lTravas .And. !(lExclui .And. !lAchou )) .Or. (lVisual .And. lAchou) )
+	
+		DEFINE MSDIALOG oDlg TITLE cCadastro FROM aSizeAut[7],0 TO aSizeAut[6],aSizeAut[5] OF oMainWnd PIXEL
+	
+		NfeCabDoc(oDlg,{aPosGet[1],aPosGet[2],aPosObj[1]},{|| .T.},.T.,.T.,SF1->F1_EST)
+	
+		oGetD:=MsNewGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nGetDad,"NfeDocVLOk","NFeDocVTOk","+DH_ITEM",/*aCpoHead*/,/*freeze*/,999,/*fieldok*/,/*superdel*/,/*delok*/,oDlg,@aHeader,@aCols)
+	
+		oGetD:OBROWSE:BADD := {|| .F.} 
+ 
+		ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{||aCols := oGetD:aCols,nOpcA:=1,IIf(oGetd:TudoOk(),oDlg:End(),nOpcA:=0)},{||oDlg:End()},,aButtons ) 
+
+	Else
+		If ((lVisual .Or. lExclui) .And. !lAchou)
+			Help(" ",1,"NAOEXISTIT")
+		EndIf	
+	EndIf
+Else
+	If FillGetDados(nOpc,"SDH",1,,,,,,,,{|aColsX| A103aMontC(aHeader,@aColsX,@lAchou,nPIdentNf,xAutoCab)}/*bMontCols*/,,aHeader,aCols,,, {|aHeaderX| A103aAfteH(aHeaderX,@nPIdentNf)}/*bAfterHeader*/  )
+		nOpcA := 1
+   EndIf
+EndIf
+If ( nOpcA == 1 .And. !lVisual )
+	Begin Transaction
+		lGravou := NfeGrvDocV(nOpc,aHeader,aCols,"1")
+		If ( lGravou )
+			EvalTrigger()
+			While (GetSx8Len() > nSaveSx8)
+				ConfirmSx8()
+			EndDo
+		EndIf
+	End Transaction
+EndIf
+MsUnlockAll()
+While (GetSx8Len() > nSaveSx8)
+	RollBackSx8()
+EndDo
+RestArea(aArea)
+Return(lGravou)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³NfeDupLin  ³ Autor ³ Caio Murakami        ³ Data ³02.12.2011³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³ Rotina de duplicacao de linha                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA103                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function NfeDupLin()
+Local nPOper     := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_OPER"    })
+Local nPCli      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_CLIENTE" })
+Local nPLjCli    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_LOJACLI" })
+Local nPFor      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_FORNECE" })
+Local nPLjFor    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_LOJAFOR" })
+Local nPDoc      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_DOC"     })
+Local nPSerie    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_SERIE"   })
+Local nPQuant    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_QUANT"   })
+Local nPQtdNf    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_QTDNF"   })
+Local nPIdent    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_IDENTNF" })
+Local nPItem     := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_ITEM"    })
+Local nPItCob    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_ITEMCOB" })
+Local nPTES      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_TES"     })
+Local nPProd     := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_PRODUTO" })
+Local nSaldo     := 0
+Local nNotDel    := 0
+Local nSaldRest  := 0
+Local n          := oGetD:nAt
+Local nCont      := 0
+Local nX         := 0
+Local lRet       := .t.
+
+//-- Valida a linda; verifica operacao e saldo disponivel
+If  NfeDocVLOk()
+	If oGetD:aCols[n][nPOper] == "3" 
+		For nX := 1 To Len(oGetD:aCols)
+			If oGetD:aCols[nX][nPIdent] == oGetD:aCols[n][nPIdent]
+			 	nSaldRest += oGetD:aCols[nX][nPQuant]	
+			EndIf
+		Next nX 
+		If nSaldRest < oGetD:aCols[n][nPQtdNf]
+			lRet := .T.
+		Else
+			If oGetD:aCols[n][nPOper] == "3"
+				If MsgYesNo( STR0006 ) //Não há saldo suficiente. Confirma a continuação do lançamento para o Depositante?
+					lRet := .T.
+				Else
+					lRet := .F.
+				EndIf
+	      Else
+				lRet := .F.
+				Help(" ",1,"A103COB01") // Não há saldo suficiente
+			EndIf		
+		EndIf		
+		If lRet
+			nSaldo := oGetD:aCols[n][nPQtdNf] - nSaldRest
+	   	//-- Adiciona nova linha e duplica a posicionada
+			nNotDel := Len(oGetD:aCols[1])
+
+			aadd( oGetD:aCols, Array(nNotDel))
+			nCont     := Len(oGetD:aCols)
+			oGetD:aCols[nCont][nPOper]  := oGetD:aCols[n][nPOper]  
+			oGetD:aCols[nCont][nPCli]   := oGetD:aCols[n][nPCli]
+			oGetD:aCols[nCont][nPLjCli] := oGetD:aCols[n][nPLjCli]
+			oGetD:aCols[nCont][nPFor]   := oGetD:aCols[n][nPFor]
+			oGetD:aCols[nCont][nPLjFor] := oGetD:aCols[n][nPLjFor]
+			oGetD:aCols[nCont][nPQuant] := Iif(nSaldo<0,0,nSaldo)
+			oGetD:aCols[nCont][nPSerie] := oGetD:aCols[n][nPSerie]
+			oGetD:aCols[nCont][nPQtdNf] := oGetD:aCols[n][nPQtdNf]
+			oGetD:aCols[nCont][nPIdent] := oGetD:aCols[n][nPIdent]
+			oGetD:aCols[nCont][nNotDel] := oGetD:aCols[n][nNotDel]
+			oGetD:aCols[nCont][nPItem]  := oGetD:aCols[n][nPItem]
+			If nPItCob > 0
+				oGetD:aCols[nCont][nPItCob] := oGetD:aCols[n][nPItCob]
+			EndIf
+			If nPTES > 0
+				oGetD:aCols[nCont][nPTES]   := oGetD:aCols[n][nPTES]
+			EndIf
+			If nPProd > 0
+				oGetD:aCols[nCont][nPProd]  := oGetD:aCols[n][nPProd]
+			EndIf
+		EndIf
+	Else
+		Help(" ",1,"A103COB02") // Opção não disponível para este tipo de operação
+	EndIf
+EndIf
+
+Return Nil
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³NfeDocVLOk ³ Autor ³ Eduardo Riera        ³ Data ³23.07.2004³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de validacao da LinhaOk                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA103                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeDocVLOk()
+
+Local aArea		 := GetArea()
+Local nPCli      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_CLIENTE" })
+Local nPLjCli    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_LOJACLI" })
+Local nPFor      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_FORNECE" })
+Local nPLjFor    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_LOJAFOR" })
+Local nPDoc      := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_DOC"     })
+Local nPSerie    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_SERIE"   })
+Local nPQuant    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_QUANT"   })
+Local nPQtdNf    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_QTDNF"   })
+Local nPIdent    := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_IDENTNF" })
+Local nPOper     := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_OPER"    })
+Local nPItem     := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_ITEM"    })
+Local nPItemCob  := aScan(oGetD:aHeader,{|x| AllTrim(x[2])=="DH_ITEMCOB" })
+Local nX         := 0
+Local nY         := 0
+Local nQuant     := 0
+Local nLen       := 0
+Local lRetorno   := 0
+Local aCpoCheck  := {"DH_ITEM","DH_SERIE","DH_DOC","DH_CLIENTE","DH_LOJACLI","DH_FORNECE","DH_LOJAFOR","DH_OPER"}
+
+Private aHeader  := oGetD:aHeader
+Private aCols    := oGetD:aCols
+Private n        := oGetD:nAt
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica o preenchimento dos campos da linha do acols    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	lRetorno := MaCheckCols(oGetD:aHeader,oGetD:aCols,n)
+If lRetorno
+	If Empty(oGetD:aCols[n][nPCli]) .And. Empty(oGetD:aCols[n][nPFor])
+		Help(" ",1,"OBRIGAT2")
+		lRetorno := .F.
+	EndIf
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Verifica o saldo a ser distribuido                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
+	nQuant := 0
+	dbSelectArea("SDH")
+	dbSetOrder(1)
+	MsSeek(xFilial("SDH")+oGetD:aCols[n][nPIdent])    
+	While !Eof() .And. xFilial("SDH") == SDH->DH_FILIAL .And.;
+		oGetD:aCols[n][nPIdent] == SDH->DH_IDENTNF
+		If !( oGetD:aCols[n][nPSerie] == SDH->DH_SERIE .And. oGetD:aCols[n][nPDoc] == SDH->DH_DOC .And.;
+			oGetD:aCols[n][nPCli] == SDH->DH_CLIENTE .And. oGetD:aCols[n][nPLjCli] == SDH->DH_LOJACLI .And.;
+			oGetD:aCols[n][nPFor] == SDH->DH_FORNECE .And. oGetD:aCols[n][nPLjFor] == SDH->DH_LOJAFOR )
+	    	nQuant +=  SDH->DH_QUANT
+	  	EndIf
+		dbSelectArea("SDH")		 
+		dbSkip()
+	EndDo
+	If nQuant + oGetD:aCols[n][nPQuant] > oGetD:aCols[n][nPQtdNF] .And.  oGetD:aCols[n][nPOper] <> "3"
+		lRetorno := .F.
+		Help(" ",1,"A103DVLO01")
+	EndIf	
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Para NFs a quantidade deve ser igual a NFE de origem     ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If oGetD:aCols[n][nPOper] == "2" .And. oGetD:aCols[n][nPQuant] <> oGetD:aCols[n][nPQtdNF]
+		lRetorno := .F.
+		Help(" ",1,"A103DVLO02")
+EndIf
+
+//-- Analisa se ha itens duplicados na GetDados.
+If nPItemCob > 0
+	Aadd(aCpoCheck,"DH_ITEMCOB")
+EndIf	
+
+If lRetorno
+	lRetorno := GDCheckKey(aCpoCheck,4)
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Replica as informações para as demais Linhas             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If lRetorno
+	For nX := n+1 To Len(oGetD:aCols)             	
+		If Empty(oGetD:aCols[nX][nPDoc])
+			For nY := 1 To Len(oGetD:aHeader)
+				If AllTrim(oGetD:aHeader[nY][2])$"DH_SERIE#DH_DOC#DH_CLIENTE#DH_LOJACLI#DH_FORNECE#DH_LOJAFOR#DH_OPER"
+	         	oGetD:aCols[nX][nY] := oGetD:aCols[n][nY]
+	   		EndIf
+			Next nY
+		EndIf
+	Next nX
+EndIf
+ 
+RestArea(aArea)
+
+Return lRetorno
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³NfeDocVTOk ³ Autor ³ Eduardo Riera        ³ Data ³23.07.2004³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Rotina de validacao da TudoOk                              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ Nenhum                                                     ³±±
+±±³          ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA103                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeDocVTOk()
+
+Local aArea		 := GetArea()
+Local lRetorno   := .T.
+Local lRetPE	 := .T.
+Local nX         := 0
+Local nPCli      := aScan(aHeader,{|x| AllTrim(x[2])=="DH_CLIENTE"})
+Local nPFor      := aScan(aHeader,{|x| AllTrim(x[2])=="DH_FORNECE"})
+Local nPOper     := aScan(aHeader,{|x| AllTrim(x[2])=="DH_OPER"})
+Local cMsg		 := ""
+Local aTes		 := {}
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica o preenchimento dos campos da linha do acols    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nX := 1 To Len(aCols)
+	If ( MaCheckCols(aHeader,aCols,nX) )
+		If Empty(aCols[nX][nPCli]) .And. Empty(aCols[nX][nPFor])
+			Help(" ",1,"OBRIGAT2")
+			lRetorno := .F.
+		Else
+			If aCols[nX][nPOper] == "2"  //Encomendante
+				SF4->(MSSeek(xFilial("SF4")+aTesEnv[nX]))
+				If Empty(SF4->F4_TESE3) .Or. !(SF4->(MsSeek(xFilial("SF4")+SF4->F4_TESE3)) .And. SF4->F4_PODER3=="R")
+					aAdd(aTes,{nX,aTesEnv[nX]})
+				Endif
+			Endif
+		EndIf
+	Else
+		lRetorno := .F.
+	EndIf	
+Next nX
+If lRetorno
+	If Len(aTes) > 0
+		For nX := 1 To Len(aTes)
+			cMsg += Alltrim(RetTitle("DH_ITEM")) + " " + StrZero(aTes[nX,1],TamSX3("D1_ITEM")[1]) + ": " + aTes[nX,2] + CRLF
+		Next
+		Help("",1,"DSNOTESREM",,cMsg,3)
+		lRetorno := .F.
+	Endif
+Endif	
+// Ponto de Entrada para validação TudoOk
+If lRetorno .And. ExistBlock("ADOCVTOK")
+	lRetPE:= ExecBlock("ADOCVTOK",.F.,.F.)
+	If ValType(lRetPE) == "L"
+		lRetorno:= lRetPE
+	EndIf
+EndIf
+RestArea(aArea)
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³ValDocCob ³ Autor ³Marcelo Coutinho       ³ Data ³11.01.2012	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de selecao dos documentos de cobertura                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Processamento Ok.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³                                                           	³±±
+±±                                                                      	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function ValDocCob()
+
+Local nReg      := SDH->(Recno())
+Local cOper     := SDH->DH_OPER
+Local lDesmarca := .F.
+
+If !IsMark("DH_OK",ThisMark(),ThisInv())
+
+	SDH->(dbGoTop())
+
+	While SDH->(!Eof())
+
+		If IsMark("DH_OK",ThisMark(),ThisInv()) .And. SDH->DH_OPER <> cOper
+		
+			Help(" ",1,"A103COB03") // Documentos selecionados com Tipo de Operação diferente.
+			lDesmarca := .T.
+         Exit
+		EndIf
+
+		SDH->(dbSkip())
+	End
+
+	MsGoTo(nReg)
+EndIf
+
+Reclock('SDH', .F.)
+
+If IsMark("DH_OK",ThisMark(),ThisInv()) .Or. lDesmarca
+	SDH->DH_OK := Space(Len(SDH->DH_OK))
+Else
+	SDH->DH_OK := ThisMark()
+EndIf
+
+MsUnlock()
+
+Return
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³NfeFilCob ³ Autor ³Eduardo Riera          ³ Data ³30.07.2004	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Selecao de filtro do documento de cobertura                	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Processamento Ok.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias da Tabela                                      	³±±
+±±³          ³ExpN2: Numero do Registro da Tabela                         	³±±
+±±³          ³ExpN3: Opcao do aRotina                                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeFilCob(cAlias,nReg,nOpc)
+
+Local cFilSDH    := FilterExpr(cAlias)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica se um filtro foi estabelecido                                  ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If !Empty(cFilSDH)
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Remove a filtragem anterior                                             ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SDH")
+	RetIndex("SDH")
+	dbClearFilter()
+	
+	SDH->(dbSetOrder(1))
+	
+EndIf
+SDH->(MsSeek(xFilial("SDH")))
+
+Return(.T.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³NfeNfeCob ³ Autor ³Eduardo Riera          ³ Data ³03.08.2004	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Selecao de filtro do documento de cobertura (Entrada)        	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Processamento Ok.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias da Tabela                                      	³±±
+±±³          ³ExpN2: Numero do Registro da Tabela                         	³±±
+±±³          ³ExpN3: Opcao do aRotina                                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeNfeCob(cAlias,nReg,nOpc,xPar,xAutoCab,xAutoSDH,aItensDefi)
+
+Local aArea    := GetArea()
+Local lRetorno := .F.
+Local lExit		:= .F.
+Local lCliente := Nil
+Local cClieFor := ""
+Local cLoja    := ""
+Local cCondicao:= ""
+Local cCodD3	:= ""
+Local cDocD3	:= ""
+Local cQuery 	:= ""  
+Local cAliasQry := "" 
+Local cAliasSDH := ""
+Local cCFOP		:= ""
+Local cLocal	:= ""   
+Local nBseIPI	:= 0   
+Local nValIPI	:= 0 
+Local nBseICM	:= 0  
+local nValICM	:= 0  
+Local nValDesc	:= 0  
+Local cItem    := StrZero(1,Len(SD1->D1_ITEM))
+Local aLinha   := {}
+Local aCab     := {}
+Local aItens   := {}
+Local aSDH     := {}
+Local aPE      := {}
+Local lAuto103 := (xAutoCab<>NIL .And. xAutoSDH<>Nil)
+Local nAutoSDH := 1
+Local cRecno   := ""
+Local cChaveAnt:= ""
+Local lGravou  := .F.
+
+Local cTM      := SuperGetMV( "MV_TMASDC" , .F. , .F. ) //-- TM para Acerto de Saldo de Documento Cobertura
+Local lTES     := .F.
+Local nX       := 0
+Local nTotProd := 0
+Local nPosProv := 0
+Local nPosDef  := 0
+Local aQtdProv := {}
+Local aQtdDef  := {}
+
+Local aCab241   := {} 
+Local aItens241 := {}
+Local nI		  := 0
+Local nCount	  := 0
+Local cLogErro  := ""
+Local nCustoExc	:= 0
+Local nExcesso	:= 0
+Local nCusto		:= 0
+
+If lAuto103
+	If Type("lMsErroAuto") <> "L"
+		lMsErroAuto := .F.
+	Endif
+Endif
+
+Default aItensDefi := {}
+
+Private bTTSSD1 := {|nOpcao| NfeGrvDocC(nOpcao,aSDH,"SD1") }
+
+If lAuto103 .And. nOpc == 5
+	bTTSSD1 := {||.T.}
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Verifica os itens marcados                                              ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("SDH")
+If lAuto103
+	If xAutoSDH[nAutoSDH][CB_REGSDH] <> NIL
+  		MsGoTo(xAutoSDH[nAutoSDH][CB_REGSDH])
+ 	Else
+ 		lExit := A103aNItem(@xAutoSDH,@nAutoSDH,@cItem,@aItens)
+ 	EndIf
+Else
+	MsSeek(xFilial("SDH"))
+EndIf
+
+If lAuto103	// Chamada via rotina automatica ou integracao MATI103A
+	While !Eof() .And. xFilial("SDH") == SDH->DH_FILIAL .And. !lExit
+		If lCliente == Nil
+			lCliente := !Empty(SDH->DH_CLIENTE)
+			If lCliente
+				cClieFor := SDH->DH_CLIENTE
+				cLoja    := SDH->DH_LOJACLI
+			Else
+				cClieFor := SDH->DH_FORNECE
+				cLoja    := SDH->DH_LOJAFOR			
+			EndIf
+		EndIf
+		If (lCliente .And. !Empty(SDH->DH_CLIENTE) .And. cClieFor == SDH->DH_CLIENTE .And. cLoja == SDH->DH_LOJACLI) .Or.;
+			 (!lCliente .And. !Empty(SDH->DH_FORNECE).And. cClieFor == SDH->DH_FORNECE .And. cLoja == SDH->DH_LOJAFOR)
+			dbSelectArea("SD1")
+			dbSetOrder(4)
+			If MsSeek(xFilial("SD1")+SDH->DH_IDENTNF)
+				If Empty(cCondicao)
+					dbSelectArea("SF1")
+					dbSetOrder(1)
+					MsSeek(xFilial("SF1")+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA+SD1->D1_TIPO)
+					cCondicao := SF1->F1_COND
+				EndIf
+				//---- Excesso
+				nPosProv := ascan(aQtdProv,{|x| x[1]+x[2]+x[3]+x[4]==SD1->(D1_COD+D1_DOC+D1_SERIE+D1_ITEM)})
+				nPosDef  := ascan(aQtdDef ,{|x| x[1]==SD1->D1_COD})
+
+				If nPosProv == 0
+					Aadd( aQtdProv, {SD1->D1_COD, SD1->D1_DOC, SD1->D1_SERIE, SD1->D1_ITEM, SD1->D1_QUANT})
+				EndIf
+
+				If nPosDef == 0
+					Aadd( aQtdDef, {SD1->D1_COD, SDH->DH_QUANT } )
+				Else
+					aQtdDef[nPosDef][02] += SDH->DH_QUANT
+				EndIf
+
+				nValDesc := SD1->D1_VALDESC
+				cLocal   := SD1->D1_LOCAL
+
+				If Len(xAutoSDH[nAutoSDH]) > 8
+					nBseIPI	:= xAutoSDH[nAutoSDH][CB_BASIPI]
+					nValIPI	:= xAutoSDH[nAutoSDH][CB_VALIPI]
+					nBseICM	:= xAutoSDH[nAutoSDH][CB_BASICM]
+					nValICM	:= xAutoSDH[nAutoSDH][CB_VALICM]
+					nValDesc:= xAutoSDH[nAutoSDH][CB_VALDES]
+					cCFOP	:= xAutoSDH[nAutoSDH][CB_CFOP]
+					cLocal	:= xAutoSDH[nAutoSDH][CB_LOCAL]
+				EndIf
+
+				aLinha := {}
+				aadd( aLinha, { "D1_ITEM"   , cItem           , Nil } )
+				aadd( aLinha, { "D1_COD"    , SD1->D1_COD     , Nil } )
+				aadd( aLinha, { "D1_QUANT"  , SDH->DH_SALDO   , Nil } )
+				aadd( aLinha, { "D1_VALDESC", nValDesc        , Nil } )
+				aadd( aLinha, { "D1_LOCAL"  , cLocal          , Nil } )
+				aadd( aLinha, { "D1_UM"     , SD1->D1_UM      , Nil } )
+				aadd( aLinha, { "D1_TES"    , xAutoSDH[nAutoSDH][CB_TES]   	 , Nil } )			
+				aadd( aLinha, { "D1_VUNIT"  , xAutoSDH[nAutoSDH][CB_VLRUNIT] , Nil } ) 
+				If IsInCallStack("MATI103A")
+					aadd( aLinha, { "D1_TOTAL"  , A410Arred(SDH->DH_SALDO*xAutoSDH[nAutoSDH][CB_VLRUNIT],"D1_TOTAL"), Nil } )
+				Else
+					aadd( aLinha, { "D1_TOTAL"  , NoRound(SDH->DH_SALDO*xAutoSDH[nAutoSDH][CB_VLRUNIT],TamSX3("D1_TOTAL")[2]), Nil } )
+				EndIf
+				aadd( aLinha, { "D1_NFORI"  , xAutoSDH[nAutoSDH][CB_DOC]  	 , Nil } )
+				aadd( aLinha, { "D1_SERIORI", xAutoSDH[nAutoSDH][CB_SERIE]   , Nil } )
+				aadd( aLinha, { "D1_ITEMORI", xAutoSDH[nAutoSDH][CB_SEQ]  	 , Nil } )
+				If !Empty(cCFOP)
+					aadd( aLinha, { "D1_CF"  	 , cCFOP  , Nil } )
+					cCFOP := ""
+				EndIf
+				If nBseIPI <> 0
+			  		aadd( aLinha, { "D1_BASEIPI", nBseIPI , Nil } )
+			  		nBseIPI := 0
+			 	EndIf
+		  		aadd( aLinha, { "D1_IPI"    , xAutoSDH[nAutoSDH][CB_TAXIPI] , Nil } )
+		  		If nValIPI <> 0
+			  		aadd( aLinha, { "D1_VALIPI" , nValIPI , Nil } )
+			  		nValIPI := 0
+			  	EndIf
+			  	If nBseICM <> 0
+					aadd( aLinha, { "D1_BASEICM", nBseICM , Nil } )
+					nBseICM := 0
+				EndIf
+				aadd( aLinha, { "D1_PICM"   , xAutoSDH[nAutoSDH][CB_TAXICM]  , Nil } )
+			  	If nValICM <> 0
+					aadd( aLinha, { "D1_VALICM" , nValICM , Nil } )
+					nValICM := 0
+				EndIf
+				If !Empty(xAutoSDH[nAutoSDH][CB_TES])
+					lTES := .T.
+				EndIf
+			Else
+				aadd( aLinha, { "D1_PICM"   , SD1->D1_PICM    , Nil } )
+				aadd( aLinha, { "D1_IPI"    , SD1->D1_IPI     , Nil } )
+				aadd( aLinha, { "D1_VUNIT"  , SD1->D1_VUNIT   , Nil } )
+				aadd( aLinha, { "D1_TOTAL"  , NoRound(SDH->DH_SALDO*SD1->D1_VUNIT,TamSX3("D1_TOTAL")[2]), Nil } )
+				aadd( aLinha, { "D1_TES"    , SD1->D1_TES     , Nil } )
+            EndIf 
+
+			If Rastro(SD1->D1_COD)
+				aadd( aLinha, { "D1_LOTECTL", SD1->D1_LOTECTL , Nil } )
+				aadd( aLinha, { "D1_NUMLOTE", SD1->D1_NUMLOTE , Nil } )
+				aadd( aLinha, { "D1_DTVALID", SD1->D1_DTVALID , Nil } )
+				aadd( aLinha, { "D1_POTENCI", SD1->D1_POTENCI , Nil } )
+			EndIf
+
+			aadd( aLinha, { "D1_CC"		, SD1->D1_CC      	, Nil } )
+			aadd( aLinha, { "D1_CONTA"	, SD1->D1_CONTA		, Nil } )
+			aadd( aLinha, { "D1_ITEMCTA", SD1->D1_ITEMCTA 	, Nil } )
+			aadd( aLinha, { "D1_CLVL"	, SD1->D1_CLVL		, Nil } )
+
+			aadd(aItens,aLinha)
+			aadd(aSDH,{cItem,SD1->D1_COD,SDH->(RecNo()),lAuto103,Iif(lAuto103,xAutoSDH[nAutoSDH][CB_TES],'')})
+			cItem := Soma1(cItem,Len(SD1->D1_ITEM))
+		EndIf
+
+		dbSelectArea("SDH")
+
+		nAutoSDH += 1
+		If nAutoSDH <= Len(xAutoSDH)
+			If xAutoSDH[nAutoSDH][CB_REGSDH] <> NIL
+				MsGoTo(xAutoSDH[nAutoSDH][CB_REGSDH])
+			Else
+				lExit := A103aNItem(@xAutoSDH,@nAutoSDH,@cItem,@aItens)
+			EndIf
+		Else
+			Exit
+		EndIf
+		// Nao tem DbSkip() pois avanca o registro no bloco acima
+	EndDo
+
+Else	// Chamada via rotina manual
+	cAliasSDH := GetNextAlias()
+	cMarca    := ThisMark()
+
+	cQuery := "SELECT SDH.DH_FILIAL, SDH.DH_OPER, SDH.DH_SERIE, SDH.DH_SALDO,"
+	cQuery += "SDH.R_E_C_N_O_,SDH.* "
+	cQuery += "FROM "+RetSqlName("SDH")+" SDH "
+	cQuery += "WHERE "
+	cQuery += "SDH.DH_OK='"+cMarca+"'"
+	cQuery += " AND SDH.D_E_L_E_T_ = ' ' "
+	cQuery += " ORDER BY DH_ITEM "
+	cQuery := ChangeQuery(cQuery)
+
+	dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),(cAliasSDH),.F.,.T.)
+
+	dbSelectArea(cAliasSDH)
+
+	While !(cAliasSDH)->(Eof()) .And. xFilial("SDH") == (cAliasSDH)->DH_FILIAL
+		SDH->(DbGoTo((cAliasSDH)->R_E_C_N_O_))
+		If IsMark("DH_OK",ThisMark(),ThisInv())
+			If lCliente == Nil
+				lCliente := !Empty((cAliasSDH)->DH_CLIENTE)
+				If lCliente
+					cClieFor := (cAliasSDH)->DH_CLIENTE
+					cLoja    := (cAliasSDH)->DH_LOJACLI
+				Else
+					cClieFor := (cAliasSDH)->DH_FORNECE
+					cLoja    := (cAliasSDH)->DH_LOJAFOR
+				EndIf
+			EndIf
+			If (lCliente .And. !Empty((cAliasSDH)->DH_CLIENTE) .And. cClieFor == (cAliasSDH)->DH_CLIENTE .And. cLoja == (cAliasSDH)->DH_LOJACLI) .Or.;
+				(!lCliente .And. !Empty((cAliasSDH)->DH_FORNECE).And. cClieFor == (cAliasSDH)->DH_FORNECE .And. cLoja == (cAliasSDH)->DH_LOJAFOR)
+				dbSelectArea("SD1")
+				dbSetOrder(4)
+				If MsSeek(xFilial("SD1")+(cAliasSDH)->DH_IDENTNF)
+					If Empty(cCondicao)
+						dbSelectArea("SF1")
+						dbSetOrder(1)
+						MsSeek(xFilial("SF1")+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA+SD1->D1_TIPO)
+						cCondicao := SF1->F1_COND
+					EndIf
+					//---- Excesso
+					nPosProv := ascan(aQtdProv,{|x| x[1]+x[2]+x[3]+x[4]==SD1->(D1_COD+D1_DOC+D1_SERIE+D1_ITEM)})
+					nPosDef  := ascan(aQtdDef ,{|x| x[1]==SD1->D1_COD})
+
+		            If nPosProv == 0
+						Aadd( aQtdProv, {SD1->D1_COD, SD1->D1_DOC, SD1->D1_SERIE, SD1->D1_ITEM, SD1->D1_QUANT})
+					EndIf
+
+		            If nPosDef == 0
+						Aadd( aQtdDef, {SD1->D1_COD, (cAliasSDH)->DH_QUANT } )
+					Else
+		               aQtdDef[nPosDef][02] += (cAliasSDH)->DH_QUANT
+					EndIf
+
+					nValDesc := SD1->D1_VALDESC
+					cLocal   := SD1->D1_LOCAL
+
+					aLinha := {}
+					aadd( aLinha, { "D1_ITEM"   , cItem           , Nil } )
+					aadd( aLinha, { "D1_COD"    , SD1->D1_COD     , Nil } )
+					aadd( aLinha, { "D1_QUANT"  , (cAliasSDH)->DH_SALDO   , Nil } )
+					aadd( aLinha, { "D1_VALDESC", nValDesc        , Nil } )
+					aadd( aLinha, { "D1_LOCAL"  , cLocal          , Nil } )
+					aadd( aLinha, { "D1_UM"     , SD1->D1_UM      , Nil } )
+					aadd( aLinha, { "D1_PICM"   , SD1->D1_PICM    , Nil } )
+					aadd( aLinha, { "D1_IPI"    , SD1->D1_IPI     , Nil } )
+					aadd( aLinha, { "D1_VUNIT"  , SD1->D1_VUNIT   , Nil } )
+					aadd( aLinha, { "D1_TOTAL"  , NoRound((cAliasSDH)->DH_SALDO*SD1->D1_VUNIT,TamSX3("D1_TOTAL")[2]), Nil } )
+					aadd( aLinha, { "D1_TES"    , SD1->D1_TES     , Nil } )
+
+					If Rastro(SD1->D1_COD)
+						aadd( aLinha, { "D1_LOTECTL", SD1->D1_LOTECTL , Nil } )
+						aadd( aLinha, { "D1_NUMLOTE", SD1->D1_NUMLOTE , Nil } )
+						aadd( aLinha, { "D1_DTVALID", SD1->D1_DTVALID , Nil } )
+						aadd( aLinha, { "D1_POTENCI", SD1->D1_POTENCI , Nil } )
+					EndIf
+
+					aadd( aLinha, { "D1_CC"		, SD1->D1_CC      	, Nil } )
+					aadd( aLinha, { "D1_CONTA"	, SD1->D1_CONTA		, Nil } )
+					aadd( aLinha, { "D1_ITEMCTA", SD1->D1_ITEMCTA 	, Nil } )
+					aadd( aLinha, { "D1_CLVL"	, SD1->D1_CLVL		, Nil } ) 
+
+					aadd(aItens,aLinha)
+					aadd(aSDH,{cItem,SD1->D1_COD,SDH->(RecNo()),lAuto103,Iif(lAuto103,xAutoSDH[nAutoSDH][CB_TES],'')})
+					cItem := Soma1(cItem,Len(SD1->D1_ITEM))
+				EndIf
+			EndIf
+		EndIf
+
+		If RecLock("SDH",.F.)
+			SDH->DH_OK  := Space(Len(SDH->DH_OK))
+			SDH->(MsUnlock())
+		EndIf
+		(cAliasSDH)->(dbSkip())
+		SDH->(dbSkip())
+	EndDo
+	(cAliasSDH)->( DBCloseArea() )
+EndIf
+
+If ValType(xAutoSDH) == 'A' .And. Len(xAutoSDH) > 0
+	For nI := 1 To Len(xAutoSDH)
+		If !Empty(xAutoSDH[nI][CB_TES])
+			lTES := .T.
+			Exit
+		Endif
+	Next nI
+EndIf
+
+If Empty(aItensDefi)
+	If !lAuto103
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Montagem do cabecalho da Nota Fiscal                                    ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		aadd( aCab, { "F1_DOC"    , CriaVar("F1_DOC",.F.)		, Nil } )	// Numero da NF : Obrigatorio
+		aadd( aCab, { "F1_SERIE"  , SerieNfId("SF1",5,"F1_SERIE"), Nil } )	// Serie da NF  : Obrigatorio
+		If lCliente
+			aadd( aCab, { "F1_TIPO"   , "B"  , Nil } )	// Tipo da NF   : Obrigatorio
+		Else
+			aadd( aCab, { "F1_TIPO"   , "N"  , Nil } )	// Tipo da NF   : Obrigatorio
+		EndIf
+		aadd( aCab, { "F1_FORNECE", cClieFor  , Nil } )	// Codigo do Fornecedor : Obrigatorio
+		aadd( aCab, { "F1_LOJA"   , cLoja     , Nil } )	// Loja do Fornecedor   : Obrigatorio
+		aadd( aCab, { "F1_EMISSAO", dDataBase , Nil } )	// Emissao da NF        : Obrigatorio
+		aadd( aCab, { "F1_FORMUL" , "S"       , Nil } )// Formulario
+		aadd( aCab, { "F1_ESPECIE", If(Empty(CriaVar("F1_ESPECIE",.T.)),PadR("NF",Len(SF1->F1_ESPECIE)),CriaVar("F1_ESPECIE",.T.)), Nil } )  // Especie
+		aadd( aCab, { "F1_COND"   , cCondicao  , Nil } )  // Condicao de pagamento
+	
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Ponto de entrada de complemento de atualizacao para Identificação      ³
+		//³ da NF de Origem											               ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ExistBlock("MT103SDH")
+		   aPE    := ExecBlock("MT103SDH",.F.,.F.,{aCab,aItens})
+		   aCab   := aPE[1]
+		   aItens := aPE[2]
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Execucao da rotina de inclusao do documento de entrada                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+		cChaveAnt := SF1->(F1_FILIAL+F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA+F1_TIPO)
+
+		If Len(aItens)>0
+			Mata103( aCab, aItens, 3, .T.)
+		EndIf
+		CloseBrowse()
+
+		If SF1->(F1_FILIAL+F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA+F1_TIPO) <> cChaveAnt
+			lGravou := .T.
+		EndIf
+
+	Else
+		If lTES
+			MSExecAuto({|x,y,z| MATA103(x,y,z)},xAutoCab,aItens,nOpc)
+		Else
+			MSExecAuto({|x,y,z| MATA140(x,y,z)},xAutoCab,aItens,nOpc)
+		EndIf
+	
+		If lMsErroAuto
+			aErroAuto := GetAutoGRLog()
+			For nCount := 1 To Len(aErroAuto)
+				cLogErro += _NoTags(aErroAuto[nCount])
+			Next nCount
+			// Monta XML de Erro de execução da rotina automatica.
+			VarInfo("MATA103A:ERRO_EXEC",cLogErro)
+			AutoGrLog(cLogErro)
+		Else
+			VarInfo("MATA103A:OK","OK")
+		Endif
+	EndIf
+Else
+	SD1->(dbSetOrder(1))
+	For nX := 1 To Len(aItensDefi)
+		SD1->(dbSeek(aItensDefi[nX]))
+		Eval(bTTSSD1)
+	Next nX
+EndIf
+
+If (!lAuto103 .And. lGravou) .Or. (lAuto103 .And. !lMsErroAuto)	// Verifica se rotina auto acima funcionou antes de executar MATA241
+	For nX := 1 To Len( aQtdDef )
+
+		nTotProd := A103TOTPROV(aItens,aQtdDef[nX][1])
+		nExcesso := aQtdDef[nX][2] - nTotProd
+
+		If nExcesso > 0
+			nCusto := A103CUSDEF(Iif(!lAuto103,SF1->F1_DOC,xAutoCab[1][2]),Iif(!lAuto103,SF1->F1_SERIE,xAutoCab[2][2]),aQtdDef[nX][1])
+			nCustoExc := (nCusto / nTotProd) * nExcesso
+
+			aCab241 := {{ "D3_DOC"    ,cDocD3 := Iif(!lAuto103,SF1->F1_DOC,xAutoCab[1][2]), NIL },;
+						{ "D3_TM"     ,cTM                                                , NIL },;
+						{ "D3_EMISSAO",dDataBase                                          , Nil }}
+
+			If AllTrim(Posicione("SF5",1,xFilial("SF5") + PadR(cTM,TamSx3("F5_CODIGO")[1]),"F5_VAL")) == "S"
+				Aadd( aItens241, {	{ "D3_COD"   , aQtdDef[nX][1]            , NIL } ,;
+	   			  		  	    	{ "D3_QUANT" ,(aQtdDef[nX][2] - nTotProd), NIL } ,;
+	   		  			  	    	{ "D3_CUSTO1",nCustoExc, NIL } } )
+			Else
+				Aadd( aItens241, {	{ "D3_COD"   , aQtdDef[nX][1]            , NIL } ,;
+	   			  		  	    	{ "D3_QUANT" ,(aQtdDef[nX][2] - nTotProd), NIL } } )
+			EndIf
+		EndIf
+	Next nX
+
+	If Len(aCab241)>0 .And. Len(aItens241)>0
+
+		If nOpc == 3
+  			MSExecAuto({|x,y,z| Mata241(x,y,z)},aCab241,aItens241,Nil)
+		Else
+			For nX := 1 To Len(aItens241)
+				cCodD3 += "'" + aItens241[nX][1][2] + "'"
+				If nX < Len(aItens241)
+					cCodD3 += ","
+		  	 	EndIf
+		  	Next nX
+
+			// Tratamento para movimento de estorno
+			// Verificação para não tentar estornar um documento já estornado
+
+			cAliasQry := GetNextAlias()
+
+			cQuery := " SELECT D3_COD,R_E_C_N_O_ NRECNO "
+			cQuery += " FROM " + RetSQLName("SD3") + " SD3 "
+			cQuery += " WHERE  D3_FILIAL	= '" + xFilial("SD3") + "' "
+			cQuery += " 	AND D3_TM    	= '" + cTM + "' "
+			cQuery += " 	AND D3_DOC   	= '" + cDocD3 + "' "
+			cQuery += " 	AND D3_COD   	IN  ( " + cCodD3 + " ) "
+			cQuery += " 	AND D3_ESTORNO <> 'S' "
+			cQuery += " 	AND D_E_L_E_T_ = ' '  "
+			cQuery += " ORDER BY D3_COD "
+
+			cQuery := ChangeQuery(cQuery)
+			dbUseArea(.T.,"TOPCONN",TCGenQry(,,cQuery),(cAliasQry),.F.,.T.)
+
+			While !(cAliasQry)->(Eof())
+		  		For nX := 1 To Len(aItens241)
+				   	If aItens241[nX][1][2] == (cAliasQry)->D3_COD
+				   		aAdd( aItens241[nX] , (cAliasQry)->NRECNO )
+				   	EndIf
+				Next nX
+				(cAliasQry)->( dbSkip() )
+			EndDo
+
+			(cAliasQry)->( DBCloseArea() )
+
+			For nX := 1 To Len(aItens241)
+	  			If Len(aItens241[nX]) == 4
+	  		  		SD3->( dbGoTo(aItens241[nX][4]) )
+				EndIf
+			Next nX
+
+			MSExecAuto({|x,y,z| Mata241(x,y,z)},aCab241,aItens241,6)
+		EndIf
+	EndIf
+EndIf
+
+RestArea(aArea)
+Return(lRetorno)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³A103CUSDEF³ Autor ³Rodrigo Pontes         ³ Data ³30.11.2015	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Calcula o custo do produto na NF                             	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpN1: Custo do produto.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Numero do documento                                  	³±±
+±±³          ³ExpC2: Numero da serie                                      	³±±
+±±³          ³ExpC3: Codigo do produto                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function A103CUSDEF(cDocDef,cSerDef,cProduto)
+
+Local nCusDef	:= 0
+Local cQry		:= 0
+
+If Select("CUSDEF") > 0
+	CUSDEF->(DbCloseArea())
+Endif
+
+cQry := "SELECT Sum(D1_CUSTO) AS CUSTO"
+cQry += " FROM " + RetSqlName("SD1")
+cQry += " WHERE  D_E_L_E_T_ = ''"
+cQry += "        AND D1_DOC = '" + cDocDef + "'"
+cQry += "        AND D1_SERIE = '" + cSerDef + "'"
+cQry += "        AND D1_COD = '" + cProduto + "'"
+cQry += " GROUP BY D1_DOC,"
+cQry += "          D1_SERIE,"
+cQry += "          D1_COD"
+
+cQry    := ChangeQuery(cQry)
+
+dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),"CUSDEF",.T.,.T.)
+
+DbSelectArea("CUSDEF")
+If CUSDEF->(!EOF())
+	nCusDef += CUSDEF->CUSTO
+Endif
+
+CUSDEF->(DbCloseArea())
+
+Return nCusDef
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³A103TOTPROV³ Autor ³Rodrigo Pontes         ³ Data ³30.11.2015	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Busca quantidade total nas NF Provisorias (N)                	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpN1: Quantidade do produto                                	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpA1: Array dos itens na NF de cobertura                   	³±±
+±±³          ³ExpC2: Codigo do produto                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Static Function A103TOTPROV(aItens,cProduto)
+
+Local nI		:= 0
+Local cQry		:= ""
+Local nNFOri	:= 0
+Local nSrOri	:= 0
+Local nTotal	:= 0
+Local aNFs		:= {}
+Local nPos		:= 0
+
+For nI := 1 To Len(aItens)
+	nNFOri	:= aScan(aItens[nI],{|x| AllTrim(x[1]) == "D1_NFORI"})
+	nSrOri	:= aScan(aItens[nI],{|x| AllTrim(x[1]) == "D1_SERIORI"})
+	
+	If nNFOri > 0 .And. nSrOri > 0
+		nPos := aScan(aNFs,{|x| x[1]+x[2] == aItens[nI,nNFOri,2]+aItens[nI,nSrOri,2]})
+		If nPos == 0
+			aAdd(aNFs,{aItens[nI,nNFOri,2],aItens[nI,nSrOri,2]})
+		Endif
+	Endif
+Next nI
+
+For nI := 1 to Len(aNFs)
+	If Select("SMNFORI") > 0
+		SMNFORI->(DbCloseArea())
+	Endif
+	
+	cQry := "SELECT Sum(D1_QUANT) AS QUANTIDADE"
+	cQry += " FROM " + RetSqlName("SD1")
+	cQry += " WHERE  D_E_L_E_T_ = ''"
+	cQry += "        AND D1_DOC = '" + aNFs[nI,1] + "'"
+	cQry += "        AND D1_SERIE = '" + aNFs[nI,2] + "'"
+	cQry += "        AND D1_COD = '" + cProduto + "'"
+	cQry += " GROUP BY D1_DOC,"
+	cQry += "          D1_SERIE,"
+	cQry += "          D1_COD"
+	
+	cQry    := ChangeQuery(cQry)
+
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),"SMNFORI",.T.,.T.)
+	
+	DbSelectArea("SMNFORI")
+	If SMNFORI->(!EOF())
+		nTotal += SMNFORI->QUANTIDADE
+	Endif
+	
+	SMNFORI->(DbCloseArea())
+Next nI	
+
+Return nTotal
+
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³A103aNItem    ºAutor  ³ Caio Murakami    º Data ³  12/09/12   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ A função realiza a ordenação do array quando existe 			 º±±
+±±º			 ³	a chamada para a função NfeNfeCob por rotina automática.		 º±±
+±±º			 ³  																				 º±±
+±±º			 ³	A função só irá realizar a ordenação se o item é novo     	 º±±
+±±º			 ³	e nao esta relacionado na SDH.									    º±±
+±±º  			 ³  																				 º±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Array de itens para serem incluidos                 	 ³±±
+±±³          ³ExpN2: Posicionamento do array                              	 ³±±
+±±³          ³ExpN3: Ordem de gravação dos itens                          	 ³±±
+±±³          ³ExpN4: Array com os itens que serão adicionados               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ NfeNfeCob()                                                  	 º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A103aNItem( aAutoSDH , nAutoSDH , cItem , aItens )
+Local lExit 	:= .F.
+local nX			:= 0 
+Local aLinha	:= {}
+
+For nX := nAutoSDH To Len(aAutoSDH)
+	
+	If aAutoSDH[nX][CB_REGSDH] == NIL
+		
+		If Len(aAutoSDH[nX]) > 6
+			
+			aLinha := {}
+			aadd( aLinha, { "D1_ITEM"   , cItem                 		, Nil } )
+			aadd( aLinha, { "D1_COD"    , aAutoSDH[nX][CB_PRODUTO]	, Nil } )
+			aadd( aLinha, { "D1_QUANT"  , aAutoSDH[nX][CB_QUANT]  	, Nil } )
+			aadd( aLinha, { "D1_VUNIT"  , aAutoSDH[nX][CB_VLRUNIT]	, Nil } )
+			aadd( aLinha, { "D1_VALDESC", aAutoSDH[nX][CB_VALDES]		, Nil } )
+			aadd( aLinha, { "D1_TOTAL"  , NoRound(aAutoSDH[nX][CB_QUANT]*aAutoSDH[nX][CB_VLRUNIT],TamSX3("D1_TOTAL")[2]), Nil } )
+			aadd( aLinha, { "D1_LOCAL"  , aAutoSDH[nX][CB_LOCAL]		, Nil } )
+			aadd( aLinha, { "D1_TES"    , aAutoSDH[nX][CB_TES]			, Nil } )
+			aadd( aLinha, { "D1_CF"  	 , aAutoSDH[nX][CB_CFOP]		, Nil } )
+			aadd( aLinha, { "D1_BASEIPI", aAutoSDH[nX][CB_BASIPI]		, Nil } )
+			aadd( aLinha, { "D1_IPI"  	 , aAutoSDH[nX][CB_TAXIPI]		, Nil } )
+			aadd( aLinha, { "D1_VALIPI" , aAutoSDH[nX][CB_VALIPI]		, Nil } )
+			aadd( aLinha, { "D1_BASEICM", aAutoSDH[nX][CB_BASICM]		, Nil } )
+			aadd( aLinha, { "D1_PICM"   , aAutoSDH[nX][CB_TAXICM]		, Nil } )
+			aadd( aLinha, { "D1_VALICM" , aAutoSDH[nX][CB_VALICM]		, Nil } )
+			
+			aadd(aItens,aLinha)
+			cItem := Soma1(cItem,Len(SD1->D1_ITEM))
+			nAutoSDH++
+			If nX == Len(aAutoSDH)
+				lExit := .T.
+			EndIf
+						
+		EndIf
+	
+	Else
+		SDH->(MsGoTo( aAutoSDH[nX][CB_REGSDH] ) )
+		Exit
+	EndIf
+	
+Next nX
+
+Return lExit
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³NfeGrvDocV³ Autor ³Eduardo Riera          ³ Data ³ 23/07/2004 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Gravacao                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Indica se a gravacao foi bem sucedida                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: Opcao da Gravacao sendo:                               ³±±
+±±³          ³       [1] Inclusao                                           ³±±
+±±³          ³       [2] Alteracao                                          ³±±
+±±³          ³       [3] Exclusao                                           ³±±
+±±³          ³ExpA1: aHeader                                                ³±±
+±±³          ³ExpA2: aCols                                                  ³±±
+±±³          ³ExpC1: Tipo do Movimento, sendo:                              ³±±
+±±³          ³       "1" = Origem                                           ³±±
+±±³          ³       "2" = Cobertura	                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function NfeGrvDocV(nOpcao,aHeader,aCols,cTpMov)
+
+Local aArea     := GetArea()
+Local lGravou   := .F.
+Local lTravou   := .T.
+Local nX        := 0
+Local nY        := 0
+Local nUsado    := Len(aHeader)
+Local nQtdBaixa := 0
+Local nPosRec	:= aScan(aHeader,{|x| AllTrim(x[2])=="DH_REC_WT"})
+
+Do Case
+Case nOpcao <> 3
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Grava os itens                                                ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	For nX := 1 To Len(aCols)
+		lTravou := .F.
+		If ValType( aCols[nX][nPosRec] ) == 'N'
+			If aCols[nX][nPosRec] > 0
+				dbSelectArea("SDH")
+				MsGoto(aCols[nX][nPosRec])
+				RecLock("SDH")
+				lTravou := .T.
+			EndIf
+		EndIf
+		If ( !aCols[nX][nUsado+1] )
+			If !lTravou
+				RecLock("SDH",.T.)
+			EndIf
+			For nY := 1 to Len(aHeader)
+				If !IsHeadRec(aHeader[ny][2]) .And. !IsHeadAlias(aHeader[ny][2]) .And.;
+				   aHeader[nY][10] <> "V"
+					SDH->(FieldPut(FieldPos(aHeader[nY][2]),aCols[nX][nY]))
+				EndIf
+			Next nY
+			SDH->DH_FILIAL 	:= xFilial("SDH")
+			SDH->DH_TPMOV  	:= cTpMov
+			SDH->DH_DTDIGIT	:= dDataBase
+			nQtdBaixa      	:= SDH->DH_QUANT
+			If FieldPos("DH_NDOC") > 0
+				SDH->DH_NDOC	:= IIF(cTpMov="1",cNFISCAL,cNFISCAL2)
+				SDH->DH_SDOC	:= cSerie
+			EndIf
+			MsUnLock()			
+			lGravou := .T.			
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Atualiza o item de origem se for cobertura.                   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			If SDH->DH_TPMOV == "2"
+				dbSelectArea("SDH")
+				dbSetOrder(2)
+				If MsSeek(xFilial("SDH")+"1"+SDH->DH_SERIE+SDH->DH_DOC+SDH->DH_ITEM+SDH->DH_CLIENTE+SDH->DH_LOJACLI+SDH->DH_FORNECE+SDH->DH_LOJAFOR+SDH->DH_OPER)
+					RecLock("SDH")
+					SDH->DH_SALDO -= nQtdBaixa
+					MsUnLock()
+				EndIf
+			Else
+				If !lTravou
+					RecLock("SDH")					
+					SDH->DH_SALDO := SDH->DH_QUANT
+				Else
+					SDH->DH_SALDO := Min(SDH->DH_QUANT,SDH->DH_SALDO)
+				EndIf				
+			EndIf			
+		Else
+			If lTravou
+				nQtdBaixa := SDH->DH_QUANT
+				SDH->(dbDelete())
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³Atualiza o item de origem se for cobertura.                   ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				If SDH->DH_TPMOV == "2"
+					dbSelectArea("SDH")
+					dbSetOrder(2)
+					If MsSeek(xFilial("SDH")+"1"+SDH->DH_SERIE+SDH->DH_DOC+SDH->DH_ITEM+SDH->DH_CLIENTE+SDH->DH_LOJACLI+SDH->DH_FORNECE+SDH->DH_LOJAFOR+SDH->DH_OPER)
+						RecLock("SDH")
+						SDH->DH_SALDO += nQtdBaixa
+						MsUnLock()
+					EndIf
+				EndIf				
+			EndIf
+		EndIf
+		MsUnLock()
+	Next nX	
+Case nOpcao == 3
+	For nX := 1 To Len(aCols)
+		SDH->(MsGoto(aCols[nX][nPosRec]))
+		nQtdBaixa := SDH->DH_QUANT
+		RecLock("SDH")
+		SDH->(dbDelete())
+		MsUnLock()
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³Atualiza o item de origem se for cobertura.                   ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If SDH->DH_TPMOV == "2"
+			dbSelectArea("SDH")
+			dbSetOrder(2)
+			If MsSeek(xFilial("SDH")+"1"+SDH->DH_SERIE+SDH->DH_DOC+SDH->DH_ITEM+SDH->DH_CLIENTE+SDH->DH_LOJACLI+SDH->DH_FORNECE+SDH->DH_LOJAFOR+SDH->DH_OPER)
+				RecLock("SDH")
+				SDH->DH_SALDO += nQtdBaixa
+				MsUnLock()
+			EndIf
+		EndIf
+	Next nX
+EndCase
+Return(lGravou)
+
+RestArea(aArea)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³NfeGrvDocC³ Autor ³Eduardo Riera          ³ Data ³ 05/08/2004 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de Gravacao                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Indica se a gravacao foi bem sucedida                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: Opcao da Gravacao sendo:                               ³±±
+±±³          ³       [1] Inclusao                                           ³±±
+±±³          ³       [2] Alteracao                                          ³±±
+±±³          ³       [3] Exclusao                                           ³±±
+±±³          ³ExpA2: aHeader                                                ³±±
+±±³          ³ExpA3: aCols                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais/Distribuicao/Logistica                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Atualizacoes sofridas desde a Construcao Inicial.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Programador  ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function NfeGrvDocC(nOpcao,aSDH,cAlias)
+
+Local aArea     := GetArea()
+Local nPosSDH   := 0
+Local nQtdBaixa := 0
+Local aDoc      := {} 
+Local cDHOper   := SuperGetMv("MV_IDHOPE2",,"3")
+Local lMsgUnic	:= IsInCallStack("MATI103A")
+
+If cAlias == "SD1"
+	nPosSDH   := aScan(aSDH,{|x| x[1] == SD1->D1_ITEM .And. x[2] == SD1->D1_COD})
+ElseIf cAlias == "SD2"
+	nPosSDH   := aScan(aSDH,{|x| x[1] == SD2->D2_ITEM .And. x[2] == SD2->D2_COD})
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Implantação do documento de entrada                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If nPosSDH > 0 .And. (!lMsgUnic .Or. (Len(aSDH[nPosSDH]) > 4 .And. !Empty(aSDH[nPosSDH][5])))  
+	dbSelectArea("SDH")
+	MsGoto(aSDH[nPosSDH][3])
+	RecLock("SDH")
+	nQtdBaixa := Min(SDH->DH_SALDO,If(cAlias == "SD1",SD1->D1_QUANT,SD2->D2_QUANT))
+	SDH->DH_SALDO -= nQtdBaixa
+	aDoc := {SDH->DH_SERIE,SDH->DH_DOC,SDH->DH_CLIENTE,SDH->DH_LOJACLI,SDH->DH_FORNECE,SDH->DH_LOJAFOR,SDH->DH_ITEM,SDH->DH_OPER}
+	Aadd(aDoc, SDH->DH_ITEMCOB )
+	RecLock("SDH",.T.)
+	SDH->DH_FILIAL := xFilial("SDH")
+	SDH->DH_TPMOV  := "2"
+	SDH->DH_DTDIGIT:= dDataBase
+	SDH->DH_SERIE  := aDoc[1]
+	SDH->DH_DOC    := aDoc[2]
+	SDH->DH_ITEM   := aDoc[7]
+	SDH->DH_CLIENTE:= aDoc[3]
+	SDH->DH_LOJACLI:= aDoc[4]
+	SDH->DH_FORNECE:= aDoc[5]
+	SDH->DH_LOJAFOR:= aDoc[6]
+	SDH->DH_ITEMCOB:= aDoc[9]
+	SDH->DH_OPER   := If(IsInCallStack("MATI103A"),cDHOper,aDoc[8])
+	If Len(aSDH[nPosSDH]) > 4
+		If aSDH[nPosSDH][4]
+			SDH->DH_TES := aSDH[nPosSDH][5]
+		EndIf
+	EndIf
+	SDH->DH_QUANT  := nQtdBaixa
+	SDH->DH_SALDO  := 0
+	SDH->DH_IDENTNF:= If(cAlias == "SD1",SD1->D1_NUMSEQ,SD2->D2_NUMSEQ)
+	If IsInCallStack("COMR100") .And. FieldPos("DH_NDOC") > 0
+		SDH->DH_NDOC   := cNFISCAL2
+		SDH->DH_SDOC   := cSerie
+	EndIf
+EndIf
+RestArea(aArea)
+Return(.T.)
+
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Program   ³NfeNfsCob ³ Autor ³Eduardo Riera          ³ Data ³03.08.2004	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Selecao de filtro do documento de cobertura (Saida)         	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ExpL1: Processamento Ok.                                    	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpC1: Alias da Tabela                                      	³±±
+±±³          ³ExpN2: Numero do Registro da Tabela                         	³±±
+±±³          ³ExpN3: Opcao do aRotina                                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                     	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³              ³        ³      ³                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function NfeNfsCob(cAlias,nReg,nOpc)
+
+Local aArea     := GetArea()  
+Local aAreaSF2  := SF2->(GetArea())
+Local aAreaSD2  := SD2->(GetArea())
+Local aCab      := {}
+Local aItem     := {}
+Local aDocOri   := {}
+Local aSDH      := {}
+Local aStruSF2  := SF2->(dbStruct())
+Local aStruSD2  := SD2->(dbStruct())
+Local cCondicao := ""
+Local cSerie    := ""
+Local cClieFor  := ""
+Local cLoja     := ""
+Local cItem     := StrZero(1,Len(SD2->D2_ITEM))
+Local cNumNFS   := ""
+Local cSeek     := ""
+Local lCliente  := Nil
+Local lMostraCtb:= .F.
+Local lAglutCtb := .F.
+Local lCtbOnLine:= .F.
+Local lCtbCusto := .F.
+Local lReajusta := .F.
+Local lAtuSA7   := .F.
+Local lGeraNfs  := .T.
+Local nY        := 0
+Local nX        := 0
+Local nCalAcrs  := 1
+Local nArredPrcLis:= 1
+Local nQtSegum  := 0
+
+Local nPFilial  := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_FILIAL"})
+Local nPItem    := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_ITEM"})
+Local nPCod 	:= aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_COD"})
+Local nPQuant   := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_QUANT"})
+Local nPPrcVen  := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_PRCVEN"})
+Local nPTotal   := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_TOTAL"})
+Local nPDescon  := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_DESCON"})
+Local nPPICM    := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_PICM"})
+Local nPIPI     := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_IPI"})
+Local nPLocal   := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_LOCAL"})
+Local nPTES     := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_TES"})
+Local nPLoteCtl := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_LOTECTL"})
+Local nPNumLote := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_NUMLOTE"})
+Local nPDtValid := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_DTVALID"})
+Local nPPotenc  := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_POTENCI"})
+Local nPUM      := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_UM"})
+Local nPQtSegum := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_QTSEGUM"})
+Local nPCliente := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_CLIENTE"})
+Local nPLoja    := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_LOJA"})
+Local nPTipo    := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_TIPO"})
+Local nPEmis    := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_EMISSAO"})
+Local nPEst     := aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_EST"})
+Local nPCC		:= aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_CCUSTO"})
+Local nPConta	:= aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_CONTA"})
+Local nPItCta	:= aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_ITEMCC"})
+Local nPClVl	:= aScan(aStruSD2,{|x| AllTrim(x[1]) == "D2_CLVL"})
+
+Local nPCFilial  := aScan(aStruSF2,{|x| AllTrim(x[1])== "F2_FILIAL"})
+Local nPCCliente:= aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_CLIENTE"})
+Local nPCLoja   := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_LOJA"})
+Local nPCCond   := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_COND"})
+Local nPCTipo   := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_TIPO"})
+Local nPTpCli   := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_TIPOCLI"})
+Local nPUFOrig  := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_UFORIG"})
+Local nPUFDest  := aScan(aStruSF2,{|x| AllTrim(x[1]) == "F2_UFDEST"})
+
+Local bSF2      	:= {|nTipo| Mt103P3SF2(nTipo) }
+Local cLocalCQ      := GetMv("MV_CQ",,"")  
+Local nSaldoRetorno := 0
+Local cTipoCli 		:= ""
+Local cFilSA1		:= xFilial("SA1")
+Local cEstado		:= ""
+
+// Se lMudouNum for .T. significa que o usuario alterou o numero da nota em MV_TPNRNFS == "3"
+// e o sistema deve respeitar o novo numero contido em cNumero (apenas para MV_ESTADO = "SC").
+Private lMudouNum := .F.
+Private cNumero   := ""
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verificacao das perguntas da Preparacao do Documento de Saida          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ mv_par01 Mostra Lan‡.Contab ?  Sim/Nao                        ³
+//³ mv_par02 Aglut. Lan‡amentos ?  Sim/Nao                        ³
+//³ mv_par03 Lan‡.Contab.On-Line?  Sim/Nao                        ³
+//³ mv_par04 Contb.Custo On-Line?  Sim/Nao                        ³
+//³ mv_par05 Reaj. na mesma N.F.?  Sim/Nao                        ³
+//³ mv_par06 Taxa deflacao ICMS ?  Numerico                       ³
+//³ mv_par07 Metodo calc.acr.fin?  Taxa defl/Dif.lista/% Acrs.ped ³
+//³ mv_par08 Arred.prc unit vist?  Sempre/Nunca/Consumid.final    ³
+//³ mv_par09 Agreg. liberac. de ?  Caracter                       ³
+//³ mv_par10 Agreg. liberac. ate?  Caracter                       ³
+//³ mv_par11 Aglut.Ped. Iguais  ?  Sim/Nao                        ³
+//³ mv_par12 Valor Minimo p/fatu?                                 ³
+//³ mv_par13 Transportadora de  ?                                 ³
+//³ mv_par14 Transportadora ate ?                                 ³
+//³ mv_par15 Atualiza Cli.X Prod?                                 ³
+//³ mv_par16 Emitir             ?  Nota / Cupom Fiscal            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte("MT460A",.F.)
+lMostraCtb  := MV_PAR01==1
+lAglutCtb   := MV_PAR02==1
+lCtbOnLine  := MV_PAR03==1
+lCtbCusto   := MV_PAR04==1
+lReajusta   := MV_PAR05==1
+nCalAcrs    := MV_PAR06
+nArredPrcLis:= MV_PAR08
+lAtuSA7     := MV_PAR15==1
+
+dbSelectArea("SDH")
+dbSetOrder(2)
+cSeek := "1"+SDH->DH_SERIE+SDH->DH_DOC
+
+//Armazena o cliente ou fornecedor antes de reposicionar a SDH, para evitar a geracao de um documento de cobertura com o 
+//fornecedor/cliente incorreto
+If lCliente == Nil
+	lCliente := !Empty(SDH->DH_CLIENTE)
+	If lCliente
+		cClieFor := SDH->DH_CLIENTE
+		cLoja    := SDH->DH_LOJACLI
+	Else
+		cClieFor := SDH->DH_FORNECE
+		cLoja    := SDH->DH_LOJAFOR
+	EndIf
+EndIf
+
+DbSeek(xFilial("SDH")+cSeek)
+
+While !Eof() .And. xFilial("SDH") == SDH->DH_FILIAL .And.;
+	"1"+SDH->DH_SERIE+SDH->DH_DOC == cSeek 
+	
+	If (lCliente .And. !Empty(SDH->DH_CLIENTE) .And. cClieFor == SDH->DH_CLIENTE .And. cLoja == SDH->DH_LOJACLI) .Or.;
+		 (!lCliente .And. !Empty(SDH->DH_FORNECE).And. cClieFor == SDH->DH_FORNECE .And. cLoja == SDH->DH_LOJAFOR) .AND. SDH->DH_SALDO > 0
+		dbSelectArea("SD1")
+		dbSetOrder(4)
+		If MsSeek(xFilial("SD1")+SDH->DH_IDENTNF)
+			dbSelectArea("SF1")
+			dbSetOrder(1)
+			MsSeek(xFilial("SF1")+SD1->D1_DOC+SD1->D1_SERIE+SD1->D1_FORNECE+SD1->D1_LOJA+SD1->D1_TIPO)
+			If Empty(cCondicao)
+				For nX := 1 To Len(aStruSF2)
+					If aStruSF2[nX][2]$"C/M"	
+						aAdd(aCab,"")
+					ElseIf aStruSF2[nX][2]=="D"	
+						aAdd(aCab,CToD(""))
+					ElseIf aStruSF2[nX][2]=="N"	
+						aAdd(aCab,0)
+					ElseIf aStruSF2[nX][2]=="L"	
+						aAdd(aCab,.F.)
+					EndIf
+				Next nX
+
+				If lCliente
+					DbSelectArea("SA1")
+					SA1->( DbSetOrder(1) )
+					If MsSeek( cFilSA1 + cClieFor + cLoja )
+						cTipoCli := SA1->A1_TIPO
+					Endif
+				Else
+					cTipoCli := "F"
+				Endif
+	
+				aCab[nPCFilial]  := xFilial("SF2")
+				aCab[nPCCliente]:= cClieFor
+				aCab[nPCLoja]   := cLoja
+				aCab[nPCCond]   := SF1->F1_COND
+				aCab[nPCTipo]   := If(lCliente,"N","B")
+				aCab[nPTpCli]	:= cTipoCli
+
+				MaFisIni(cClieFor,cLoja,IIF(lCliente,"C","F"),IIF(lCliente,"N","B"),cTipoCli,,,,,'MATA461',,,,,,cClieFor,cLoja)
+				aCab[nPUFOrig] := MaFisRet(,"NF_UFORIGEM")
+				cEstado := MaFisRet(,"NF_UFDEST")
+				aCab[nPUFOrig] := MaFisRet(,"NF_UFORIGEM")
+				aCab[nPUFDest] := cEstado
+				MaFisEnd()
+
+			ElseIf cCondicao <> SF1->F1_DOC
+				Exit
+			EndIf
+			cCondicao := SF1->F1_DOC
+			dbSelectArea("SF4")
+			dbSetOrder(1)
+			If MsSeek(xFilial("SF4")+SD1->D1_TES)
+				If Empty(SF4->F4_TESE3) .Or. !(SF4->(MsSeek(xFilial("SF4")+SF4->F4_TESE3)) .And. SF4->F4_PODER3=="R" )
+					lGeraNfs := .F.                 
+					Help("",1,"DSNOTESREM")
+					Exit
+				EndIf
+				                           
+				//Caso tenha sido transferido ao CQ, faz o retorno de cada liberacao do Controle de Qualidade (tabela SD7)
+				If SD1->D1_LOCAL $ cLocalCQ  
+					nSaldoRetorno := SDH->DH_SALDO
+					
+					dbSelectArea("SD7")
+					SD7->(dbSetOrder(1))
+					SD7->(dbSeek(xFilial("SD7")+SD1->D1_NUMCQ+SD1->D1_COD ))
+					While SD7->(!Eof()) .And. SD7->D7_FILIAL + SD7->D7_NUMERO + SD7->D7_PRODUTO == xFilial("SD7")+SD1->D1_NUMCQ+SD1->D1_COD
+						If nSaldoRetorno > 0 
+							If SD7->D7_TIPO == 1
+								nQtSegum := ConvUM(SD1->D1_COD,Iif(nSaldoRetorno >= SD7->D7_QTDE,SD7->D7_QTDE,SD7->D7_QTDE - nSaldoRetorno),0,2)
+								If Mt103Saldo(SD1->D1_COD,SD7->D7_LOCDEST,Iif(nSaldoRetorno >= SD7->D7_QTDE,SD7->D7_QTDE,SD7->D7_QTDE - nSaldoRetorno),nQtSegum,SD1->D1_LOTECTL,SD1->D1_NUMLOTE)
+									aAdd( aDocOri, 0 )
+									aAdd(aItem,{})
+									nY++
+									For nX := 1 To Len(aStruSD2)
+										If aStruSD2[nX][2]$"C/M"	
+											aAdd(aItem[nY],"")
+										ElseIf aStruSD2[nX][2]=="D"	
+											aAdd(aItem[nY],CToD(""))
+										ElseIf aStruSD2[nX][2]=="N"	
+											aAdd(aItem[nY],0)
+										ElseIf aStruSD2[nX][2]=="L"	
+											aAdd(aItem[nY],.T.)			
+										EndIf
+									Next nX
+									aItem[nY][nPFilial]  := xFilial("SD2")
+									aItem[nY][nPItem]  := cItem
+									aItem[nY][nPCod]   := SD1->D1_COD
+									aItem[nY][nPQuant] := Iif(nSaldoRetorno >= SD7->D7_QTDE,SD7->D7_QTDE,SD7->D7_QTDE - nSaldoRetorno)
+									aItem[nY][nPPrcVen]:= SD1->D1_VUNIT
+									aItem[nY][nPTotal] := NoRound(Iif(nSaldoRetorno >= SD7->D7_QTDE,SD7->D7_QTDE,SD7->D7_QTDE - nSaldoRetorno)*SD1->D1_VUNIT,TamSX3("D2_TOTAL")[2])
+									aItem[nY][nPDescon]:= SD1->D1_VALDESC
+									aItem[nY][nPPICM]  := SD1->D1_PICM
+									aItem[nY][nPIPI]   := SD1->D1_IPI
+									aItem[nY][nPLocal] := SD7->D7_LOCDEST
+									aItem[nY][nPTES]   := SF4->F4_CODIGO
+									If Rastro(SD1->D1_COD) .And. SF4->F4_ESTOQUE=="S"
+										aItem[nY][nPLoteCtl]:= SD1->D1_LOTECTL
+										aItem[nY][nPNumLote]:= SD1->D1_NUMLOTE
+										aItem[nY][nPDtValid]:= SD1->D1_DTVALID
+										aItem[nY][nPPotenc] := SD1->D1_POTENCI
+									EndIf
+									aItem[nY][nPUM]     := SD1->D1_UM
+									aItem[nY][nPQtSegum]:= nQtSegum
+									aItem[nY][nPCliente]:= cClieFor
+									aItem[nY][nPLoja]   := cLoja
+									aItem[nY][nPTipo]   := If(lCliente,"N","B")
+									aItem[nY][nPEmis]   := dDataBase
+									aItem[nY][nPEst]	:= cEstado
+									aItem[nY][nPCC]		:= SD1->D1_CC
+									aItem[nY][nPConta]	:= SD1->D1_CONTA
+									aItem[nY][nPItCta]	:= SD1->D1_ITEMCTA
+									aItem[nY][nPClVl]	:= SD1->D1_CLVL
+							
+									aadd(aSDH,{cItem,SD1->D1_COD,SDH->(RecNo())})
+									cItem := Soma1(cItem,Len(SD2->D2_ITEM))     
+									
+									nSaldoRetorno -= Iif(nSaldoRetorno >= SD7->D7_QTDE,SD7->D7_QTDE,SD7->D7_QTDE - nSaldoRetorno)
+								Else
+									lGeraNfs := .F.
+									Help(" ",1,"A430QUANT")
+									Exit
+								EndIf   
+							EndIf
+						EndIf
+					     
+						SD7->(dbSkip())
+					EndDo					
+				Else  
+					nQtSegum := ConvUM(SD1->D1_COD,SDH->DH_SALDO,0,2)
+					If SF4->F4_ESTOQUE=="N" .Or. Mt103Saldo(SD1->D1_COD,SD1->D1_LOCAL,SDH->DH_SALDO,nQtSegum,SD1->D1_LOTECTL,SD1->D1_NUMLOTE)
+						aAdd( aDocOri, 0 )
+						aAdd(aItem,{})
+						nY++
+						For nX := 1 To Len(aStruSD2)
+							If aStruSD2[nX][2]$"C/M"	
+								aAdd(aItem[nY],"")
+							ElseIf aStruSD2[nX][2]=="D"	
+								aAdd(aItem[nY],CToD(""))
+							ElseIf aStruSD2[nX][2]=="N"	
+								aAdd(aItem[nY],0)
+							ElseIf aStruSD2[nX][2]=="L"	
+								aAdd(aItem[nY],.T.)			
+							EndIf
+						Next nX
+						aItem[nY][nPFilial]  := xFilial("SD2")
+						aItem[nY][nPItem]  := cItem
+						aItem[nY][nPCod]   := SD1->D1_COD
+						aItem[nY][nPQuant] := SDH->DH_SALDO
+						aItem[nY][nPPrcVen]:= SD1->D1_VUNIT
+						aItem[nY][nPTotal] := NoRound(SDH->DH_SALDO*SD1->D1_VUNIT,TamSX3("D2_TOTAL")[2])
+						aItem[nY][nPDescon]:= SD1->D1_VALDESC
+						aItem[nY][nPPICM]  := SD1->D1_PICM
+						aItem[nY][nPIPI]   := SD1->D1_IPI
+						aItem[nY][nPLocal] := SD1->D1_LOCAL
+						aItem[nY][nPTES]   := SF4->F4_CODIGO
+						If Rastro(SD1->D1_COD) .And. SF4->F4_ESTOQUE=="S"
+							aItem[nY][nPLoteCtl]:= SD1->D1_LOTECTL
+							aItem[nY][nPNumLote]:= SD1->D1_NUMLOTE
+							aItem[nY][nPDtValid]:= SD1->D1_DTVALID
+							aItem[nY][nPPotenc] := SD1->D1_POTENCI
+						EndIf
+						aItem[nY][nPUM]     := SD1->D1_UM
+						aItem[nY][nPQtSegum]:= nQtSegum
+						aItem[nY][nPCliente]:= cClieFor
+						aItem[nY][nPLoja]   := cLoja
+						aItem[nY][nPTipo]   := If(lCliente,"N","B")
+						aItem[nY][nPEmis]   := dDataBase
+						aItem[nY][nPEst]	:= cEstado
+						aItem[nY][nPCC]		:= SD1->D1_CC
+						aItem[nY][nPConta]	:= SD1->D1_CONTA
+						aItem[nY][nPItCta]	:= SD1->D1_ITEMCTA
+						aItem[nY][nPClVl]	:= SD1->D1_CLVL
+				
+						aadd(aSDH,{cItem,SD1->D1_COD,SDH->(RecNo())})
+						cItem := Soma1(cItem,Len(SD2->D2_ITEM))
+					Else
+						lGeraNfs := .F.
+						Help(" ",1,"A430QUANT")
+						Exit
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+	dbSelectArea("SDH")	
+	dbSkip()	
+EndDo
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Execucao da rotina de inclusao do documento de saida ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+If Len(aItem) > 0 .And. Len(aCab) > 0 .And. lGeraNfs
+	If Sx5NumNota(@cSerie,GetNewPar("MV_TPNRNFS","1"))	
+		cNumNFS := MaNfs2Nfs(,;
+					,;
+					cClieFor,;
+					cLoja,;
+					cSerie,;
+					lMostraCtb,;
+					lAglutCtb,;
+					lCtbOnLine,;
+					lCtbCusto,;
+					lReajusta,;
+					nCalAcrs,;
+					nArredPrcLis,;
+					lAtuSA7,;
+					.F.,;
+					,;
+					,;
+					bSF2,;
+					,;
+					aDocOri,;
+					aItem,;
+					aCab)
+		aCab := {}
+		aItem:= {}
+		If Empty(cNumNFS)
+			Help(" ",1,"MA511NODOC")
+		Else
+			dbSelectArea("SF2")
+			dbSetOrder(1)
+			MsSeek(xFilial("SF2")+PadR( cNumNFS, Len( SF2->F2_DOC ) )+cSerie+cClieFor+cLoja)
+			dbSelectArea("SD2")
+			dbSetOrder(3)
+			MsSeek(xFilial("SD2")+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA)
+			While !Eof() .And. xFilial("SD2") == SD2->D2_FILIAL .And.;
+					SF2->F2_DOC == SD2->D2_DOC .And.;
+					SF2->F2_SERIE == SD2->D2_SERIE .And.;                           
+					SF2->F2_CLIENTE == SD2->D2_CLIENTE .And.;
+					SF2->F2_LOJA == SD2->D2_LOJA
+				NfeGrvDocC(,aSDH,"SD2")
+				dbSelectArea("SD2")
+				dbSkip()
+			EndDo
+			Mc090Visual("SF2",SF2->(RecNo()),1)
+		EndIf
+	EndIf
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Restaura a integridade da Rotina                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RestArea(aAreaSD2)
+RestArea(aAreaSF2)
+RestArea(aArea)
+Return(.T.)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Mt103P3SF2³ Autor ³Kleber Dias Gomes      ³ Data ³12/01/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Rotina de atualizacao do SF2                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³                                                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpN1: nTipo                                                ³±±
+±±³          ³       [1] Apos a inclusao                                  ³±±
+±±³          ³       [2] Apos a atualizacao                               ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao Efetuada                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function Mt103P3SF2(nTipo)
+
+Local aArea := GetArea()
+Local cVend := "1"
+Local nX    := 0
+Local nVend := Fa440CntVen()
+If nTipo == 1
+	SF2->F2_TRANSP  := ""
+	SF2->F2_REDESP  := ""
+	For nX := 1 To nVend
+		SF2->(FieldPut(FieldPos("F2_VEND"+cVend),""))
+		cVend := Soma1(cVend,1)
+	Next nX
+	SF2->F2_OK      := ""
+	SF2->F2_FIMP    := ""
+	SF2->F2_DTLANC  := Ctod("")
+	SF2->F2_DTREAJ  := Ctod("")
+	SF2->F2_REAJUST := ""
+	SF2->F2_DTBASE0 := Ctod("")
+	SF2->F2_FATORB0 := 0
+	SF2->F2_DTBASE1 := Ctod("")
+	SF2->F2_FATORB1 := 0
+	SF2->F2_VARIAC  := 0
+	SF2->F2_NEXTDOC := ""
+	SF2->F2_PDV     := ""
+	SF2->F2_MAPA    := ""
+	SF2->F2_ECF     := ""
+	SF2->F2_PREFIXO := ""
+	SF2->F2_DUPL    := ""
+	SF2->F2_ORDPAGO := ""
+	SF2->F2_NFCUPOM := ""
+	SF2->F2_DESCCAB := 0
+	SF2->F2_FRETE   := 0
+	SF2->F2_SEGURO  := 0
+	SF2->F2_DESPESA := 0
+	SF2->F2_FRETAUT := 0
+	SF2->F2_ICMAUTO := 0
+	SF2->F2_CONTSOC := 0
+EndIf
+RestArea(aArea)
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Funcao    ³Mt103Saldo³ Autor ³Kleber Dias Gomes      ³ Data ³13/01/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Avalia o saldo do item do pedido.                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Logico    - .T. Item da nota sera faturado, .F. nao sera    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³cProduto  - Produto do pedido analisado                     ³±±
+±±³          ³cLocal    - Armazem do pedido analisado                     ³±±
+±±³          ³nQuant    - Quantidade do pedido analisado                  ³±±
+±±³          ³nQuant2UM - Quantidade do pedido analisado na segunda UM    ³±±
+±±³          ³cLoteCtl  - Lote do pedido analisado                        ³±±
+±±³          ³cNumLote  - Sub-Lote do pedido analisado                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function Mt103Saldo(cProduto,cLocal,nQuant,nQuant2UM,cLoteCtl,cNumLote)
+Local lRet     := .T.
+Local aArray   := {}
+Local nX       := 0
+Local nY       := 0
+Local nSaldo   := 0
+Local aArea    := GetArea()
+
+// Checa o saldo do lote na data
+If Rastro(cProduto) 
+	aArray:=SldPorLote(cProduto,cLocal,nQuant,nQuant2UM,cLoteCtl,cNumLote,NIL,NIL,NIL,.F.,NIL,NIL,NIL,NIL,dDataBase)
+	For nX:=1 to Len(aArray)
+		For nY:=1 to Len(aArray[nX,10])
+			nSaldo+=aArray[nX,10,nY,2]
+		Next nY
+	Next nX
+	lRet:=QtdComp(nSaldo) >= QtdComp(nQuant)
+ElseIf Localiza(cProduto)
+	aArray:=SldPorLote(cProduto,cLocal,nQuant,nQuant2UM,cLoteCtl,cNumLote,NIL,NIL,NIL,.F.,NIL,NIL,NIL,NIL,dDataBase)
+	For nX:=1 to Len(aArray)
+		nSaldo+=aArray[nX,5]
+	Next nX
+	lRet:=QtdComp(nSaldo) >= QtdComp(nQuant)
+Else
+	dbSelectArea("SB2")
+	dbSetOrder(1)
+	MsSeek(xFilial("SB2")+cProduto+cLocal)
+	lRet := !(SaldoMov() < nQuant)
+EndIf          
+RestArea(aArea)
+Return lRet
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A103aMontC³ Autor ³ Ricardo Berti         ³ Data ³ 12/01/07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Montagem do aCols	  									  ³±±
+±±³          ³ 															  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ ExpL1 := A103aMontC(ExpA1,ExpA2,ExpN1)					  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = aHeader                                 		  	  ³±±
+±±³          ³ ExpA2 = aCols 											  ³±±
+±±³          ³ ExpL1 = atualiza .T. se encontrou reg.valido em SDH   	  ³±±
+±±³          ³ ExpN1 = Posicao da coluna "DH_IDENTNF" no aHeader		  ³±±
+±±³          ³ ExpA2 = Itens para IntegDef - Mensagem única      		  	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ ExpL1 = .F. aborta a FillGetDados (montagem do aCols)  	  ³±±
+±±³          ³         .T. continua o processamento pela FillGetDados	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA103A                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A103aMontC(aHeader,aCols,lAchou,nPIdentNf,xAutoCab)
+
+Local cAliasSD1 := "SD1"
+Local cQuery    := ""
+Local nX        := 0
+Local nCampo    := 0
+Local nUsado	 := Len(aHeader)
+Local lQuery    := .F.
+Local aStruSD1  := {}
+
+If xAutoCab == Nil
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem do aCols com base do SD1                                       ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	dbSelectArea("SD1")
+	dbSetOrder(1)
+	If Ascan(aHeader,{|x| x[8] == "M" }) == 0
+		lQuery    := .T.
+		cAliasSD1 := "NfeDocVinc"
+		aStruSD1  := SD1->(dbStruct())
+		cQuery    := "SELECT SD1.*,SD1.R_E_C_N_O_ SD1RECNO "
+		cQuery    += "FROM "+RetSqlName("SD1")+" SD1 "
+		cQuery    += "WHERE SD1.D1_FILIAL='"+xFilial("SD1")+"' AND "
+		cQuery    += "SD1.D1_DOC='"+SF1->F1_DOC+"' AND "
+		cQuery    += "SD1.D1_SERIE='"+SF1->F1_SERIE+"' AND "
+		cQuery    += "SD1.D1_FORNECE='"+SF1->F1_FORNECE+"' AND "
+		cQuery    += "SD1.D1_LOJA='"+SF1->F1_LOJA+"' AND "
+		cQuery    += "SD1.D1_TIPO='"+SF1->F1_TIPO+"' AND "
+		cQuery    += "SD1.D_E_L_E_T_=' ' "
+		cQuery    += "ORDER BY "+SqlOrder(SD1->(IndexKey()))
+
+		cQuery    := ChangeQuery(cQuery)
+
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSD1,.T.,.T.)
+
+		For nX := 1 To Len(aStruSD1)
+			If aStruSD1[nX][2]<>"C"
+				TcSetField(cAliasSD1,aStruSD1[nX][1],aStruSD1[nX][2],aStruSD1[nX][3],aStruSD1[nX][4])
+			EndIf
+		Next nX
+	Else
+		MsSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECE+SF1->F1_LOJA)
+	EndIf
+	While ( !Eof().And. (cAliasSD1)->D1_FILIAL== xFilial("SD1") .And. ;
+		(cAliasSD1)->D1_DOC == SF1->F1_DOC .And. ;
+	(cAliasSD1)->D1_SERIE == SF1->F1_SERIE .And. ;
+		(cAliasSD1)->D1_FORNECE == SF1->F1_FORNECE .And. ;
+		(cAliasSD1)->D1_LOJA == SF1->F1_LOJA )
+	
+		aadd(aTesEnv,(cAliasSD1)->D1_TES)
+	
+			
+		dbSelectArea("SDH")
+		dbSetOrder(1)
+		If MsSeek(xFilial("SDH")+(cAliasSD1)->D1_NUMSEQ)
+		  	While (SDH->(!Eof()) .And. SDH->(DH_FILIAL+DH_IDENTNF) == xFilial("SDH")+(cAliasSD1)->D1_NUMSEQ)
+		  		aadd(aCols,Array(nUsado+1)) 	
+				For nX := 1 To nUsado 
+						If IsHeadRec(aHeader[nX][2])   
+							aCols[Len(aCols)][nX]	:= SDH->(RecNo())
+						ElseIf IsHeadAlias(aHeader[nX][2]) 
+							aCols[Len(aCols)][nX]	:= "SDH"
+						ElseIf ( aHeader[nX][10] <> "V")
+							aCols[Len(aCols)][nX] := FieldGet(FieldPos(aHeader[nX][2]))
+						Else
+							aCols[Len(aCols)][nX] := CriaVar(aHeader[nX][2])
+						EndIf
+						If AllTrim(aHeader[nX][2]) == "DH_PRODUTO"
+							aCols[Len(aCols)][nX] := (cAliasSD1)->D1_COD
+						ElseIf AllTrim(aHeader[nX][2]) == "DH_QTDNF"
+							aCols[Len(aCols)][nX] := (cAliasSD1)->D1_QUANT
+						ElseIf AllTrim(aHeader[nX][2]) == "DH_ITEM"
+							aCols[Len(aCols)][nX] := (cAliasSD1)->D1_ITEM
+					   EndIf		                    
+			  	Next nX
+			  	SDH->(dbSkip())
+			  	aCols[Len(aCols)][nUsado+1] := .F.
+		  	EndDo							
+			lAchou := .T.
+		Else
+			aadd(aCols,Array(nUsado+1))
+			For nX := 1 To nUsado
+				If IsHeadRec(aHeader[nX][2])   
+					aCols[Len(aCols)][nX]	:= 0
+				ElseIf IsHeadAlias(aHeader[nX][2]) 
+					aCols[Len(aCols)][nX]	:= "SDH"
+				Else
+					aCols[Len(aCols)][nX] := CriaVar(aHeader[nX][2])
+					If AllTrim(aHeader[nX][2]) == "DH_PRODUTO"
+						aCols[Len(aCols)][nX] := (cAliasSD1)->D1_COD
+					ElseIf AllTrim(aHeader[nX][2]) == "DH_QTDNF"
+						aCols[Len(aCols)][nX] := (cAliasSD1)->D1_QUANT
+					ElseIf AllTrim(aHeader[nX][2]) == "DH_ITEM"
+						aCols[Len(aCols)][nX] := (cAliasSD1)->D1_ITEM
+				    EndIf			
+			    EndIf			
+			Next nX
+			aCols[Len(aCols)][nPIdentNf] := (cAliasSD1)->D1_NUMSEQ
+			aCols[Len(aCols)][nUsado+1] := .F.
+		EndIf
+	
+		dbSelectArea(cAliasSD1)
+		dbSkip()
+	
+	EndDo
+	If lQuery
+		dbSelectArea(cAliasSD1)
+		dbCloseArea()
+		dbSelectArea("SD1")
+	EndIf
+Else
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Montagem do aCols com base no aCab do MSExecAuto                        ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+	Aadd( aCols, Array( nUsado+1) )
+
+	For nX := 1 To Len( xAutoCab )
+	
+		nCampo := Ascan(aHeader,{|x| Alltrim(x[2])==xAutoCab[nX][1]})
+
+		If nCampo > 0
+			aCols[Len(aCols)][nCampo] := xAutoCab[nX][2]
+	   EndIf		                    
+
+		aCols[Len(aCols)][nUsado+1] := .F.
+
+	Next nX
+
+EndIf
+
+Return .T.
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³A103aAfteH³ Autor ³ Ricardo Berti         ³ Data ³ 12/01/07 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Funcao executada APOS gerar aHeader, antes da FillGetDados ³±±
+±±³          ³ criar os campos do Walk-Thru.							  ³±±
+±±³          ³              						    			 	  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³ A103aAfteH(ExpA1,ExpN1)		                    		  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ ExpA1 = Array aHeader passado por ref.	                  ³±±
+±±³          ³ ExpN1 = Posicao da coluna "DH_IDENTNF" no aHeader		  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³ Nenhum													  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ MATA103A                                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function A103aAfteH(aHeaderX,nPIdentNf)
+
+nPIdentNf := Ascan(aHeaderX,{|x| Alltrim(x[2])=="DH_IDENTNF"})
+Return Nil
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A103FIniLoj³ Autor ³ Julio C.Guerato      ³ Data ³10.09.2009 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³Rotina de avaliacao do fornecedor                            ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a validacao do codigo  ³±±
+±±³          ³e loja do fornecedor                                         ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A103FIniLoj()
+
+Local aArea		:= GetArea()
+Local nPFornece := aScan(aHeader,{|x| Trim(x[2])=="DH_FORNECE"})
+Local nPLoja	:= aScan(aHeader,{|x| Trim(x[2])=="DH_LOJAFOR"})
+Local lRetorno	:= .T.
+
+dbSelectArea("SA2")
+If !Empty(M->DH_FORNECE)
+	If Empty(aCols[n][nPLoja]) 
+		SA2->(dbSetOrder(1))
+		SA2->(MsSeek(xFilial("SA2")+M->DH_FORNECE))
+		If SA2->(Found())
+			aCols[n][nPLoja] := SA2->A2_LOJA
+			lRetorno := .T.
+		EndIf
+	Else
+		lRetorno := ExistCpo("SA2",M->DH_FORNECE+aCols[n][nPLoja])
+	EndIf
+Endif
+RestArea(aArea)
+Return(lRetorno)
+
+/*/
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³A103CIniLoj³ Autor ³ Julio C.Guerato      ³ Data ³10.09.2009 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³Rotina de avaliacao do Cliente                               ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³Nenhum                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³Esta rotina tem como objetivo efetuar a validacao do codigo  ³±±
+±±³          ³e loja do Cliente                                            ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ Materiais                                                   ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Function A103CIniLoj()
+
+Local aArea		 := GetArea()
+Local nPCliente := aScan(aHeader,{|x| Trim(x[2])=="DH_CLIENTE"})
+Local nPLoja	 := aScan(aHeader,{|x| Trim(x[2])=="DH_LOJACLI"})
+Local lRetorno	 := .T.
+
+dbSelectArea("SA1")
+If !Empty(M->DH_CLIENTE)
+	If Empty(aCols[n][nPLoja]) 
+		SA1->(dbSetOrder(1))
+		SA1->(MsSeek(xFilial("SA1")+M->DH_CLIENTE))
+		If SA1->(Found())
+			aCols[n][nPLoja] := SA1->A1_LOJA
+			lRetorno := .T.
+		EndIf
+	Else
+		lRetorno := ExistCpo("SA1",M->DH_CLIENTE+aCols[n][nPLoja])
+	EndIf
+Endif
+RestArea(aArea)
+Return(lRetorno)
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³IntegDef  ºAutor  ³ Marcelo C. Coutinho  º Data ³  15/12/11   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDescricao ³ Mensagem Única											    º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Mensagem Única                                            	º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function IntegDef( cXML, nTypeTrans, cTypeMessage, cVersion )
+
+local aRet := {}
+
+aRet := MATI103a( cXML, nTypeTrans, cTypeMessage, cVersion)
+
+Return aRet

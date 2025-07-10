@@ -1,0 +1,9 @@
+#Include "Mata115.ch"
+#INCLUDE "PROTHEUS.CH"
+
+Function MATA115X()
+
+// XXX Rotina descontinuada. O fonte será mantido pois a função A115Valor() foi movida para o
+// MATA119, e o MATA115 precisa ser compilado vazio para não termos erro de função duplicada.
+
+Return
